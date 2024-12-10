@@ -13,7 +13,22 @@ const page = ref(1)
 const sortBy = ref()
 const orderBy = ref()
 const selectedRows = ref([])
-
+const isTypeDialog = ref('Add')
+const isAddDialogVisible = ref(false)
+const fetchTrigger = ref(0)
+const conReqNo = ref(0)
+const conReqId = ref(0)
+const isSnackbarResponse = ref(false)
+const isSnackbarResponseAlertColor = ref('error')
+const errorMessages = ref('Internal server error')
+const successMessages = ref('Successfully')
+const errors = ref({
+  Username: undefined,
+  UserDisplay: undefined,
+  NoTlp: undefined,
+  Access: undefined,
+  BU: undefined,
+})
 const updateOptions = options => {
   sortBy.value = options.sortBy[0]?.key
   orderBy.value = options.sortBy[0]?.order
@@ -21,11 +36,6 @@ const updateOptions = options => {
 
 // Headers
 const headers = [
-  {
-    title: 'Actions',
-    key: 'actions',
-    sortable: false,
-  },
   {
     title: 'Request No',
     key: 'con_req_no',
@@ -148,20 +158,86 @@ const resolveVendorPriorityVariant = stat => {
   return 'error'
 }
 
-const deleteVendor = async id => {
-  await $api(`/apps/vendor-assigment/${ id }`, { method: 'DELETE' })
-
-  // Delete from selectedRows
-  const index = selectedRows.value.findIndex(row => row === id)
-  if (index !== -1)
-    selectedRows.value.splice(index, 1)
-
-  // Refetch Vendor
-  fetchVendor()
-}
-
 const formatDate = (date, time = false) => {
   return dayjs(date).format(`DD MMM YYYY${time ? ", HH:mm" : ""}`);
+}
+
+const updateSnackbarResponse = res => {
+  isSnackbarResponse.value = res;
+}
+
+const updateSnackbarResponseAlertColor = color => {
+  isSnackbarResponseAlertColor.value = color;
+}
+
+const alertErrorResponse = () => {
+  fetchTrigger.value += 1;
+  isSnackbarResponse.value = true;
+  isSnackbarResponseAlertColor.value = 'error'
+}
+
+const alertSuccessResponse = () => {
+  fetchTrigger.value += 1;
+  isSnackbarResponse.value = true;
+  isSnackbarResponseAlertColor.value = 'success'
+}
+
+const updateErrorMessages = err => {
+  errorMessages.value = err;
+}
+
+const updateErrors = err => {
+  errors.value = err;
+}
+
+const openDialog = async ({ id = null, type, con_req_no = null, con_req_id = null }) => {
+  isTypeDialog.value = type
+  isAddDialogVisible.value = true
+  if(type == 'Add')
+    conReqNo.value = con_req_no
+    conReqId.value = con_req_id
+    fetchTrigger.value += 1;
+}
+
+const fetchAddData = async (userHRData, clearedForm) => {
+  try {
+      const response = await $api('/configurations/human-resources/add', {
+        method: 'POST',
+        body: JSON.stringify(userHRData),
+        onResponseError({ response }) {
+          alertErrorResponse()
+          const responseData = response._data;
+          const responseMessage = responseData.message;
+          const responseErrors = responseData.errors;
+          errors.value = responseErrors;
+          errorMessages.value = responseMessage;
+          throw new Error("Created data failed");
+        },
+      });
+
+    const responseStringify = JSON.stringify(response);
+    const responseParse = JSON.parse(responseStringify);
+
+    if(responseParse?.status == 200) {
+      clearedForm()
+      fetchUserHR()
+      alertSuccessResponse()
+      const responseMessage = responseParse?.message;
+      successMessages.value = responseMessage;
+      isUserHRDialogVisible.value = false
+    } else {
+      alertErrorResponse()
+      throw new Error("Created data failed");
+    }
+  } catch (error) {
+    alertErrorResponse()
+  }
+}
+
+const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
+  if (mode === "Add") {
+    fetchAddData(conReqNo.value,formData, dialogUpdate)
+  }
 }
 </script>
 
@@ -279,13 +355,8 @@ const formatDate = (date, time = false) => {
         <template #item.con_req_no="{ item }">
           <div class="d-flex align-center gap-x-4">
             <div class="d-flex flex-column">
-              <h6 class="text-base">
-                <RouterLink
-                  :to="{ name: 'apps-user-view-id', params: { id: item.con_id } }"
-                  class="font-weight-medium text-link"
-                >
-                  {{ item.con_req_no }}
-                </RouterLink>
+              <h6 class="text-base text-primary" style="cursor: pointer;" @click="openDialog({type: 'Add', con_req_no: item.con_req_no, con_req_id: item.con_req_id})">
+                {{ item.con_req_no }}
               </h6>
               <div class="text-sm">
                 {{ item.aud_user == '' || null ? '-' : item.aud_user }}
@@ -350,16 +421,6 @@ const formatDate = (date, time = false) => {
           </div>
         </template>
 
-        <!-- Actions -->
-        <template #item.actions="{ item }">
-          <IconBtn @click="deleteVendor(item.con_id)">
-            <VIcon icon="tabler-eye-edit" />
-            <VTooltip open-delay="200" location="top" activator="parent">
-              <span>Vendor Assigment Request</span>
-            </VTooltip>
-          </IconBtn>
-        </template>
-
         <!-- pagination -->
         <template #bottom>
           <TablePagination
@@ -372,4 +433,34 @@ const formatDate = (date, time = false) => {
       <!-- SECTION -->
     </VCard>
   </section>
+  <VendorDetailDialog
+    v-model:isDialogVisible="isAddDialogVisible"
+    :errors="errors"
+    :type-dialog="isTypeDialog"
+    :contract-req-no="conReqNo"
+    :contract-req-id="conReqId"
+    :fetch-trigger="fetchTrigger"
+    @isSnackbarResponseAlertColor="updateSnackbarResponseAlertColor"
+    @isSnackbarResponse="updateSnackbarResponse"
+    @VendorData="handleFormSubmit"
+    @errorMessages="updateErrorMessages"
+    @errors="updateErrors"
+  />
+  <VSnackbar
+    v-model="isSnackbarResponse"
+    transition="scroll-y-reverse-transition"
+    location="top end"
+    variant="flat"
+    :color="isSnackbarResponseAlertColor"
+  >
+    {{ isSnackbarResponseAlertColor == 'error' ? errorMessages : successMessages }}
+    <template #actions>
+      <VBtn
+        color="white"
+        @click="isSnackbarResponse = false"
+      >
+        Close
+      </VBtn>
+    </template>
+  </VSnackbar>
 </template>

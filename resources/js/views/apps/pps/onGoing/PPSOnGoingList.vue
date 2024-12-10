@@ -1,6 +1,6 @@
 <script setup>
 import dayjs from "dayjs";
-import { computed } from 'vue';
+import 'vue-skeletor/dist/vue-skeletor.css';
 
 const emit = defineEmits(['updateTotalNotPriority','updateTotalPriority'])
 const searchQuery = ref('')
@@ -16,11 +16,14 @@ const isPPSOngoingAddDialogVisible = ref(false)
 const isPPSOngoingDialogDeleteVisible = ref(false)
 const isPPSOngoingTypeDialog = ref('Add')
 const IDPPSOngoing = ref(0)
+const conReqPPSOngoing = ref(0)
 const isSnackbarResponse = ref(false)
 const isSnackbarResponseAlertColor = ref('error')
 const fetchTrigger = ref(0);
 const errorMessages = ref('Internal server error')
 const successMessages = ref('Successfully')
+const isSuccessNextStep = ref(false)
+const rangeIncrement = ref([])
 const errors = ref({
    // PPS form
   company: undefined,
@@ -195,19 +198,6 @@ const status = [
   }
 ]
 
-const openDialog = async ({ id = null, type }) => {
-  isPPSOngoingTypeDialog.value = type
-  isPPSOngoingAddDialogVisible.value = true
-  if(type == 'Edit')
-    IDPPSOngoing.value = id
-    fetchTrigger.value += 1;
-}
-
-const openDialogDelete = async (id) => {
-  IDPPSOngoing.value = id
-  isPPSOngoingDialogDeleteVisible.value = true
-}
-
 const updateSnackbarResponse = res => {
   isSnackbarResponse.value = res;
 }
@@ -244,11 +234,15 @@ const resolvePPSPriorityVariant = stat => {
   return 'error'
 }
 
+const updateRangeIncrement = data => {
+  rangeIncrement.value = data
+}
+
 const formatDate = (date, time = false) => {
   return dayjs(date).format(`DD MMM YYYY${time ? ", HH:mm" : ""}`);
 }
 
-const fetchAddData = async (PPSData, clearedForm) => {
+const fetchAddPPSData = async (PPSData) => {
   try {
       const formData = new FormData();
       
@@ -279,12 +273,14 @@ const fetchAddData = async (PPSData, clearedForm) => {
     const responseParse = JSON.parse(responseStringify);
 
     if(responseParse?.status == 200) {
-      clearedForm()
       fetchPPS()
       alertSuccessResponse()
       const responseMessage = responseParse?.message;
+      const data = responseParse?.data.rows;
+      conReqPPSOngoing.value = data.con_req_id;
+      await getIncrementPPSOngoing(conReqPPSOngoing)
       successMessages.value = responseMessage;
-      isPPSOngoingAddDialogVisible.value = false
+      isSuccessNextStep.value = true;
     } else {
       alertErrorResponse()
       throw new Error("Created data failed");
@@ -294,11 +290,97 @@ const fetchAddData = async (PPSData, clearedForm) => {
   }
 }
 
+const fetchAddJobTypeData = async (JobTypeData, clearedForm) => {
+  try {
+      const formData = new FormData();
+      
+      for (const [key, value] of Object.entries(JobTypeData)) {
+        if (value instanceof File) {
+          formData.append(key, value);
+        } else if (typeof value === 'object' && value !== null) {
+          formData.append(key, JSON.stringify(value));
+        } else {
+          formData.append(key, value);
+        }
+      }
+      formData.append('con_id',IDPPSOngoing.value)
+      formData.append('periode',rangeIncrement.value)
+      console.log({rangeIncrement: rangeIncrement.value, con_id: IDPPSOngoing.value});
+      const response = await $api('/apps/trn-job-type/add', {
+        method: 'POST',
+        body: formData,
+        onResponseError({ response }) {
+          alertErrorResponse()
+          const responseData = response._data;
+          const responseMessage = responseData.message;
+          const responseErrors = responseData.errors;
+          errors.value = responseErrors;
+          errorMessages.value = responseMessage;
+          throw new Error("Created data failed");
+        },
+      });
+
+    const responseStringify = JSON.stringify(response);
+    const responseParse = JSON.parse(responseStringify);
+
+    if(responseParse?.status == 200) {
+      clearedForm()
+      fetchPPS()
+      alertSuccessResponse()
+      isPPSOngoingAddDialogVisible.value = false
+      const responseMessage = responseParse?.message;      
+      successMessages.value = responseMessage;
+    } else {
+      alertErrorResponse()
+      throw new Error("Created data failed");
+    }
+  } catch (error) {
+    alertErrorResponse()
+  }
+}
+
+const getIncrementPPSOngoing = async id => {
+  try {
+    const reqIdPPSOngoing = Number(id);
+    const response = await $api(`/apps/trn-job-type/get-increment/${reqIdPPSOngoing}`, {
+        method: 'GET',
+        onResponseError({ response }) {
+        alertErrorResponse()
+        isPPSOngoingDialogDeleteVisible.value = false;
+        const responseData = response._data;
+        const responseMessage = responseData.message;
+        const responseErrors = responseData.errors;
+        errors.value = responseErrors;
+        errorMessages.value = responseMessage;
+        throw new Error("Get data failed");
+      },
+    })
+    const responseStringify = JSON.stringify(response);
+    const responseParse = JSON.parse(responseStringify);
+
+    if(responseParse?.status == 200) {
+      alertSuccessResponse()
+      const responseMessage = responseParse?.message;
+      rangeIncrement.value = responseParse?.periode;
+      const data = responseParse?.data.rows;
+      IDPPSOngoing.value = data.con_id;
+      conReqPPSOngoing.value = data.con_req_id;
+      successMessages.value = responseMessage;
+    } else {
+      alertErrorResponse()
+      isPPSOngoingDialogDeleteVisible.value = false;
+      throw new Error("Get data failed");
+    }
+  } catch (error) {
+    isPPSOngoingDialogDeleteVisible.value = false;
+    alertErrorResponse()
+  }
+}
+
 const fetchPPSOngoingUpdate = async (id, PPSData, clearedForm) => {
   try {
     const idPPSOngoing = Number(id);
     const formData = new FormData();
-
     for (const [key, value] of Object.entries(PPSData)) {
       if (value instanceof File) {
         formData.append(key, value);
@@ -308,8 +390,9 @@ const fetchPPSOngoingUpdate = async (id, PPSData, clearedForm) => {
         formData.append(key, value);
       }
     }
+    console.log({PPSData,formData})
     const response = await $api(`/apps/pps-ongoing/update/${idPPSOngoing}`, {
-        method: 'PUT',
+        method: 'POST',
         body: formData,
         onResponseError({ response }) {
           alertErrorResponse()
@@ -328,10 +411,9 @@ const fetchPPSOngoingUpdate = async (id, PPSData, clearedForm) => {
     if(responseParse?.status == 200) {
       clearedForm()
       fetchPPS()
+      alertSuccessResponse()
       const responseMessage = responseParse?.message;
       successMessages.value = responseMessage;
-      isPPSOngoingAddDialogVisible.value = false
-      alertSuccessResponse()
     } else {
       alertErrorResponse()
       throw new Error("Updated data failed");
@@ -375,12 +457,32 @@ const deletedPPSOngoing = async id => {
   }
 }
 
-const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
+const handlePPSFormSubmit = async ({mode, formData, dialogUpdate}) => {
   if (mode === "Add") {
-    fetchAddData(formData, dialogUpdate)
+    fetchAddPPSData(formData)
   } else if(mode === 'Edit') {
     fetchPPSOngoingUpdate(IDPPSOngoing.value, formData, dialogUpdate)
   }
+}
+
+const handleJobTypeFormSubmit = async ({formData, dialogUpdate}) => {
+  fetchAddJobTypeData(formData, dialogUpdate)
+}
+
+const openDialog = async ({ id = null, type, con_req_id = null }) => {
+  isPPSOngoingTypeDialog.value = type
+  isPPSOngoingAddDialogVisible.value = true
+  if(type == 'Edit' || type == 'Edit Job Type')
+    IDPPSOngoing.value = id;
+    conReqPPSOngoing.value = con_req_id
+    fetchTrigger.value += 1;
+  if(type == 'Edit Job Type')
+    await getIncrementPPSOngoing(con_req_id)
+}
+
+const openDialogDelete = async (id) => {
+  IDPPSOngoing.value = id
+  isPPSOngoingDialogDeleteVisible.value = true
 }
 </script>
 
@@ -598,13 +700,13 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
             <VIcon icon="tabler-dots-vertical" />
             <VMenu activator="parent">
               <VList>
-                <VListItem :to="{ name: 'apps-user-view-id', params: { id: item.con_id } }">
+                <VListItem @click="openDialog({id: item.con_id, type: 'Edit Job Type', con_req_id: item.con_req_id})">
                   <template #prepend>
                     <VIcon icon="tabler-file-pencil" />
                   </template>
                   <VListItemTitle>Edit Jobtype</VListItemTitle>
                 </VListItem>
-                <VListItem link>
+                <VListItem @click="openDialog({id: item.con_id, type: 'Edit', con_req_id: item.con_req_id})">
                   <template #prepend>
                     <VIcon icon="tabler-eye-edit" />
                   </template>
@@ -651,10 +753,15 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
     :errors="errors"
     :typeDialog="isPPSOngoingTypeDialog"
     :ppsongoing-id="IDPPSOngoing"
+    :ppsongoing-conreq="conReqPPSOngoing"
     :fetch-trigger="fetchTrigger"
+    :range-increment="rangeIncrement"
+    :is-success-next-step="isSuccessNextStep"
+    @updateRangeIncrement="updateRangeIncrement"
     @isSnackbarResponseAlertColor="updateSnackbarResponseAlertColor"
     @isSnackbarResponse="updateSnackbarResponse"
-    @PPSData="handleFormSubmit"
+    @PPSData="handlePPSFormSubmit"
+    @JobTypeData="handleJobTypeFormSubmit"
     @errorMessages="updateErrorMessages"
     @errors="updateErrors"
   />

@@ -67,8 +67,31 @@ export async function getListMerJobType() {
   }
 }
 
+export async function getListMerPaymentTemplate() {
+  const url = 'http://localhost:8000/api/apps/mer-payment-template/list';
+  // const token = localStorage.getItem('token') || 'YOUR_BEARER_TOKEN_HERE';
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET'
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Error: ${response.status}, ${errorData.message || 'Unknown error'}`);
+    }
+
+    const data = await response.json();
+    return data;
+
+  } catch (error) {
+    console.error("Error fetching payment template data");
+    throw error;
+  }
+}
+
 export async function getListMerPaymentType() {
-  const url = 'http://localhost:8000/api/apps/payment-type/list';
+  const url = 'http://localhost:8000/api/apps/mer-payment-type/list';
   // const token = localStorage.getItem('token') || 'YOUR_BEARER_TOKEN_HERE';
 
   try {
@@ -248,6 +271,54 @@ export async function getListBU() {
 
   } catch (error) {
     console.error("Error fetching business units data");
+    throw error;
+  }
+}
+
+export async function getListContract() {
+  const url = 'http://localhost:8000/api/apps/contract/list';
+  // const token = localStorage.getItem('token') || 'YOUR_BEARER_TOKEN_HERE';
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET'
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Error: ${response.status}, ${errorData.message || 'Unknown error'}`);
+    }
+
+    const data = await response.json();
+    
+    return data;
+
+  } catch (error) {
+    console.error("Error fetching contract data");
+    throw error;
+  }
+}
+
+export async function getListSignatureType() {
+  const url = 'http://localhost:8000/api/configurations/signature-type/list';
+  // const token = localStorage.getItem('token') || 'YOUR_BEARER_TOKEN_HERE';
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET'
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Error: ${response.status}, ${errorData.message || 'Unknown error'}`);
+    }
+
+    const data = await response.json();
+    
+    return data;
+
+  } catch (error) {
+    console.error("Error fetching signature type data");
     throw error;
   }
 }

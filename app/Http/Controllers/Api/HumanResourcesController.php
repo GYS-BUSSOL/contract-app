@@ -130,7 +130,6 @@ class HumanResourcesController extends Controller
 
     public function add(Request $request)
     {
-        Log::info($request->all());
         $data = [
             'Username' => ['required', 'string'],
             'UserDisplay' => ['required', 'string'],

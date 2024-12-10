@@ -34,8 +34,8 @@
   <div class="d-flex mb-6">
       <VRow>
         <template
-          v-for="(data, id) in widgetData"
-          :key="id"
+          v-for="(data, index) in widgetData"
+          :key="index"
         >
           <VCol
             cols="12"

@@ -173,6 +173,32 @@ class SignatureTypeController extends Controller
         }
     }
 
+    public function list()
+    {
+        try {
+            $dataGet = $this->st->get();
+            $totalRecord = $dataGet->count();
+
+            return response()->json([
+                'status' => 200,
+                'message' => 'Successfully retrieved mer signature type data',
+                'data' => [
+                    'rows' => $dataGet,
+                    'total_record' => $totalRecord
+                ],
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 500,
+                'message' => 'Failed to retrieve mer signature type data',
+                'data' => [
+                    'rows' => [],
+                    'total_record' => 0
+                ],
+            ], 500);
+        }
+    }
+
     public function destroy(int $id)
     {
         try {

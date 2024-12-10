@@ -38,6 +38,7 @@ const deleteUserHR = async id => {
 }
 
 const dialogModelValueDeleteUpdate = () => {
+  emit("idDeleted", 0);
   emit('update:isDialogDeleteVisible', false);
 }
 </script>

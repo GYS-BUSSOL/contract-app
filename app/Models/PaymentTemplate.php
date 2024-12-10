@@ -5,11 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class TimeHistory extends Model
+class PaymentTemplate extends Model
 {
     use HasFactory;
-
-    protected $table = 'trn_time_history', $guarded = ['ths_id'];
+    protected $table = 'mer_payment_template', $guarded = ['id'];
     public $timestamps = false;
-    protected $primaryKey = 'ths_id';
+    protected $primaryKey = 'id';
 }

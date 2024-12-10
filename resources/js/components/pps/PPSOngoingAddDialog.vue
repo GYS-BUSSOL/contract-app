@@ -11,8 +11,8 @@ import {
   EditorContent,
   useEditor,
 } from '@tiptap/vue-3';
-import { ref } from 'vue';
-import { VForm } from 'vuetify/components/VForm';
+import dayjs from 'dayjs';
+import 'vue-skeletor/dist/vue-skeletor.css';
 
 const emit = defineEmits([
   'update:isDialogVisible',
@@ -20,7 +20,8 @@ const emit = defineEmits([
   'isSnackbarResponse',
   'isSnackbarResponseAlertColor',
   'errorMessages',
-  'errors'
+  'errors',
+  'updateRangeIncrement'
 ]);
 
 const props = defineProps({
@@ -36,21 +37,32 @@ const props = defineProps({
     type: Number,
     required: true
   },
+  ppsongoingConreq: {
+    type: Number,
+    required: true
+  },
+  rangeIncrement: {
+    type: Array,
+    required: true,
+    default: () => {
+      return [];
+    }
+  },
   fetchTrigger: {
     type: Number,
     default: 0
   },
   errors: {
     type: Object,
-    required: false
-  }
+    required: false,
+    default: () => ({})
+  },
+  isSuccessNextStep: {
+    type: Boolean,
+    required: true,
+    default: false,
+  },
 });
-
-const laborData = reactive({
-  labor: [
-    {id: Date.now(), type: null, qty: null},
-  ]
-})
 
 const dataCompany = ref([])
 const dataMerBU = ref([])
@@ -61,6 +73,23 @@ const dataMerJobType = ref([])
 const dataMerMeasurementUnit = ref([])
 const dataMerPaymentType = ref([])
 const dataMerLaborType = ref([])
+const isPPSOngoingDialogViewPathVisible = ref(false)
+const pathData = ref('')
+const isLoading = ref(true)
+const refPPSForm = ref()
+const refJobTypeForm = ref()
+const typeDialog = computed(() => props.typeDialog)
+const ppsongoingId = computed(() => props.ppsongoingId)
+const ppsongoingConreq = computed(() => props.ppsongoingConreq)
+const loadingBtn = ref([])
+const currentStep = ref(0)
+const isCurrentStepValid = ref(true)
+const isFileAttachment = ref('')
+const laborData = reactive({
+  labor: [
+    {id: Date.now(), type: null, qty: null},
+  ]
+})
 const dataCJTType = ref([
   {
     title: "Same With UOM",
@@ -71,15 +100,8 @@ const dataCJTType = ref([
     value: "2"
   },
 ])
-const isLoading = ref(true)
-const refPPSForm = ref()
-const refJobTypeForm = ref()
-const typeDialog = computed(() => props.typeDialog)
-const ppsongoingId = computed(() => props.ppsongoingId)
-const loadingBtn = ref([])
-const currentStep = ref(0)
-const isCurrentStepValid = ref(true)
 const ppsOngoingData = reactive({
+  rows: [],
   // PPS form
   company: null,
   bu: null,
@@ -112,18 +134,10 @@ const ppsOngoingData = reactive({
   labor_qty: null,
   cjt_type: null,
   cjt_qty: null,
-  total: null
+  total: null,
 })
-const numberedSteps = [
-  {
-    title: 'PPS Data',
-    subtitle: 'Add PPS data',
-  },
-  {
-    title: 'Job Type',
-    subtitle: 'Add job type',
-  },
-]
+const numberedSteps = ref([]);
+
 
 // Editor Target Estimate
 const editorTargetEstimate = useEditor({
@@ -183,6 +197,8 @@ const setLinkComment = () => {
 }
 
 const dialogModelValueUpdate = () => {
+  ppsOngoingData.rows = [];
+  laborData.labor = [{id: Date.now(), type: null, qty: null},]
   // PPS form
   ppsOngoingData.company = null;
   ppsOngoingData.bu = null;
@@ -204,6 +220,9 @@ const dialogModelValueUpdate = () => {
   ppsOngoingData.suggest_vendor = null;
   ppsOngoingData.con_comment_jobtarget = '';
   ppsOngoingData.file_attachment = null;
+  editorComment.value?.commands.setContent('')
+  editorTargetEstimate.value?.commands.setContent('')
+  isFileAttachment.value = ''
   // Job Type form
   ppsOngoingData.job_type = null;
   ppsOngoingData.job_desc = null;
@@ -211,22 +230,44 @@ const dialogModelValueUpdate = () => {
   ppsOngoingData.payment_type = null;
   ppsOngoingData.total_job_target_qty = null;
   ppsOngoingData.uom = null;
+  ppsOngoingData.labor_type = null;
+  ppsOngoingData.labor_qty = null;
   ppsOngoingData.cjt_type = null;
   ppsOngoingData.cjt_qty = null;
   ppsOngoingData.total = null;
-  ppsOngoingData.labor_type = null;
-  ppsOngoingData.labor_qty = null;
   // Form all reset
   refPPSForm.value?.reset()
   refPPSForm.value?.resetValidation()
   refJobTypeForm.value?.reset()
   refJobTypeForm.value?.resetValidation()
   loadingBtn.value[0] = false;
+  emit('updateRangeIncrement',[])
   emit('update:isDialogVisible', false)
 }
 
 const updateInptLabor = (index, updatedData) => {
   laborData.labor[index] = updatedData;
+}
+
+const balanceCheck = () => {
+  let cumulativeTotal = 0;
+  ppsOngoingData.rows.forEach((row, index) => {
+    cumulativeTotal += parseFloat(row.cjt_qty || 0);
+    row.total = cumulativeTotal;
+  });
+}
+
+const averageEvenly = () => {
+  const rowCount = ppsOngoingData.rows.length;
+  if (rowCount > 0) {
+    const dividedValue = parseFloat(ppsOngoingData.total_job_target_qty || 0) / rowCount;
+
+    ppsOngoingData.rows.forEach((row) => {
+      row.cjt_qty = dividedValue.toFixed(2);
+    });
+
+    balanceCheck();
+  }
 }
 
 watch(
@@ -236,8 +277,37 @@ watch(
     ppsOngoingData.labor_qty = newLaborData.map((labor) => labor.qty || null);
   },
   { deep: true }
-);
+)
 
+watch(
+  () => ppsOngoingData.rows,
+  (newCjtData) => {
+    ppsOngoingData.cjt_type = newCjtData.map((cjt) => cjt.cjt_type || null);
+    ppsOngoingData.cjt_qty = newCjtData.map((cjt) => cjt.cjt_qty || null);
+    ppsOngoingData.total = newCjtData.map((cjt) => cjt.total || null);
+  },
+  { deep: true }
+)
+
+watch(
+  () => props.rangeIncrement,
+  (newRange) => {
+    console.log("newRange:", newRange);
+    console.log("newRange length:", newRange.length);
+
+    if (Array.isArray(newRange)) {
+      ppsOngoingData.rows = newRange.map(() => ({
+        cjt_type: null,
+        cjt_qty: null,
+        total: null
+      }));
+    }
+
+    console.log("ppsOngoingData.rows:", ppsOngoingData.rows);
+    console.log("ppsOngoingData.rows length:", ppsOngoingData.rows.length);
+  },
+  { immediate: true }
+);
 
 const fetchCompanyData = async () => {
   try {
@@ -246,7 +316,7 @@ const fetchCompanyData = async () => {
       const rows = response.data.rows || [];
       dataCompany.value = rows.map((row) => ({
         title: row.company_name,
-        value: row.id,
+        value: row.company_code,
       }));
     } else {
       console.error('Failed to fetch company data');
@@ -264,7 +334,7 @@ const fetchMerBUData = async () => {
       const rows = response.data.rows || [];
       dataMerBU.value = rows.map((row) => ({
         title: row.number + ' - ' + row.description,
-        value: row.id,
+        value: row.number,
       }));
     } else {
       console.error('Failed to fetch mer business units data');
@@ -282,7 +352,7 @@ const fetchMerCCData = async () => {
       const rows = response.data.rows || [];
       dataMerCC.value = rows.map((row) => ({
         title: row.number + ' - ' + row.description,
-        value: row.id,
+        value: row.number,
       }));
     } else {
       console.error('Failed to fetch mer cost center data');
@@ -300,7 +370,7 @@ const fetchMerWCData = async () => {
       const rows = response.data.rows || [];
       dataMerWC.value = rows.map((row) => ({
         title: row.number + ' - ' + row.description,
-        value: row.id,
+        value: row.number,
       }));
     } else {
       console.error('Failed to fetch mer work center data');
@@ -401,28 +471,30 @@ const fetchMerLaborTypeData = async () => {
   }
 }
 
-watch(ppsOngoingData.ck_wl, (newValue) => {
-  syncWorkLocation();
-});
-
-watch(ppsOngoingData.wc, (newValue) => {
-  syncWorkLocation();
-});
-
 const syncWorkLocation = () => {
-  if (ppsOngoingData.ck_wl) {
+  if (ppsOngoingData.ck_wl && ppsOngoingData.wc.length > 0) {
+    console.log({ck_wl: ppsOngoingData.ck_wl});
+    
     ppsOngoingData.work_location = ppsOngoingData.wc.length > 0 ? ppsOngoingData.wc : '';
   } else {
+    ppsOngoingData.ck_wl = false;
     ppsOngoingData.work_location = null;
   }
 };
 
-const validatePPSForm = () => {
+watch(() => ppsOngoingData.ck_wl, (newValue) => {
+  syncWorkLocation();
+}, { immediate: true });
+
+watch(() => ppsOngoingData.wc, (newValue) => {
+  syncWorkLocation();
+}, { immediate: true });
+
+
+const validatePPSForm = async () => {
   refPPSForm.value?.validate().then(valid => {
     if (valid.valid) {
       onSubmitPPS()
-      currentStep.value++
-      isCurrentStepValid.value = true
     } else {
       isCurrentStepValid.value = false
     }
@@ -448,10 +520,18 @@ const removeLabor = (index) => {
   laborData.labor.splice(index, 1)
 }
 
+const hasRequiredKeys = (row) => {
+  return (
+    "cjt_type" in row &&
+    "cjt_qty" in row &&
+    "total" in row
+  )
+}
+
 const fetchPPSOngodingEdit = async () => {
   try {
     isLoading.value = true;
-    const response = await $api(`/apps/pps-ongoing/edit/${userhrId.value}`, {
+    const response = await $api(`/apps/pps-ongoing/edit/${ppsongoingId.value}`, {
       method: 'GET',
       onResponseError({ response }) {
         const responseData = response._data;
@@ -468,12 +548,70 @@ const fetchPPSOngodingEdit = async () => {
     if (dataResponse.status == 200) {
       const dataResult = dataResponse.data;
       isLoading.value = false;
-      userHRData.Username = dataResult.usr_name;
-      userHRData.UserDisplay = dataResult.usr_display_name;
-      userHRData.NoTlp = dataResult.usr_no_tlp;
-      userHRData.Access = dataResult.usr_access;
-      userHRData.BU = dataResult.bu_id.split(",")
-        .map((id) => parseInt(id.trim(), 10));
+
+      ppsOngoingData.cc = dataResult.arr_cc.map((cc) => cc.tbc_code);
+      ppsOngoingData.wc = dataResult.arr_wc.map((wc) => wc.tbc_code);
+      ppsOngoingData.shift_checklist = dataResult.arr_shift.map((shift) => shift.sh_shift);
+      // Contract data
+      ppsOngoingData.bu = dataResult.con_bu;
+      ppsOngoingData.ck_wl = dataResult.con_wc_checklist == 1 ? true : false;
+      ppsOngoingData.company = dataResult.con_company;
+      ppsOngoingData.work_location = dataResult.con_work_location;
+      ppsOngoingData.id_project = dataResult.con_id_project;
+      ppsOngoingData.pps_no = dataResult.con_pps_no;
+      ppsOngoingData.old_pps_no = dataResult.con_old_pps_no;
+      ppsOngoingData.priority = dataResult.con_priority_id == 1 ? "segera" : "tidak segera";
+      ppsOngoingData.cp_name = dataResult.con_cp_name;
+      ppsOngoingData.cp_dept = dataResult.con_cp_dept;
+      ppsOngoingData.cp_ext = dataResult.con_cp_exthp;
+      ppsOngoingData.cp_email = dataResult.con_cp_email;
+      ppsOngoingData.duration = dataResult.con_duration_start + ' to ' + dataResult.con_duration_end;
+      ppsOngoingData.suggest_vendor = dataResult.ven_id;
+      ppsOngoingData.con_comment_jobtarget = dataResult.con_comment_jobtarget;
+      ppsOngoingData.comment = dataResult.con_comment_bu;
+
+      editorComment.value?.commands.setContent(dataResult.con_comment_bu || null)
+      editorTargetEstimate.value?.commands.setContent(dataResult.con_comment_jobtarget || null)
+      isFileAttachment.value = dataResult.con_file_attachment;
+    } else {
+      emit('update:isDialogVisible', false)
+      emit('isSnackbarResponse',true)
+      emit('isSnackbarResponseAlertColor', 'error')
+      throw new Error("Get data failed");
+    }
+  } catch (error) {
+    isLoading.value = false;
+    emit('update:isDialogVisible', false)
+    emit('isSnackbarResponse',true)
+    emit('isSnackbarResponseAlertColor', 'error')
+  }
+}
+
+const fetchJobTypeEdit = async () => {
+  try {
+    isLoading.value = true;
+    const response = await $api(`/apps/trn-job-type/edit/${ppsongoingConreq.value}`, {
+      method: 'GET',
+      onResponseError({ response }) {
+        const responseData = response._data;
+        const responseMessage = responseData.message;
+        const responseErrors = responseData.errors;
+        emit('errors', responseErrors);
+        emit('errorMessages', responseMessage);
+        emit('update:isDialogVisible', false)
+        throw new Error("Get data failed");
+      },
+    });
+    
+    const dataResponse = JSON.parse(JSON.stringify(response));
+    if (dataResponse.status == 200) {
+      const dataResult = dataResponse.data;
+      isLoading.value = false;
+
+      // ppsOngoingData.cc = dataResult.arr_cc.map((cc) => cc.tbc_code);
+      // ppsOngoingData.wc = dataResult.arr_wc.map((wc) => wc.tbc_code);
+      // ppsOngoingData.shift_checklist = dataResult.arr_shift.map((shift) => shift.sh_shift);
+      // Contract data
     } else {
       emit('update:isDialogVisible', false)
       emit('isSnackbarResponse',true)
@@ -542,20 +680,30 @@ const onSubmitJobType = () => {
 
   try {
     loadingBtn.value[0] = true
-    const mode = props.typeDialog;
-    emit("JobTypeData", { mode, formData: {... formDataToObject}, dialogUpdate: dialogModelValueUpdate });
+    emit("JobTypeData", { formData: {... formDataToObject}, dialogUpdate: dialogModelValueUpdate });
   } catch (err) {
     loadingBtn.value[0] = false
   }
 }
 
+const openPathDialog = (path) => {
+  pathData.value = path;
+  isPPSOngoingDialogViewPathVisible.value = true;
+}
+
 watch(
-  [() => ppsongoingId.value, () => typeDialog.value, () => props.fetchTrigger],
-    ([newId,newType]) => {
+  [() => ppsongoingId.value, () => ppsongoingConreq.value, () => typeDialog.value, () => props.fetchTrigger, () => props.isSuccessNextStep],
+    ([newId,newConReq,newType]) => {
       if (newType === "Edit" && newId) {
         fetchPPSOngodingEdit();
       } else if (newType === "Add") {
         isLoading.value = false;
+        if(props.isSuccessNextStep) {
+          currentStep.value++
+          isCurrentStepValid.value = true
+        }
+      } else if(newType === 'Edit Job Type' && newConReq) {
+        fetchJobTypeEdit()
       }
       fetchCompanyData()
       fetchMerBUData()
@@ -566,6 +714,25 @@ watch(
       fetchMerMeasurementUnitData()
       fetchMerPaymentTypeData()
       fetchMerLaborTypeData()
+      
+      numberedSteps.value = [
+        ...(newType !== 'Edit Job Type'
+          ? [
+              {
+                title: 'PPS Data',
+                subtitle: 'Add PPS data',
+              },
+            ]
+          : []),
+        ...(newType === 'Add' || newType === 'Edit Job Type'
+          ? [
+              {
+                title: 'Job Type',
+                subtitle: 'Add job type',
+              },
+            ]
+          : []),
+      ];
       loadingBtn.value[0] = false;
   },
   { immediate: true }
@@ -589,20 +756,43 @@ watch(
           :is-active-step-valid="isCurrentStepValid"
         />
       </VCardText>
-
+      
       <VDivider />
 
       <VCardText>
         <VWindow v-model="currentStep" class="disable-tab-transition">
           <!-- PPS Form -->
-          <VWindowItem>
+          <VWindowItem v-if="typeDialog != 'Edit Job Type'">
             <VForm
               ref="refPPSForm"
               @submit.prevent="validatePPSForm"
               lazy-validation
             >
+            <VRow>
+              <VCol col="12" md="6">
+                <div class="card__text" v-if="isLoading">
+                  <Skeletor height="20" width="80" class="mb-2" />
+                  <div v-for="i in 10" :key="i">
+                    <div style="margin-top: 35px;">
+                      <Skeletor height="20" width="80" class="mb-2" />
+                      <Skeletor height="40" pill />
+                    </div>
+                  </div>
+                </div>
+              </VCol>
+              <VCol col="12" md="6">
+                <div class="card__text" v-if="isLoading">
+                  <div v-for="i in 10" :key="i">
+                    <div style="margin-top: 35px;">
+                      <Skeletor height="20" width="80" class="mb-3" />
+                      <Skeletor height="40" pill />
+                    </div>
+                  </div>
+                </div>
+              </VCol>
+            </VRow>
               <VRow>
-                <VCol cols="12">
+                <VCol cols="12" v-if="!isLoading">
                   <h5>(*) Is required</h5>
                 </VCol>
                 <!-- Left Column -->
@@ -904,6 +1094,8 @@ watch(
                     label="Suggest Vendor"
                     v-model="ppsOngoingData.suggest_vendor"
                     :items="dataMerVendor"
+                    :item-title="'title'"
+                    :item-value="'value'"
                     :error-messages="props.errors?.suggest_vendor"
                     clearable
                     />
@@ -912,10 +1104,16 @@ watch(
                     <VFileInput
                       label="Upload File"
                       v-model="ppsOngoingData.file_attachment"
-                      :error-messages="props.errors?.file_attachment"
-                      accept="image/png, image/jpeg, image/bmp"
+                      :error-messages="props.errors?.file_attachment"                      
+                      accept="image/png, image/jpeg, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                       placeholder="Pick a file"
-                      />
+                    />
+                      <small>Accepted: .pdf,.docx,.doc,.jpg,.jpeg,.png,.xlsx MAX: 5MB</small>
+                      <RouterLink v-if="isFileAttachment != null && isFileAttachment != ''"> 
+                        <small class="" @click="openPathDialog(isFileAttachment)">
+                        View data
+                        </small>
+                      </RouterLink>
                   </VCol>
                   <VCol>
                     <label for="target-estimate" class="text-body-2 text-high-emphasis mb-1">
@@ -973,21 +1171,39 @@ watch(
                 </VCol>
               </VRow>
               <VCol cols="12">
-                <div class="d-flex flex-wrap gap-4 justify-end mt-8">
-                  <VBtn type="submit">
-                    Save & Next Job Type
-                    <VIcon
-                      icon="tabler-arrow-right"
-                      end
-                      class="flip-in-rtl"
-                    />
-                  </VBtn>
-                </div>
+                <VRow class="d-flex justify-end">
+                  <div class="card__actions d-flex justify-end" v-if="isLoading">
+                    <Skeletor width="96" height="36" class="me-4"/>
+                    <Skeletor width="96" height="36" />
+                  </div>
+                  <div v-if="!isLoading">
+                    <VBtn
+                      class="me-4"
+                      color="error"
+                      variant="tonal"
+                      @click="dialogModelValueUpdate"
+                    >
+                      Discard
+                    </VBtn>
+                    <VBtn 
+                      type="submit"
+                      :loading="loadingBtn[0]"
+                      :disabled="loadingBtn[0]"
+                    >
+                    <span>{{ typeDialog == 'Edit' ? 'Update' : 'Save & Next Job Type' }}</span>
+                      <VIcon v-if="typeDialog == 'Add'"
+                        icon="tabler-arrow-right"
+                        end
+                        class="flip-in-rtl"
+                      />
+                    </VBtn>
+                  </div>
+                </VRow>
               </VCol>
             </VForm>
           </VWindowItem>
           <!-- Job Type Form -->
-          <VWindowItem>
+          <VWindowItem v-if="typeDialog != 'Edit'">
             <VForm ref="refJobTypeForm" @submit.prevent="validateJobTypeForm">
               <VRow>
                 <VCol cols="12">
@@ -1060,6 +1276,7 @@ watch(
                                 placeholder="Type here..."
                                 :rules="[requiredValidator, integerValidator]"
                                 :error-messages="props.errors?.total_job_target_qty"
+                                @input="averageEvenly"
                                 clearable
                               />
                             </VCol>
@@ -1081,54 +1298,59 @@ watch(
                       </VCard>
                     </div>
                     <!-- Card-2 -->
-                    <div class="mb-5">
-                      <VCard
-                        flat
-                        border
-                        class="d-flex flex-sm-row flex-column-reverse"
-                      >
-                        <div class="pa-6 flex-grow-1">
-                          <VRow>
-                            <VCol cols="12" md="2">
-                              <AppTextField
-                                label="Year - Month"
-                                :readonly="true"
-                              />
-                            </VCol>
-                            <VCol cols="12" md="4">
-                              <AppAutocomplete
-                                placeholder="Select type"
-                                label="Type"
-                                v-model="ppsOngoingData.cjt_type"
-                                :items="dataCJTType"
-                                :item-title="'title'"
-                                :item-value="'value'"
-                                :error-messages="props.errors?.cjt_type"
-                                clearable
-                              />
-                            </VCol>
-                            <VCol cols="12" md="3">
-                              <AppTextField
-                                label="Increment"
-                                v-model="ppsOngoingData.cjt_qty"
-                                type="number"
-                                placeholder="Type here..."
-                                :rules="[integerValidator]"
-                                :error-messages="props.errors?.cjt_qty"
-                                clearable
-                              />
-                            </VCol>
-                            <VCol cols="12" md="3">
-                              <AppTextField
-                                label="Total"
-                                v-model="ppsOngoingData.total"
-                                :error-messages="props.errors?.total"
-                                :readonly="true"
-                              />
-                            </VCol>
-                          </VRow>
-                        </div>
-                      </VCard>
+                    <div v-for="(date, index) in props.rangeIncrement">
+                      <div v-if="props.rangeIncrement.length > 0 && ppsOngoingData.rows.length > 0 && ppsOngoingData.rows[index] && hasRequiredKeys(ppsOngoingData.rows[index])" :key="index" class="mb-5">
+                        <VCard
+                          flat
+                          border
+                          class="d-flex flex-sm-row flex-column-reverse"
+                        >
+                          <div class="pa-6 flex-grow-1">
+                            <VRow>
+                              <VCol cols="12" md="2">
+                                <AppTextField
+                                  :value="dayjs(date).format('YYYY-MM')"
+                                  label="Year-Month"
+                                  :readonly="true"
+                                />
+                              </VCol>
+                              <VCol cols="12" md="4">
+                                <AppAutocomplete
+                                  placeholder="Select type"
+                                  label="Type"
+                                  v-model="ppsOngoingData.rows[index].cjt_type"
+                                  :items="dataCJTType"
+                                  :item-title="'title'"
+                                  :item-value="'value'"
+                                  :error-messages="props.errors?.cjt_type"
+                                  :rules="[requiredValidator]"
+                                  clearable
+                                />
+                              </VCol>
+                              <VCol cols="12" md="3">
+                                <AppTextField
+                                  label="Increment"
+                                  v-model="ppsOngoingData.rows[index].cjt_qty"
+                                  type="number"
+                                  placeholder="Type here..."
+                                  :error-messages="props.errors?.cjt_qty"
+                                  :rules="[requiredValidator]"
+                                  @input="balanceCheck"
+                                  clearable
+                                />
+                              </VCol>
+                              <VCol cols="12" md="3">
+                                <AppTextField
+                                  label="Total"
+                                  v-model="ppsOngoingData.rows[index].total"
+                                  :error-messages="props.errors?.total"
+                                  :readonly="true"
+                                />
+                              </VCol>
+                            </VRow>
+                          </div>
+                        </VCard>
+                      </div>
                     </div>
                     <!-- Card-3 Repeat form-->
                     <div
@@ -1159,25 +1381,34 @@ watch(
                 </VCol>
                 <!-- Action Button -->
                 <VCol cols="12">
-                  <div class="d-flex flex-wrap gap-4 justify-sm-space-between justify-center mt-8">
-                    <VBtn
-                      color="secondary"
-                      variant="tonal"
-                      @click="currentStep--"
-                    >
-                      <VIcon
-                        icon="tabler-arrow-left"
-                        start
-                        class="flip-in-rtl"
-                      />
-                      Previous
-                    </VBtn>
-
+                  <div class="d-flex flex-wrap gap-4 justify-end mt-8">
                     <VBtn
                       color="success"
                       type="submit"
+                      :loading="loadingBtn[0]"
+                      :disabled="loadingBtn[0]"
                     >
-                      submit
+                      <VIcon v-if="typeDialog == 'Add'"
+                        icon="tabler-device-floppy"
+                        start
+                        class="flip-in-rtl"
+                      />
+                      <span>{{ typeDialog == 'Edit' ? 'Update' : 'Save' }}</span>
+                    </VBtn>
+                    
+                    <VBtn v-if="typeDialog != 'Edit'"
+                      color="success"
+                      variant="outlined"
+                      type="submit"
+                      :loading="loadingBtn[0]"
+                      :disabled="loadingBtn[0]"
+                    >
+                      <VIcon v-if="typeDialog == 'Add'"
+                        icon="tabler-location"
+                        start
+                        class="flip-in-rtl"
+                      />
+                      Save & New Job Type
                     </VBtn>
                   </div>
                 </VCol>
@@ -1188,6 +1419,10 @@ watch(
       </VCardText>
     </VCard>
   </VDialog>
+  <PPSOngoingViewPathDialog
+    v-model:isDialogViewPathVisible="isPPSOngoingDialogViewPathVisible"
+    :path-data="pathData"
+  />
 </template>
 
 <style lang="scss" scoped>

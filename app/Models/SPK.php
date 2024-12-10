@@ -10,4 +10,6 @@ class SPK extends Model
     use HasFactory;
 
     protected $table = 'trn_spk', $guarded = ['spk_id'];
+    public $timestamps = false;
+    protected $primaryKey = 'spk_id';
 }

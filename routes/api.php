@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\{
   ManDaysRateController,
   Approval2Controller,
   Approval1Controller,
+  AuthController,
   BUController,
   ReviewerController,
   RangeController,
@@ -28,8 +29,13 @@ use App\Http\Controllers\Api\{
   JobTypeController,
   MeasurementUnitController,
   SignatureTypeController,
-  PaymentTypeController
+  PaymentTypeController,
+  TrnJobTypeController,
+  ContractController,
+  ContractJobController,
+  PaymentTemplateController
 };
+use Illuminate\Auth\Middleware\Authenticate;
 
 Route::get('/user', function (Request $request) {
   return $request->user();
@@ -38,6 +44,13 @@ Route::get('/user', function (Request $request) {
 
 RateLimiter::for('api', function (Request $request) {
   return Limit::perMinute(60)->by($request->ip());
+});
+Route::middleware(['guest', 'throttle:60,1'])->group(function () {
+  // Authenticate
+  Route::controller(AuthController::class)->group(function () {
+    Route::post('/login', 'login');
+    Route::post('/logout', 'logout');
+  });
 });
 
 Route::group(['prefix' => 'apps'], function () {
@@ -53,7 +66,11 @@ Route::group(['prefix' => 'apps'], function () {
   });
   // Payment Type
   Route::controller(PaymentTypeController::class)->group(function () {
-    Route::get('/payment-type/list', 'list');
+    Route::get('/mer-payment-type/list', 'list');
+  });
+  // Payment Template
+  Route::controller(PaymentTemplateController::class)->group(function () {
+    Route::get('/mer-payment-template/list', 'list');
   });
   // Measurement Unit
   Route::controller(MeasurementUnitController::class)->group(function () {
@@ -70,6 +87,16 @@ Route::group(['prefix' => 'apps'], function () {
   // Vendor Assigment
   Route::controller(VendorAssigmentController::class)->group(function () {
     Route::post('/vendor-assigment/search', 'search');
+    Route::post('/vendor-assigment/add', 'add');
+  });
+  // Contract
+  Route::controller(ContractController::class)->group(function () {
+    Route::get('/contract/edit/{conReq}', 'edit');
+    Route::get('/contract/list', 'list');
+  });
+  // Contract Job
+  Route::controller(ContractJobController::class)->group(function () {
+    Route::get('/contract-job/edit/{conReq}', 'edit');
   });
   // PPS
   Route::controller(PPSController::class)->group(function () {
@@ -77,7 +104,7 @@ Route::group(['prefix' => 'apps'], function () {
     Route::post('/pps-completed/search', 'searchCompleted');
     Route::post('/pps-ongoing/add', 'add');
     Route::get('/pps-ongoing/edit/{id}', 'edit');
-    Route::put('/pps-ongoing/update/{id}', 'update');
+    Route::post('/pps-ongoing/update/{id}', 'update');
     Route::delete('/pps-ongoing/delete/{id}', 'destroy');
   });
   // Renewal
@@ -94,6 +121,7 @@ Route::group(['prefix' => 'apps'], function () {
   });
   // Vendor
   Route::controller(MerVendorController::class)->group(function () {
+    Route::get('/mer-vendor/edit/{id}', 'edit');
     Route::get('/mer-vendor/list', 'list');
   });
   // Reviewer
@@ -107,17 +135,26 @@ Route::group(['prefix' => 'apps'], function () {
   // SPK
   Route::controller(SPKController::class)->group(function () {
     Route::post('/spk-list/search', 'search');
+    Route::post('/spk/add', 'add');
     Route::post('/spk-report/search', 'searchReport');
     Route::post('/spk-active/search', 'searchActive');
   });
-  // Approval
+  // Approval 1
   Route::controller(Approval1Controller::class)->group(function () {
     Route::post('/approval-lvl1-ongoing/search', 'searchOngoing');
     Route::post('/approval-lvl1-completed/search', 'searchCompleted');
   });
+  // Approval 2
   Route::controller(Approval2Controller::class)->group(function () {
     Route::post('/approval-lvl2-ongoing/search', 'searchOngoing');
     Route::post('/approval-lvl2-completed/search', 'searchCompleted');
+  });
+  // Trn Job Type
+  Route::controller(TrnJobTypeController::class)->group(function () {
+    Route::get('/trn-job-type/get-increment/{req_id}', 'getRangeIncrement');
+    Route::post('/trn-job-type/add', 'add');
+    Route::get('/trn-job-type/edit/{id}', 'edit');
+    Route::post('/trn-job-type/update/{id}', 'update');
   });
 });
 
@@ -178,6 +215,7 @@ Route::group(['prefix' => 'configurations'], function () {
     Route::post('/signature-type/search', 'search');
     Route::post('/signature-type/add', 'add');
     Route::get('/signature-type/edit/{id}', 'edit');
+    Route::get('/signature-type/list', 'list');
     Route::put('/signature-type/update/{id}', 'update');
     Route::delete('/signature-type/delete/{id}', 'destroy');
   });

@@ -390,6 +390,8 @@ declare module 'vue' {
     PBLAddDialog: typeof import('./resources/js/components/pbl/PBLAddDialog.vue')['default']
     PPSOngoingAddDialog: typeof import('./resources/js/components/pps/PPSOngoingAddDialog.vue')['default']
     PPSOngoingDeleteDialog: typeof import('./resources/js/components/pps/PPSOngoingDeleteDialog.vue')['default']
+    PPSOngoingViewImageDialog: typeof import('./resources/js/components/pps/PPSOngoingViewImageDialog.vue')['default']
+    PPSOngoingViewPathDialog: typeof import('./resources/js/components/pps/PPSOngoingViewPathDialog.vue')['default']
     PricingPlanDialog: typeof import('./resources/js/components/dialogs/PricingPlanDialog.vue')['default']
     ProductDescriptionEditor: typeof import('./resources/js/@core/components/ProductDescriptionEditor.vue')['default']
     ReferAndEarnDialog: typeof import('./resources/js/components/dialogs/ReferAndEarnDialog.vue')['default']
@@ -410,5 +412,8 @@ declare module 'vue' {
     TwoFactorAuthDialog: typeof import('./resources/js/components/dialogs/TwoFactorAuthDialog.vue')['default']
     UserInfoEditDialog: typeof import('./resources/js/components/dialogs/UserInfoEditDialog.vue')['default']
     UserUpgradePlanDialog: typeof import('./resources/js/components/dialogs/UserUpgradePlanDialog.vue')['default']
+    VendorAddDialog: typeof import('./resources/js/components/vendor/VendorAddDialog.vue')['default']
+    VendorDetailDialog: typeof import('./resources/js/components/vendor/VendorDetailDialog.vue')['default']
+    VendorViewPathDialog: typeof import('./resources/js/components/vendor/VendorViewPathDialog.vue')['default']
   }
 }

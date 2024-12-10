@@ -67,7 +67,7 @@ const removeLabor = () => {
           md="6"
         >
           <h6 class="text-h6">
-            Labor Type
+            Labor Type*
           </h6>
         </VCol>
         <VCol
@@ -75,7 +75,7 @@ const removeLabor = () => {
           md="6"
         >
           <h6 class="text-h6 ps-2">
-            Labor Qty
+            Labor Qty*
           </h6>
         </VCol>
       </VRow>
@@ -91,6 +91,7 @@ const removeLabor = () => {
           :item-title="'title'"
           :item-value="'value'"
           :error-messages="props.errors?.type"
+          :rules="[requiredValidator]"
           clearable
         />
         </VCol>
@@ -101,8 +102,8 @@ const removeLabor = () => {
         <AppTextField
           v-model="localData.qty"
           type="number"
-          placeholder="Qty"
-          :rules="[integerValidator]"
+          placeholder="Qty*"
+          :rules="[requiredValidator, integerValidator]"
           :error-messages="props.errors?.qty"
           clearable
         />

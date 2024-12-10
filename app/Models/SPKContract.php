@@ -10,4 +10,6 @@ class SPKContract extends Model
     use HasFactory;
 
     protected $table = 'trn_spk_contract', $guarded = ['spc_id'];
+    public $timestamps = false;
+    protected $primaryKey = 'spc_id';
 }

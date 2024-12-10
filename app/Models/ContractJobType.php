@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class TimeHistory extends Model
+class ContractJobType extends Model
 {
     use HasFactory;
 
-    protected $table = 'trn_time_history', $guarded = ['ths_id'];
+    protected $table = 'trn_contract_job_type', $guarded = ['cjtype_id'];
     public $timestamps = false;
-    protected $primaryKey = 'ths_id';
+    protected $primaryKey = 'cjtype_id';
 }

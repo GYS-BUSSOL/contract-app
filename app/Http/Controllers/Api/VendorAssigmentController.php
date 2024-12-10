@@ -2,22 +2,22 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\VendorAssigment;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\Contract;
 
 class VendorAssigmentController extends Controller
 {
-    protected $vendor;
+    protected $contract;
 
-    public function __construct(VendorAssigment $vendor)
+    public function __construct(Contract $contract)
     {
-        $this->vendor = $vendor;
+        $this->contract = $contract;
     }
 
     public function search(Request $request)
     {
-        $tableColumn = $this->vendor->getTable();
+        $tableColumn = $this->contract->getTable();
         try {
             $payload = $request->all();
             $countBuilderAll = $this->customSearchData($payload, $tableColumn);
@@ -32,7 +32,7 @@ class VendorAssigmentController extends Controller
 
             return response()->json([
                 'status' => 200,
-                'message' => 'Successfully retrieved vendor data',
+                'message' => 'Successfully retrieved contract data',
                 'data' => [
                     'rows' => $dataGet,
                     'total_data' => $totalShowData,
@@ -44,7 +44,7 @@ class VendorAssigmentController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 500,
-                'message' => 'Failed to retrieve vendor data',
+                'message' => 'Failed to retrieve contract data',
                 'data' => [
                     'rows' => [],
                     'total_record' => 0
@@ -55,7 +55,7 @@ class VendorAssigmentController extends Controller
 
     private function customSearchData($payload, $tableColumn)
     {
-        $data = VendorAssigment::where(function ($query) use ($payload, $tableColumn) {
+        $data = $this->contract->where(function ($query) use ($payload, $tableColumn) {
             if (isset($payload['columns'])) {
                 $listWhere = $payload['columns'];
                 foreach ($listWhere as $where) {

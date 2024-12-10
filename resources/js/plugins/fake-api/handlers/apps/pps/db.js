@@ -295,38 +295,3 @@ export async function fetchPPSCompleted(currentPage, rowPerPage, rowSearch, prio
     throw error;
   }
 }
-
-// export async function addPPS(request) {
-//   const url = 'http://localhost:8000/api/apps/pps-ongoing/add';
-//   // const token = localStorage.getItem('token') || 'YOUR_BEARER_TOKEN_HERE';
-
-//   const formData = new FormData();
-
-//   for (const [key, value] of Object.entries(request)) {
-//     if (typeof value === 'object' && !(value instanceof File)) {
-//       formData.append(key, JSON.stringify(value));
-//     } else {
-//       formData.append(key, value);
-//     }
-//   }
-//   console.log({db: formData});
-  
-//   try {
-//     const response = await fetch(url, {
-//       method: 'POST',
-//       body: formData,
-//     });
-
-//     if (!response.ok) {
-//       const errorData = await response.json();
-//       throw new Error(`Error: ${response.status}, ${errorData.message || 'Unknown error'}`);
-//     }
-
-//     const data = await response.json();
-//     return data;
-
-//   } catch (error) {
-//     console.error("Error fetching pps data:", error);
-//     throw error;
-//   }
-// }
