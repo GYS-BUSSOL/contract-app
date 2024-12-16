@@ -27,9 +27,11 @@ const errors = ref({
   username: undefined,
   password: undefined,
 })
+const loadingBtn = ref([])
 
 const login = async () => {
   try {
+    loadingBtn.value[0] = true
     const res = await $api('/auth/login', {
       method: 'POST',
       body: {
@@ -37,21 +39,25 @@ const login = async () => {
         password: credentials.value.password,
       },
       onResponseError({ response }) {
+        loadingBtn.value[0] = false
+        console.log(JSON.stringify(response));
         errors.value = response._data.errors
       },
-    })
-
-    const { accessToken, userData, userAbilityRules } = res
-
-    useCookie('userAbilityRules').value = userAbilityRules
-    ability.update(userAbilityRules)
-    useCookie('userData').value = userData
-    useCookie('accessToken').value = accessToken
-    await nextTick(() => {
-      router.replace(route.query.to ? String(route.query.to) : '/')
-    })
+    });
+    const { accessToken, userData, userAbilityRules, status } = res
+    if (status == 201) {
+  
+      useCookie('userAbilityRules').value = userAbilityRules
+      ability.update(userAbilityRules)
+      useCookie('userData').value = userData
+      useCookie('accessToken').value = accessToken
+      await nextTick(() => {
+        router.replace(route.query.to ? String(route.query.to) : '/')
+      })
+    }
   } catch (err) {
-    console.error(err)
+    loadingBtn.value[0] = false
+    throw new Error("Failed login");
   }
 }
 
@@ -66,19 +72,19 @@ const onSubmit = () => {
 <template>
   <div class="auth-wrapper d-flex align-center justify-center pa-4">
     <div class="position-relative my-sm-16">
-      <!-- 👉 Top shape -->
+      <!-- Top shape -->
       <VNodeRenderer
         :nodes="h('div', { innerHTML: authV1TopShape })"
         class="text-primary auth-v1-top-shape d-none d-sm-block"
       />
 
-      <!-- 👉 Bottom shape -->
+      <!-- Bottom shape -->
       <VNodeRenderer
         :nodes="h('div', { innerHTML: authV1BottomShape })"
         class="text-primary auth-v1-bottom-shape d-none d-sm-block"
       />
 
-      <!-- 👉 Auth Card -->
+      <!-- Auth Card -->
       <VCard
         class="auth-card"
         max-width="460"
@@ -102,7 +108,7 @@ const onSubmit = () => {
             Contract Management System
           </h4>
           <p class="mb-0">
-            Please sign-in to your LDAP account
+            Please sign-in to your account
           </p>
         </VCardText>
 
@@ -115,6 +121,7 @@ const onSubmit = () => {
               <VCol cols="12">
                 <AppTextField
                   v-model="credentials.username"
+                  placeholder="Username"
                   autofocus
                   label="Username"
                   type="text"
@@ -149,6 +156,8 @@ const onSubmit = () => {
                 <VBtn
                   block
                   type="submit"
+                  :loading="loadingBtn[0]"
+                  :disabled="loadingBtn[0]"
                 >
                   Login
                 </VBtn>

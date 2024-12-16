@@ -103,7 +103,7 @@ const removeLabor = () => {
           v-model="localData.qty"
           type="number"
           placeholder="Qty*"
-          :rules="[requiredValidator, integerValidator]"
+          :rules="[requiredValidator]"
           :error-messages="props.errors?.qty"
           clearable
         />

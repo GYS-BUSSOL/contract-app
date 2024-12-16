@@ -30,7 +30,7 @@ if (error.value) {
 
       <div class="user-profile-info w-100 mt-16 pt-6 pt-sm-0 mt-sm-0">
         <h4 class="text-h4 text-center text-sm-start font-weight-medium mb-2">
-          {{ profileHeaderData?.fullName }}
+          {{ profileHeaderData?.usr_display_name }}
         </h4>
 
         <div class="d-flex align-center justify-center justify-sm-space-between flex-wrap gap-5">

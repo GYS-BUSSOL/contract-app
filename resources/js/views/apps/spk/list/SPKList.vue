@@ -12,7 +12,7 @@ const sortBy = ref()
 const orderBy = ref()
 const selectedRows = ref([])
 const isPBLAddDialogVisible = ref(false)
-
+const token = useCookie('accessToken')
 const updateOptions = options => {
   sortBy.value = options.sortBy[0]?.key
   orderBy.value = options.sortBy[0]?.order
@@ -70,6 +70,7 @@ const {
     page,
     sortBy,
     orderBy,
+    token
   },
 }))
 
@@ -208,7 +209,7 @@ const formatDate = (date, time = false) => {
           <div v-if="item.arr_con_req_no.length > 0" class="text-body-1 text-high-emphasis text-capitalize">
             <ul>
               <div v-for="(req, index) in item.arr_con_req_no" :key="req.con_id">
-                <RouterLink :to="{ name: 'apps-pbl', params: { id: req.con_id } }" class="font-weight-medium text-link">
+                <RouterLink :to="{ name: 'apps-pbl', params: { id: req.con_id } }" class="text-primary font-weight-medium text-link">
                   <template v-if="item.arr_con_req_no.length > 1">
                     <li class="list-unstyled">{{ req.con_req_no }}</li>
                   </template>
@@ -229,7 +230,7 @@ const formatDate = (date, time = false) => {
           <div v-if="item.arr_con_pps_no.length > 0" class="text-body-1 text-high-emphasis text-capitalize">
             <ul>
               <div v-for="(pps, index) in item.arr_con_pps_no" :key="pps.con_id">
-                <RouterLink :to="{ name: 'apps-pbl', params: { id: pps.con_id } }" class="font-weight-medium text-link">
+                <RouterLink :to="{ name: 'apps-pbl', params: { id: pps.con_id } }" class="text-primary font-weight-medium text-link">
                   <template v-if="item.arr_con_pps_no.length > 1">
                     <li class="list-unstyled">{{ pps.con_pps_no }}</li>
                   </template>

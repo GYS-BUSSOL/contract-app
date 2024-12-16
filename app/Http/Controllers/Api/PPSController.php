@@ -3,11 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use Carbon\Carbon;
-use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\PPS\CreateRequest;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\{Request, JsonResponse};
-use App\Http\Controllers\Api\TrnJobTypeController;
 use Illuminate\Support\Facades\{DB, Log, Storage};
 use App\Models\{Contract, TrnBUCCWC, MerShift, TimeHistory, TrnShift};
 
@@ -74,7 +72,7 @@ class PPSController extends Controller
       $duration_start = null;
       $duration_end = null;
       $currentDate = Carbon::now();
-      $userName = 'Wahyu';
+      $userName = Auth::user()->usr_display_name;
 
       $generateRequestId = $this->generateRequestId();
       Log::info('generated');
@@ -231,7 +229,7 @@ class PPSController extends Controller
       $duration_start = null;
       $duration_end = null;
       $currentDate = Carbon::now();
-      $userName = 'Wahyu';
+      $userName = Auth::user()->usr_display_name;
 
       $dataCurrent = $this->contract->firstWhere('con_id', $id);
       $newRequestId = $dataCurrent['con_req_id'];
@@ -579,10 +577,10 @@ class PPSController extends Controller
         'aud_date' => $arrContract['current_date'],
         'aud_machine' => $arrContract['ip']
       ];
-      $result = TrnBUCCWC::where([
+      $result = TrnBUCCWC::firstWhere([
         ['con_req_id', $arrContract['request_id']],
         ['tbc_kategori', 'cc']
-      ])->first();
+      ]);
       $result->update($arrCCData);
       Log::info(['arrCCData' => $result]);
     }
@@ -617,10 +615,10 @@ class PPSController extends Controller
         'aud_date' => $arrContract['current_date'],
         'aud_machine' => $arrContract['ip']
       ];
-      $result = TrnBUCCWC::where([
+      $result = TrnBUCCWC::firstWhere([
         ['con_req_id', $arrContract['request_id']],
         ['tbc_kategori', 'wc']
-      ])->first();
+      ]);
       $result->update($arrWCData);
       Log::info(['arrWCData' => $result]);
     }

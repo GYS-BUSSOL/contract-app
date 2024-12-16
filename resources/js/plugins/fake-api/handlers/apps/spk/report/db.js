@@ -1,8 +1,7 @@
 
-export async function fetchSPKReport(currentPage, rowPerPage, rowSearch, vendorFilter, buFilter, startDateFilter, endDateFilter, spkStatus) {
+export async function fetchSPKReport(currentPage, rowPerPage, rowSearch, vendorFilter, buFilter, startDateFilter, endDateFilter, spkStatus, token) {
   let start = 0;
   const url = 'http://localhost:8000/api/apps/spk-report/search';
-  const token = 'YOUR_BEARER_TOKEN_HERE';
   
   if(currentPage != 1 && currentPage > 1)
     start = (currentPage * rowPerPage) - rowPerPage
@@ -26,7 +25,7 @@ export async function fetchSPKReport(currentPage, rowPerPage, rowSearch, vendorF
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // 'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(payload)
     });

@@ -4,7 +4,6 @@ import destr from 'destr'
 import { HttpResponse, http } from 'msw'
 
 export const handlerAppsVendorAssigment = [
-  
     // Get Vendor Assigment Details
     http.get(('/api/apps/vendor-assigment/search'), async ({ request }) => {
       const url = new URL(request.url)
@@ -104,53 +103,5 @@ export const handlerAppsVendorAssigment = [
         totalNotPriorityCount,
         page,
       }, { status: 200 })
-    }),
-
-    // Get Single Vendor Detail
-    http.get(('/api/apps/vendor-assigment/:id'), async ({ params }) => {
-      const vendorId = Number(params.id)
-      const vendor = db.vendors.find(e => e.id === vendorId)
-      if (!vendor) {
-        return HttpResponse.json({ message: 'Vendor not found' }, { status: 404 })
-      }
-      else {
-        return HttpResponse.json({
-          ...vendor,
-          ...{
-            taskDone: 1230,
-            projectDone: 568,
-            taxId: 'Tax-8894',
-            language: 'English',
-          },
-        }, { status: 200 })
-      }
-    }),
-
-    // Delete Vendor
-    http.delete(('/api/apps/vendor-assigment/:id'), async ({ params }) => {
-      const vendorId = Number(params.id)
-      const vendorIndex = db.vendors.findIndex(e => e.id === vendorId)
-      if (vendorIndex === -1) {
-        return HttpResponse.json('Vendor not found', { status: 404 })
-      }
-      else {
-        db.vendors.splice(vendorIndex, 1)
-        
-        return new HttpResponse(null, {
-          status: 204,
-        })
-      }
-    }),
-
-    // 👉 Add vendor
-    http.post(('/api/apps/vendor-assigment'), async ({ request }) => {
-      const vendor = await request.json()
-
-      db.vendors.push({
-        ...vendor,
-        id: db.vendors.length + 1,
-      })
-      
-      return HttpResponse.json({ body: vendor }, { status: 201 })
     }),
 ]

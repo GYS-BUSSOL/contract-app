@@ -11,7 +11,26 @@ const page = ref(1)
 const sortBy = ref()
 const orderBy = ref()
 const selectedRows = ref([])
-
+const isTypeDialog = ref('Detail')
+const isSnackbarResponse = ref(false)
+const isJobTypeDetailDialogVisible = ref(false)
+const isSnackbarResponseAlertColor = ref('error')
+const errorMessages = ref('Internal server error')
+const successMessages = ref('Successfully')
+const conReqNo = ref(0)
+const conReqId = ref(0)
+const fetchTrigger = ref(0)
+const errors = ref({
+  con_req_id: undefined,
+  cjb_pay_type: undefined,
+  cjb_pay_template: undefined,
+  cjb_rate: undefined,
+  cjb_desc: undefined,
+  suggest_vendor: undefined,
+  duration: undefined,
+  signature_type: undefined,
+  spk_jobdesc_summary: undefined,
+})
 const updateOptions = options => {
   sortBy.value = options.sortBy[0]?.key
   orderBy.value = options.sortBy[0]?.order
@@ -46,6 +65,18 @@ const headers = [
   },
 ]
 
+// search filters
+const expiredStatus = [
+  {
+    title: 'Expired data',
+    value: '1',
+  },
+  {
+    title: 'Not expired yet data',
+    value: 'null',
+  }
+]
+
 const {
   data: approvalLvl1DataCompleted,
   execute: fetchApprovalLvl1Completed,
@@ -64,23 +95,44 @@ const approvalLvl1Completed = computed(() => approvalLvl1DataCompleted.value.app
 const totalApprovalLvl1Completed = computed(() => approvalLvl1DataCompleted.value.totalApprovalLvl1Completed)
 const totalExpiredCount = computed(() => approvalLvl1DataCompleted.value.totalExpiredCount)
 const totalNotExpiredCount = computed(() => approvalLvl1DataCompleted.value.totalNotExpiredCount)
-emit('updateTotalNotExpired', totalNotExpiredCount.value);
-emit('updateTotalExpired', totalExpiredCount.value);
 
-// search filters
-const expiredStatus = [
-  {
-    title: 'Expired data',
-    value: '1',
+watch(
+  [totalNotExpiredCount, totalExpiredCount],
+  ([newNotExpiredStatus, newExpiredStatus]) => {
+    emit('updateTotalNotExpired', newNotExpiredStatus);
+    emit('updateTotalExpired', newExpiredStatus);
   },
-  {
-    title: 'Not expired yet data',
-    value: 'null',
-  }
-]
+  { immediate: true }
+)
 
 const formatDate = (date, time = false) => {
   return dayjs(date).format(`DD MMM YYYY${time ? ", HH:mm" : ""}`);
+}
+
+const updateSnackbarResponse = res => {
+  isSnackbarResponse.value = res;
+}
+
+const updateSnackbarResponseAlertColor = color => {
+  isSnackbarResponseAlertColor.value = color;
+}
+
+const updateErrorMessages = err => {
+  errorMessages.value = err;
+}
+
+const updateErrors = err => {
+  errors.value = err;
+}
+
+const openDialog = async ({ id = null, type, con_req_no = null, con_req_id = null }) => {
+  isTypeDialog.value = type
+  conReqNo.value = con_req_no
+  conReqId.value = con_req_id
+  if(type == 'Detail') {
+    isJobTypeDetailDialogVisible.value = true
+    fetchTrigger.value += 1;
+  }
 }
 </script>
 
@@ -164,13 +216,10 @@ const formatDate = (date, time = false) => {
         <template #item.con_req_no="{ item }">
           <div class="d-flex align-center gap-x-4">
             <div class="d-flex flex-column">
-              <h6 class="text-base">
-                <RouterLink
-                  :to="{ name: 'apps-user-view-id', params: { id: item.con_id } }"
-                  class="font-weight-medium text-link"
-                >
-                  {{ item.con_req_no }}
-                </RouterLink>
+              <h6 class="text-base text-primary" style="cursor: pointer;" 
+                @click="openDialog({type: 'Detail', con_req_no: item.con_req_no, con_req_id: item.con_req_id})"
+              >
+                {{ item.con_req_no }}
               </h6>
               <div class="text-sm">
                 {{ item.aud_user == '' || null ? '-' : item.aud_user }}
@@ -227,4 +276,35 @@ const formatDate = (date, time = false) => {
       <!-- SECTION -->
     </VCard>
   </section>
+
+  <ApprovalDetailDialog
+    v-model:isDialogVisible="isJobTypeDetailDialogVisible"
+    :errors="errors"
+    :type-dialog="isTypeDialog"
+    :contract-req-id="conReqId"
+    :fetch-trigger="fetchTrigger"
+    @isSnackbarResponseAlertColor="updateSnackbarResponseAlertColor"
+    @isSnackbarResponse="updateSnackbarResponse"
+    @errorMessages="updateErrorMessages"
+    @errors="updateErrors"
+  />
+
+  <VSnackbar
+    v-model="isSnackbarResponse"
+    transition="scroll-y-reverse-transition"
+    location="top end"
+    variant="flat"
+    :color="isSnackbarResponseAlertColor"
+  >
+    {{ isSnackbarResponseAlertColor == 'error' ? errorMessages : successMessages }}
+    <template #actions>
+      <VBtn
+        color="white"
+        @click="isSnackbarResponse = false"
+      >
+        Close
+      </VBtn>
+    </template>
+  </VSnackbar>
+
 </template>

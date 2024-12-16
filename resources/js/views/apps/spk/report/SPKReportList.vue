@@ -18,6 +18,7 @@ const orderBy = ref()
 const selectedRows = ref([])
 const dataMerVendor = ref([])
 const dataMerBU = ref([])
+const token = useCookie('accessToken')
 
 const updateOptions = options => {
   sortBy.value = options.sortBy[0]?.key
@@ -111,6 +112,7 @@ const {
     page,
     sortBy,
     orderBy,
+    token
   },
 }))
 

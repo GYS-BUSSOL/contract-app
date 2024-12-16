@@ -14,6 +14,7 @@ export const handlerAppsSPKList = [
       const page = url.searchParams.get('page')
       const orderBy = url.searchParams.get('orderBy')
       const searchQuery = is.string(q) ? q : undefined
+      const token = url.searchParams.get('token')
       let queryLower = (searchQuery ?? '').toString().toLowerCase()
       const parsedSortBy = destr(sortBy)
       const sortByLocal = is.string(parsedSortBy) ? parsedSortBy : ''
@@ -22,7 +23,7 @@ export const handlerAppsSPKList = [
       const parsedItemsPerPage = destr(itemsPerPage)
       const itemsPerPageLocal = is.number(parsedItemsPerPage) ? parsedItemsPerPage : 10
       // Fetch Data
-      const fetchData = await fetchSPKList(page, itemsPerPage, queryLower, expiredStatus);
+      const fetchData = await fetchSPKList(page, itemsPerPage, queryLower, expiredStatus, token);
       const dataRows = fetchData.data.rows;
       const totalExpiredCount = fetchData.data.total_expired || 0
       const totalNotExpiredCount = fetchData.data.total_not_expired || 0

@@ -18,6 +18,7 @@ export const handlerAppsSPKReport = [
       const page = url.searchParams.get('page')
       const orderBy = url.searchParams.get('orderBy')
       const searchQuery = is.string(q) ? q : undefined
+      const token = url.searchParams.get('token')
       let queryLower = (searchQuery ?? '').toString().toLowerCase()
       const parsedSortBy = destr(sortBy)
       const sortByLocal = is.string(parsedSortBy) ? parsedSortBy : ''
@@ -26,7 +27,7 @@ export const handlerAppsSPKReport = [
       const parsedItemsPerPage = destr(itemsPerPage)
       const itemsPerPageLocal = is.number(parsedItemsPerPage) ? parsedItemsPerPage : 10
       // Fetch Data
-      const fetchData = await fetchSPKReport(page, itemsPerPage, queryLower, vendor, bu, startDate, endDate, spkStatus);
+      const fetchData = await fetchSPKReport(page, itemsPerPage, queryLower, vendor, bu, startDate, endDate, spkStatus, token);
       const dataRows = fetchData.data.rows;
       const totalActiveSPKCount = fetchData.data.total_active_spk || 0
       const totalNotActiveSPKCount = fetchData.data.total_not_active_spk || 0

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use Carbon\Carbon;
-use Illuminate\Support\Facades\{DB, Log};
+use Illuminate\Support\Facades\{Auth, DB, Log};
 use App\Http\Controllers\Controller;
 use App\Models\{SPK, Contract, ContractJob, MerVendor, SPKContract};
 use Illuminate\Http\{Request, JsonResponse};
@@ -109,7 +109,7 @@ class SPKController extends Controller
       $spkStartDate = null;
       $spkEndDate = null;
       $currentDate = Carbon::now();
-      $userName = 'Wahyu';
+      $userName = Auth::user()->usr_display_name;
       $ip = $request->server('REMOTE_ADDR');
 
       $generateSPKId = $this->generateSPKId();

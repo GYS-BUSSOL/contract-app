@@ -4,7 +4,7 @@ const props = defineProps({
     type: Boolean,
     required: true,
   },
-  ppsongoingId: {
+  cjbId: {
     type: Number,
     required: true
   },
@@ -21,7 +21,7 @@ const emit = defineEmits([
 ]);
 
 watch(
-  [() => props.ppsongoingId, () => props.fetchTrigger],
+  [() => props.cjbId, () => props.fetchTrigger],
   () => {
       loadingBtnDelete.value[0] = false;
   },
@@ -38,7 +38,6 @@ const deletePPSOngoing = async id => {
 }
 
 const dialogModelValueDeleteUpdate = () => {
-  emit("idDeleted", 0);
   emit('update:isDialogDeleteVisible', false);
 }
 </script>
@@ -53,7 +52,7 @@ const dialogModelValueDeleteUpdate = () => {
       <VCardItem class="text-center">
         <VCardTitle>
           <h4 class="text-h4 mb-2">
-            Delete PPS On Going
+            Delete Job Type
           </h4>
         </VCardTitle>
       </VCardItem>
@@ -75,7 +74,7 @@ const dialogModelValueDeleteUpdate = () => {
               type="submit"
               :loading="loadingBtnDelete[0]"
               :disabled="loadingBtnDelete[0]"
-              @click="deletePPSOngoing(props.ppsongoingId)"
+              @click="deletePPSOngoing(props.cjbId)"
             >
               Delete
             </VBtn>

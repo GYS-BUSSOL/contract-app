@@ -15,6 +15,7 @@ const selectedRows = ref([])
 const isTypeDialog = ref('Add')
 const isAddDialogVisible = ref(false)
 const isSnackbarResponse = ref(false)
+const isJobTypeDetailDialogVisible = ref(false)
 const isSnackbarResponseAlertColor = ref('error')
 const errorMessages = ref('Internal server error')
 const successMessages = ref('Successfully')
@@ -22,11 +23,13 @@ const conReqNo = ref(0)
 const conReqId = ref(0)
 const fetchTrigger = ref(0)
 const isSuccessNextStep = ref(false)
+const token = useCookie('accessToken')
 const errors = ref({
   con_req_id: undefined,
   cjb_pay_type: undefined,
   cjb_pay_template: undefined,
   cjb_rate: undefined,
+  cjb_desc: undefined,
   suggest_vendor: undefined,
   duration: undefined,
   signature_type: undefined,
@@ -94,8 +97,15 @@ const pbl = computed(() => PBLData.value.pbl)
 const totalPBL = computed(() => PBLData.value.totalPBL)
 const totalExpiredCount = computed(() => PBLData.value.totalExpiredCount)
 const totalNotExpiredCount = computed(() => PBLData.value.totalNotExpiredCount)
-emit('updateTotalNotExpired', totalNotExpiredCount.value);
-emit('updateTotalExpired', totalExpiredCount.value);
+
+watch(
+  [totalNotExpiredCount, totalExpiredCount],
+  ([newNotExpiredStatus, newExpiredStatus]) => {
+    emit('updateTotalNotExpired', newNotExpiredStatus);
+    emit('updateTotalExpired', newExpiredStatus);
+  },
+  { immediate: true }
+)
 
 // search filters
 const expiredStatus = [
@@ -189,6 +199,10 @@ const fetchAddData = async (SPKData) => {
       const response = await $api('/apps/spk/add', {
         method: 'POST',
         body: JSON.stringify(SPKData),
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
         onResponseError({ response }) {
           alertErrorResponse()
           const responseData = response._data;
@@ -220,11 +234,14 @@ const fetchAddData = async (SPKData) => {
 
 const openDialog = async ({ id = null, type, con_req_no = null, con_req_id = null }) => {
   isTypeDialog.value = type
-  isAddDialogVisible.value = true
-  if(type == 'Add')
-    conReqNo.value = con_req_no
-    conReqId.value = con_req_id
+  conReqNo.value = con_req_no
+  conReqId.value = con_req_id
+  if(type == 'Add') {
+    isAddDialogVisible.value = true
+  } else if(type == 'Detail') {
+    isJobTypeDetailDialogVisible.value = true
     fetchTrigger.value += 1;
+  }
 }
 
 const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
@@ -403,6 +420,7 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
       <!-- SECTION -->
     </VCard>
   </section>
+  
   <PBLAddDialog
     v-model:isDialogVisible="isAddDialogVisible"
     :errors="errors"
@@ -418,6 +436,19 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
     @errors="updateErrors"
     @isSuccessNextStep="updateSucccessStep"
   />
+
+  <PBLDetailDialog
+    v-model:isDialogVisible="isJobTypeDetailDialogVisible"
+    :errors="errors"
+    :type-dialog="isTypeDialog"
+    :contract-req-id="conReqId"
+    :fetch-trigger="fetchTrigger"
+    @isSnackbarResponseAlertColor="updateSnackbarResponseAlertColor"
+    @isSnackbarResponse="updateSnackbarResponse"
+    @errorMessages="updateErrorMessages"
+    @errors="updateErrors"
+  />
+
   <VSnackbar
     v-model="isSnackbarResponse"
     transition="scroll-y-reverse-transition"

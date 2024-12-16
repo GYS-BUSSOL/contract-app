@@ -6,6 +6,7 @@ const ability = useAbility()
 
 // TODO: Get type from backend
 const userData = useCookie('userData')
+const token = useCookie('accessToken')
 
 const logout = async () => {
 
@@ -23,7 +24,33 @@ const logout = async () => {
   
   // Reset ability to initial ability
   ability.update([])
-  window.location.href = '/login';
+  await fetchLogout();
+}
+
+const fetchLogout = async () => {
+  try {
+    const response = await $api(`/auth/logout`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        onResponseError({ response }) {
+          throw new Error("Logout failed");
+        },
+      });
+    
+    const responseStringify = JSON.stringify(response);
+    const responseParse = JSON.parse(responseStringify);
+
+    if(responseParse?.status == 200) {
+      window.location.href = '/login';
+    } else {
+      throw new Error("Logout failed");
+    }
+  } catch (error) {
+    throw new Error("Logout failed");
+  }
 }
 
 const userProfileList = [
@@ -111,10 +138,10 @@ const userProfileList = [
 
               <div>
                 <h6 class="text-h6 font-weight-medium">
-                  {{ userData.fullName || userData.username }}
+                  {{ userData.usr_display_name || userData.usr_name }}
                 </h6>
                 <VListItemSubtitle class="text-capitalize text-disabled">
-                  {{ userData.role }}
+                  {{ userData.usr_access }}
                 </VListItemSubtitle>
               </div>
             </div>

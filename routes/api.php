@@ -33,23 +33,49 @@ use App\Http\Controllers\Api\{
   TrnJobTypeController,
   ContractController,
   ContractJobController,
-  PaymentTemplateController
+  PaymentTemplateController,
+  PenilaianController,
+  TimeHistoryController
 };
-use Illuminate\Auth\Middleware\Authenticate;
-
-Route::get('/user', function (Request $request) {
-  return $request->user();
-})->middleware('auth:sanctum');
-
 
 RateLimiter::for('api', function (Request $request) {
   return Limit::perMinute(60)->by($request->ip());
 });
+
 Route::middleware(['guest', 'throttle:60,1'])->group(function () {
   // Authenticate
   Route::controller(AuthController::class)->group(function () {
-    Route::post('/login', 'login');
-    Route::post('/logout', 'logout');
+    Route::post('/auth/login', 'login');
+  });
+});
+
+Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
+  // Auth
+  Route::post('/auth/logout', [AuthController::class, 'logout']);
+  Route::group(['prefix' => 'apps'], function () {
+    // SPK
+    Route::controller(SPKController::class)->group(function () {
+      Route::post('/spk-list/search', 'search');
+      Route::post('/spk/add', 'add');
+      Route::post('/spk-report/search', 'searchReport');
+      Route::post('/spk-active/search', 'searchActive');
+    });
+    // Contract Job
+    Route::controller(ContractJobController::class)->group(function () {
+      Route::post('/contract-job/add', 'add');
+      Route::get('/contract-job/list/{conReq}', 'list');
+      Route::get('/contract-job/edit/{conReq}', 'edit');
+      Route::post('/contract-job/reject-status', 'rejectStatus');
+    });
+    // Penilaian
+    Route::controller(PenilaianController::class)->group(function () {
+      Route::get('/valuation/list/{conReq}', 'list');
+    });
+    // History
+    Route::controller(TimeHistoryController::class)->group(function () {
+      Route::get('/history/list/{conReq}', 'list');
+      Route::get('/history-reviewer/list/{conReq}', 'listReviewer');
+    });
   });
 });
 
@@ -94,10 +120,6 @@ Route::group(['prefix' => 'apps'], function () {
     Route::get('/contract/edit/{conReq}', 'edit');
     Route::get('/contract/list', 'list');
   });
-  // Contract Job
-  Route::controller(ContractJobController::class)->group(function () {
-    Route::get('/contract-job/edit/{conReq}', 'edit');
-  });
   // PPS
   Route::controller(PPSController::class)->group(function () {
     Route::post('/pps-ongoing/search', 'searchOngoing');
@@ -132,13 +154,6 @@ Route::group(['prefix' => 'apps'], function () {
   Route::controller(BudgetBUController::class)->group(function () {
     Route::post('/budget-bu/search', 'search');
   });
-  // SPK
-  Route::controller(SPKController::class)->group(function () {
-    Route::post('/spk-list/search', 'search');
-    Route::post('/spk/add', 'add');
-    Route::post('/spk-report/search', 'searchReport');
-    Route::post('/spk-active/search', 'searchActive');
-  });
   // Approval 1
   Route::controller(Approval1Controller::class)->group(function () {
     Route::post('/approval-lvl1-ongoing/search', 'searchOngoing');
@@ -153,8 +168,8 @@ Route::group(['prefix' => 'apps'], function () {
   Route::controller(TrnJobTypeController::class)->group(function () {
     Route::get('/trn-job-type/get-increment/{req_id}', 'getRangeIncrement');
     Route::post('/trn-job-type/add', 'add');
-    Route::get('/trn-job-type/edit/{id}', 'edit');
     Route::post('/trn-job-type/update/{id}', 'update');
+    Route::delete('/trn-job-type/delete/{id}', 'destroy');
   });
 });
 

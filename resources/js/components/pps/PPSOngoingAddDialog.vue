@@ -33,13 +33,17 @@ const props = defineProps({
     type: String,
     required: true
   },
-  ppsongoingId: {
+  conId: {
     type: Number,
-    required: true
+    required: true,
   },
-  ppsongoingConreq: {
+  cjbId: {
     type: Number,
-    required: true
+    required: true,
+  },
+  conReqId: {
+    type: Number,
+    required: true,
   },
   rangeIncrement: {
     type: Array,
@@ -62,6 +66,11 @@ const props = defineProps({
     required: true,
     default: false,
   },
+  isDisabled: {
+    type: Boolean,
+    required: true,
+    default: false,
+  },
 });
 
 const dataCompany = ref([])
@@ -73,23 +82,28 @@ const dataMerJobType = ref([])
 const dataMerMeasurementUnit = ref([])
 const dataMerPaymentType = ref([])
 const dataMerLaborType = ref([])
+const jobTarget = ref()
 const isPPSOngoingDialogViewPathVisible = ref(false)
 const pathData = ref('')
 const isLoading = ref(true)
 const refPPSForm = ref()
 const refJobTypeForm = ref()
 const typeDialog = computed(() => props.typeDialog)
-const ppsongoingId = computed(() => props.ppsongoingId)
-const ppsongoingConreq = computed(() => props.ppsongoingConreq)
+const conId = computed(() => props.conId)
+const conReqId = computed(() => props.conReqId)
 const loadingBtn = ref([])
+const loadingBtnSecond = ref([])
+const isDisabled = ref(false)
 const currentStep = ref(0)
 const isCurrentStepValid = ref(true)
 const isFileAttachment = ref('')
+const token = useCookie('accessToken')
 const laborData = reactive({
   labor: [
-    {id: Date.now(), type: null, qty: null},
+    {id: 0, type: null, qty: null},
   ]
 })
+
 const dataCJTType = ref([
   {
     title: "Same With UOM",
@@ -100,6 +114,7 @@ const dataCJTType = ref([
     value: "2"
   },
 ])
+
 const ppsOngoingData = reactive({
   rows: [],
   // PPS form
@@ -136,6 +151,7 @@ const ppsOngoingData = reactive({
   cjt_qty: null,
   total: null,
 })
+
 const numberedSteps = ref([]);
 
 
@@ -167,6 +183,7 @@ const setLinkTargetEstimate = () => {
 
   editorTargetEstimate.value?.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
 }
+
 // Editor Comment
 const editorComment = useEditor({
   content: '',
@@ -223,6 +240,7 @@ const dialogModelValueUpdate = () => {
   editorComment.value?.commands.setContent('')
   editorTargetEstimate.value?.commands.setContent('')
   isFileAttachment.value = ''
+  jobTarget.value = []
   // Job Type form
   ppsOngoingData.job_type = null;
   ppsOngoingData.job_desc = null;
@@ -241,8 +259,31 @@ const dialogModelValueUpdate = () => {
   refJobTypeForm.value?.reset()
   refJobTypeForm.value?.resetValidation()
   loadingBtn.value[0] = false;
+  loadingBtnSecond.value[0] = false;
+  isDisabled.value = false;
   emit('updateRangeIncrement',[])
   emit('update:isDialogVisible', false)
+}
+
+const dialogModelJobtypeValueUpdate = () => {
+  laborData.labor = [{id: Date.now(), type: null, qty: null},]
+  // Job Type form
+  ppsOngoingData.job_type = null;
+  ppsOngoingData.job_desc = null;
+  ppsOngoingData.pic = null;
+  ppsOngoingData.payment_type = null;
+  ppsOngoingData.total_job_target_qty = null;
+  ppsOngoingData.uom = null;
+  ppsOngoingData.labor_type = null;
+  ppsOngoingData.labor_qty = null;
+  ppsOngoingData.cjt_type = null;
+  ppsOngoingData.cjt_qty = null;
+  ppsOngoingData.total = null;
+  refJobTypeForm.value?.reset()
+  refJobTypeForm.value?.resetValidation()
+  loadingBtn.value[0] = false;
+  loadingBtnSecond.value[0] = false;
+  isDisabled.value = false;
 }
 
 const updateInptLabor = (index, updatedData) => {
@@ -270,44 +311,53 @@ const averageEvenly = () => {
   }
 }
 
-watch(
-  () => laborData.labor,
-  (newLaborData) => {
-    ppsOngoingData.labor_type = newLaborData.map((labor) => labor.type || null);
-    ppsOngoingData.labor_qty = newLaborData.map((labor) => labor.qty || null);
-  },
-  { deep: true }
-)
+const syncWorkLocation = () => {
+  if (ppsOngoingData.ck_wl && ppsOngoingData.wc.length > 0) {
+    console.log({ck_wl: ppsOngoingData.ck_wl});
+    
+    ppsOngoingData.work_location = ppsOngoingData.wc.length > 0 ? ppsOngoingData.wc : '';
+  } else {
+    ppsOngoingData.ck_wl = false;
+    ppsOngoingData.work_location = null;
+  }
+}
 
-watch(
-  () => ppsOngoingData.rows,
-  (newCjtData) => {
-    ppsOngoingData.cjt_type = newCjtData.map((cjt) => cjt.cjt_type || null);
-    ppsOngoingData.cjt_qty = newCjtData.map((cjt) => cjt.cjt_qty || null);
-    ppsOngoingData.total = newCjtData.map((cjt) => cjt.total || null);
-  },
-  { deep: true }
-)
-
-watch(
-  () => props.rangeIncrement,
-  (newRange) => {
-    console.log("newRange:", newRange);
-    console.log("newRange length:", newRange.length);
-
-    if (Array.isArray(newRange)) {
-      ppsOngoingData.rows = newRange.map(() => ({
-        cjt_type: null,
-        cjt_qty: null,
-        total: null
-      }));
+const validatePPSForm = async () => {
+  refPPSForm.value?.validate().then(valid => {
+    if (valid.valid) {
+      onSubmitPPS()
+    } else {
+      isCurrentStepValid.value = false
     }
+  })
+}
 
-    console.log("ppsOngoingData.rows:", ppsOngoingData.rows);
-    console.log("ppsOngoingData.rows length:", ppsOngoingData.rows.length);
-  },
-  { immediate: true }
-);
+const validateJobTypeForm = (type) => {
+  refJobTypeForm.value?.validate().then(valid => {
+    if (valid.valid) {
+      isCurrentStepValid.value = true
+      onSubmitJobType(type)
+    } else {
+      isCurrentStepValid.value = false
+    }
+  })
+}
+
+const addItem = () => {
+  laborData.labor.push({ id: Date.now(), type: null, qty: null})
+}
+
+const removeLabor = (id) => {
+  laborData.labor = laborData.labor.filter((labor) => labor.id !== id);
+}
+
+const hasRequiredKeys = (row) => {
+  return (
+    "cjt_type" in row &&
+    "cjt_qty" in row &&
+    "total" in row
+  )
+}
 
 const fetchCompanyData = async () => {
   try {
@@ -471,67 +521,10 @@ const fetchMerLaborTypeData = async () => {
   }
 }
 
-const syncWorkLocation = () => {
-  if (ppsOngoingData.ck_wl && ppsOngoingData.wc.length > 0) {
-    console.log({ck_wl: ppsOngoingData.ck_wl});
-    
-    ppsOngoingData.work_location = ppsOngoingData.wc.length > 0 ? ppsOngoingData.wc : '';
-  } else {
-    ppsOngoingData.ck_wl = false;
-    ppsOngoingData.work_location = null;
-  }
-};
-
-watch(() => ppsOngoingData.ck_wl, (newValue) => {
-  syncWorkLocation();
-}, { immediate: true });
-
-watch(() => ppsOngoingData.wc, (newValue) => {
-  syncWorkLocation();
-}, { immediate: true });
-
-
-const validatePPSForm = async () => {
-  refPPSForm.value?.validate().then(valid => {
-    if (valid.valid) {
-      onSubmitPPS()
-    } else {
-      isCurrentStepValid.value = false
-    }
-  })
-}
-
-const validateJobTypeForm = () => {
-  refJobTypeForm.value?.validate().then(valid => {
-    if (valid.valid) {
-      isCurrentStepValid.value = true
-      onSubmitJobType()
-    } else {
-      isCurrentStepValid.value = false
-    }
-  })
-}
-
-const addItem = () => {
-  laborData.labor.push({ id: Date.now(), type: null, qty: null})
-}
-
-const removeLabor = (index) => {
-  laborData.labor.splice(index, 1)
-}
-
-const hasRequiredKeys = (row) => {
-  return (
-    "cjt_type" in row &&
-    "cjt_qty" in row &&
-    "total" in row
-  )
-}
-
 const fetchPPSOngodingEdit = async () => {
   try {
     isLoading.value = true;
-    const response = await $api(`/apps/pps-ongoing/edit/${ppsongoingId.value}`, {
+    const response = await $api(`/apps/pps-ongoing/edit/${conId.value}`, {
       method: 'GET',
       onResponseError({ response }) {
         const responseData = response._data;
@@ -587,18 +580,22 @@ const fetchPPSOngodingEdit = async () => {
   }
 }
 
-const fetchJobTypeEdit = async () => {
+const fetchContractJobSingleEdit = async () => {
   try {
     isLoading.value = true;
-    const response = await $api(`/apps/trn-job-type/edit/${ppsongoingConreq.value}`, {
+    const response = await $api(`/apps/contract-job/edit/${props.cjbId}`, {
       method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
       onResponseError({ response }) {
         const responseData = response._data;
         const responseMessage = responseData.message;
         const responseErrors = responseData.errors;
         emit('errors', responseErrors);
         emit('errorMessages', responseMessage);
-        emit('update:isDialogVisible', false)
+        emit('update:isDialogSingleVisible', false)
         throw new Error("Get data failed");
       },
     });
@@ -608,19 +605,31 @@ const fetchJobTypeEdit = async () => {
       const dataResult = dataResponse.data;
       isLoading.value = false;
 
-      // ppsOngoingData.cc = dataResult.arr_cc.map((cc) => cc.tbc_code);
-      // ppsOngoingData.wc = dataResult.arr_wc.map((wc) => wc.tbc_code);
-      // ppsOngoingData.shift_checklist = dataResult.arr_shift.map((shift) => shift.sh_shift);
-      // Contract data
+      ppsOngoingData.job_type = dataResult.job_type.map((jt) => jt.job_type_id);
+      ppsOngoingData.job_desc = dataResult.contract_job.cjb_desc;
+      ppsOngoingData.pic = dataResult.contract_job.cjb_pic;
+      ppsOngoingData.payment_type = dataResult.contract_job.cjb_pay_type;
+      ppsOngoingData.total_job_target_qty = dataResult.contract_job.cjb_qty;
+      ppsOngoingData.uom = dataResult.contract_job.unt_id;
+      laborData.labor = dataResult.job_labor.map((jl) => ({
+        id: jl.cjl_id,
+        type: jl.cjl_type,
+        qty: jl.cjl_qty
+      }))
+      ppsOngoingData.rows = dataResult.job_target.map((jt) => ({
+        cjt_type: jt.cjt_type,
+        cjt_qty: jt.cjt_qty,
+        total: jt.cjt_total
+      }))
     } else {
-      emit('update:isDialogVisible', false)
+      emit('update:isDialogSingleVisible', false)
       emit('isSnackbarResponse',true)
       emit('isSnackbarResponseAlertColor', 'error')
       throw new Error("Get data failed");
     }
   } catch (error) {
     isLoading.value = false;
-    emit('update:isDialogVisible', false)
+    emit('update:isDialogSingleVisible', false)
     emit('isSnackbarResponse',true)
     emit('isSnackbarResponseAlertColor', 'error')
   }
@@ -661,7 +670,7 @@ const onSubmitPPS = () => {
   }
 }
 
-const onSubmitJobType = () => {
+const onSubmitJobType = (type) => {
   const formData = new FormData();
   // Form Job Type
   formData.append('labor_type', ppsOngoingData.labor_type || null);
@@ -679,10 +688,16 @@ const onSubmitJobType = () => {
   const formDataToObject = Object.fromEntries(formData.entries());
 
   try {
-    loadingBtn.value[0] = true
-    emit("JobTypeData", { formData: {... formDataToObject}, dialogUpdate: dialogModelValueUpdate });
+    isDisabled.value = true
+    if(type == 'Save')
+      loadingBtn.value[0] = true;
+    else if(type == 'Continue')
+      loadingBtnSecond.value[0] = true;
+    emit("JobTypeData", { type ,formData: {... formDataToObject}, dialogUpdate: dialogModelValueUpdate, dialogJobtypeUpdate: dialogModelJobtypeValueUpdate });
   } catch (err) {
-    loadingBtn.value[0] = false
+    isDisabled.value = false;
+    loadingBtn.value[0] = false;
+    loadingBtnSecond.value[0] = false;
   }
 }
 
@@ -692,8 +707,8 @@ const openPathDialog = (path) => {
 }
 
 watch(
-  [() => ppsongoingId.value, () => ppsongoingConreq.value, () => typeDialog.value, () => props.fetchTrigger, () => props.isSuccessNextStep],
-    ([newId,newConReq,newType]) => {
+  [() => conId.value, () => conReqId.value, () => typeDialog.value, () => props.cjbId, () => props.fetchTrigger, () => props.isSuccessNextStep],
+  ([newId,newConReq,newType, newCjbId]) => {
       if (newType === "Edit" && newId) {
         fetchPPSOngodingEdit();
       } else if (newType === "Add") {
@@ -702,33 +717,41 @@ watch(
           currentStep.value++
           isCurrentStepValid.value = true
         }
-      } else if(newType === 'Edit Job Type' && newConReq) {
-        fetchJobTypeEdit()
       }
-      fetchCompanyData()
-      fetchMerBUData()
-      fetchMerCCData()
-      fetchMerWCData()
-      fetchMerVendorData()
+
+      if(newType === 'Add Job Type') {
+        dialogModelJobtypeValueUpdate()
+      }
+
+      if(newType !== 'List Job Type' && newType != '') {
+        fetchCompanyData()
+        fetchMerBUData()
+        fetchMerCCData()
+        fetchMerWCData()
+        fetchMerVendorData()
+      } 
+      if(newType == 'Edit Job Type' && newType != '') {
+        fetchContractJobSingleEdit()
+      }
       fetchMerJobTypeData()
       fetchMerMeasurementUnitData()
       fetchMerPaymentTypeData()
       fetchMerLaborTypeData()
-      
+
       numberedSteps.value = [
-        ...(newType !== 'Edit Job Type'
+        ...(newType !== 'List Job Type' && newType !== 'Edit Job Type' && newType !== 'Add Job Type'
           ? [
               {
                 title: 'PPS Data',
-                subtitle: 'Add PPS data',
+                subtitle: (newType === 'Edit' ? 'Edit' : 'Add') + ' PPS data',
               },
             ]
           : []),
-        ...(newType === 'Add' || newType === 'Edit Job Type'
+        ...(newType === 'Add' || newType === 'List Job Type' || newType === 'Edit Job Type' || newType === 'Add Job Type'
           ? [
               {
                 title: 'Job Type',
-                subtitle: 'Add job type',
+                subtitle:  (newType === 'Edit Job Type' ? 'Edit' : 'Add') +' job type',
               },
             ]
           : []),
@@ -736,7 +759,58 @@ watch(
       loadingBtn.value[0] = false;
   },
   { immediate: true }
-);
+)
+
+watch(() => ppsOngoingData.ck_wl, (newValue) => {
+  syncWorkLocation();
+}, { immediate: true })
+
+watch(() => props.isDisabled, (newValue) => {
+  isDisabled.value = newValue;
+})
+
+watch(() => ppsOngoingData.wc, (newValue) => {
+  syncWorkLocation();
+}, { immediate: true })
+
+watch(
+  () => laborData.labor,
+  (newLaborData) => {
+    ppsOngoingData.labor_type = newLaborData.map((labor) => labor.type || null);
+    ppsOngoingData.labor_qty = newLaborData.map((labor) => labor.qty || null);
+  },
+  { deep: true }
+)
+
+watch(
+  () => ppsOngoingData.rows,
+  (newCjtData) => {
+    ppsOngoingData.cjt_type = newCjtData.map((cjt) => cjt.cjt_type || null);
+    ppsOngoingData.cjt_qty = newCjtData.map((cjt) => cjt.cjt_qty || null);
+    ppsOngoingData.total = newCjtData.map((cjt) => cjt.total || null);
+  },
+  { deep: true }
+)
+
+watch(
+  () => props.rangeIncrement,
+  (newRange) => {
+    console.log("newRange:", newRange);
+    console.log("newRange length:", newRange.length);
+
+    if (Array.isArray(newRange)) {
+      ppsOngoingData.rows = newRange.map(() => ({
+        cjt_type: null,
+        cjt_qty: null,
+        total: null
+      }));
+    }
+
+    console.log("ppsOngoingData.rows:", ppsOngoingData.rows);
+    console.log("ppsOngoingData.rows length:", ppsOngoingData.rows.length);
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
@@ -762,7 +836,7 @@ watch(
       <VCardText>
         <VWindow v-model="currentStep" class="disable-tab-transition">
           <!-- PPS Form -->
-          <VWindowItem v-if="typeDialog != 'Edit Job Type'">
+          <VWindowItem v-if="typeDialog != 'List Job Type' && typeDialog != 'Edit Job Type' && typeDialog != 'Add Job Type'">
             <VForm
               ref="refPPSForm"
               @submit.prevent="validatePPSForm"
@@ -1179,7 +1253,7 @@ watch(
                   <div v-if="!isLoading">
                     <VBtn
                       class="me-4"
-                      color="error"
+                      color="secondary"
                       variant="tonal"
                       @click="dialogModelValueUpdate"
                     >
@@ -1204,7 +1278,7 @@ watch(
           </VWindowItem>
           <!-- Job Type Form -->
           <VWindowItem v-if="typeDialog != 'Edit'">
-            <VForm ref="refJobTypeForm" @submit.prevent="validateJobTypeForm">
+            <VForm ref="refJobTypeForm">
               <VRow>
                 <VCol cols="12">
                   <div class="add-products-form">
@@ -1274,7 +1348,7 @@ watch(
                                 v-model="ppsOngoingData.total_job_target_qty"
                                 type="number"
                                 placeholder="Type here..."
-                                :rules="[requiredValidator, integerValidator]"
+                                :rules="[requiredValidator]"
                                 :error-messages="props.errors?.total_job_target_qty"
                                 @input="averageEvenly"
                                 clearable
@@ -1359,7 +1433,7 @@ watch(
                       class="mb-4"
                     >
                       <JobType
-                        :id="index"
+                        :id="labor.id"
                         :dataLaborLength="Number(laborData?.labor.length)"
                         :data="labor"
                         :errors="props.errors"
@@ -1386,26 +1460,29 @@ watch(
                       color="success"
                       type="submit"
                       :loading="loadingBtn[0]"
-                      :disabled="loadingBtn[0]"
+                      :disabled="isDisabled"
+                      @click="validateJobTypeForm('Save')"
                     >
                       <VIcon v-if="typeDialog == 'Add'"
                         icon="tabler-device-floppy"
                         start
                         class="flip-in-rtl"
                       />
-                      <span>{{ typeDialog == 'Edit' ? 'Update' : 'Save' }}</span>
+                      <span>{{ typeDialog == 'Edit' || typeDialog == 'Edit Job Type' ? 'Update' : 'Save' }}</span>
                     </VBtn>
                     
-                    <VBtn v-if="typeDialog != 'Edit'"
+                    <VBtn v-if="typeDialog != 'Edit' && typeDialog != 'Edit Job Type'"
                       color="success"
                       variant="outlined"
                       type="submit"
-                      :loading="loadingBtn[0]"
-                      :disabled="loadingBtn[0]"
+                      :loading="loadingBtnSecond[0]"
+                      :disabled="isDisabled"
+                      @click="validateJobTypeForm('Continue')"
                     >
                       <VIcon v-if="typeDialog == 'Add'"
                         icon="tabler-location"
                         start
+                        type="submit"
                         class="flip-in-rtl"
                       />
                       Save & New Job Type

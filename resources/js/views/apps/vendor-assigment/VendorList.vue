@@ -1,5 +1,4 @@
 <script setup>
-import VendorCards from '@/views/apps/vendor-assigment/VendorCards.vue';
 import dayjs from "dayjs";
 
 // Store
@@ -22,6 +21,7 @@ const isSnackbarResponse = ref(false)
 const isSnackbarResponseAlertColor = ref('error')
 const errorMessages = ref('Internal server error')
 const successMessages = ref('Successfully')
+const token = useCookie('accessToken')
 const errors = ref({
   Username: undefined,
   UserDisplay: undefined,
@@ -29,6 +29,7 @@ const errors = ref({
   Access: undefined,
   BU: undefined,
 })
+const emit = defineEmits(['updateTotalNotPriority','updateTotalPriority']);
 const updateOptions = options => {
   sortBy.value = options.sortBy[0]?.key
   orderBy.value = options.sortBy[0]?.order
@@ -87,6 +88,15 @@ const vendors = computed(() => vendorData.value.vendors)
 const totalVendors = computed(() => vendorData.value.totalVendors)
 const totalPriorityCount = computed(() => vendorData.value.totalPriorityCount)
 const totalNotPriorityCount = computed(() => vendorData.value.totalNotPriorityCount)
+
+watch(
+  [totalNotPriorityCount, totalPriorityCount],
+  ([newNotPriorityStatus, newPriorityStatus]) => {
+    emit('updateTotalNotPriority', newNotPriorityStatus);
+    emit('updateTotalPriority', newPriorityStatus);
+  },
+  { immediate: true }
+)
 
 // search filters
 const expiredStatus = [
@@ -199,11 +209,16 @@ const openDialog = async ({ id = null, type, con_req_no = null, con_req_id = nul
     fetchTrigger.value += 1;
 }
 
-const fetchAddData = async (userHRData, clearedForm) => {
+const fetchAddData = async (vendorData, clearedForm) => {
   try {
-      const response = await $api('/configurations/human-resources/add', {
+
+      const response = await $api('/apps/contract-job/add', {
         method: 'POST',
-        body: JSON.stringify(userHRData),
+        body: JSON.stringify(vendorData),
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
         onResponseError({ response }) {
           alertErrorResponse()
           const responseData = response._data;
@@ -220,11 +235,11 @@ const fetchAddData = async (userHRData, clearedForm) => {
 
     if(responseParse?.status == 200) {
       clearedForm()
-      fetchUserHR()
+      fetchVendor()
       alertSuccessResponse()
       const responseMessage = responseParse?.message;
       successMessages.value = responseMessage;
-      isUserHRDialogVisible.value = false
+      isAddDialogVisible.value = false
     } else {
       alertErrorResponse()
       throw new Error("Created data failed");
@@ -234,21 +249,56 @@ const fetchAddData = async (userHRData, clearedForm) => {
   }
 }
 
-const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
+const fetchRejectData = async (vendorData, clearedForm) => {
+  try {
+
+      const response = await $api('/apps/contract-job/reject-status', {
+        method: 'POST',
+        body: JSON.stringify(vendorData),
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        onResponseError({ response }) {
+          alertErrorResponse()
+          const responseData = response._data;
+          const responseMessage = responseData.message;
+          const responseErrors = responseData.errors;
+          errors.value = responseErrors;
+          errorMessages.value = responseMessage;
+          throw new Error("Rejected data failed");
+        },
+      });
+
+    const responseStringify = JSON.stringify(response);
+    const responseParse = JSON.parse(responseStringify);
+
+    if(responseParse?.status == 200) {
+      clearedForm()
+      fetchVendor()
+      alertSuccessResponse()
+      const responseMessage = responseParse?.message;
+      successMessages.value = responseMessage;
+      isAddDialogVisible.value = false
+    } else {
+      alertErrorResponse()
+      throw new Error("Rejected data failed");
+    }
+  } catch (error) {
+    alertErrorResponse()
+  }
+}
+
+const handleFormSubmit = async ({mode,formData,dialogUpdate}) => {
   if (mode === "Add") {
-    fetchAddData(conReqNo.value,formData, dialogUpdate)
+    fetchAddData(formData,dialogUpdate)
+  } else if(mode === "Reject"){
+    fetchRejectData(formData,dialogUpdate)
   }
 }
 </script>
 
 <template>
-  <section>
-    <VRow>
-      <VCol cols="12">
-        <VendorCards :totalNotPriorityCount="totalNotPriorityCount" :totalPriorityCount="totalPriorityCount" />
-      </VCol>
-    </VRow>
-  </section>
   <section>
     <VCard class="mb-6">
       <VCardItem class="pb-4">
@@ -307,7 +357,6 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
               { value: 25, title: '25' },
               { value: 50, title: '50' },
               { value: 100, title: '100' },
-              { value: -1, title: 'All' },
             ]"
             style="inline-size: 6.25rem;"
             @update:model-value="itemsPerPage = parseInt($event, 10)"
@@ -442,7 +491,7 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
     :fetch-trigger="fetchTrigger"
     @isSnackbarResponseAlertColor="updateSnackbarResponseAlertColor"
     @isSnackbarResponse="updateSnackbarResponse"
-    @VendorData="handleFormSubmit"
+    @vendorData="handleFormSubmit"
     @errorMessages="updateErrorMessages"
     @errors="updateErrors"
   />

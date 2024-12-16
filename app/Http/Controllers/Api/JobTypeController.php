@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use Carbon\Carbon;
 use App\Models\JobType;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\{Request, JsonResponse};
 
 class JobTypeController extends Controller
@@ -96,7 +97,7 @@ class JobTypeController extends Controller
         }
 
         try {
-            $validated['aud_user'] = 'Wahyu'; // Nama lengkap User login
+            $validated['aud_user'] = Auth::user()->usr_display_name;
             $validated['aud_date'] = Carbon::now();
             $validated['aud_prog'] = 'CMSY';
             $validated['aud_machine'] = $request->server('REMOTE_ADDR');
@@ -162,7 +163,7 @@ class JobTypeController extends Controller
                     "message" => "Job type not found",
                 ], 404);
             }
-            $validated['aud_user'] = 'Wahyu'; // Nama lengkap User login
+            $validated['aud_user'] = Auth::user()->usr_display_name;
             $validated['aud_date'] = Carbon::now();
             $validated['aud_prog'] = 'CMSY';
             $validated['aud_machine'] = $request->server('REMOTE_ADDR');

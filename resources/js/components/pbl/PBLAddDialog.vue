@@ -61,6 +61,7 @@ const dataMerVendor = ref([])
 const dataContractList = ref([])
 const dataSignatureTypeList = ref([])
 const allDataVendor = ref([])
+const token = useCookie('accessToken')
 const numberedSteps = ref([
   {
     title: 'Create',
@@ -261,8 +262,12 @@ const fetchContractEdit = async (conReqId) => {
 const fetchContractJobEdit = async (conReqId) => {
   try {
     isLoading.value = true;
-    const response = await $api(`/apps/contract-job/edit/${conReqId}`, {
+    const response = await $api(`/apps/contract-job/list/${conReqId}`, {
       method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
       onResponseError({ response }) {
         const responseData = response._data;
         const responseMessage = responseData.message;
@@ -589,14 +594,22 @@ watch([() => contractData.con_req_id], (conReqId) => {
                             {{ index + 1 }}
                           </td>
                           <td>
-                            {{ contractJobData.job_type.find((jy) => jy.cjb_id == data.cjb_id)?.job_type || '-' }}
-                          </td>
+                            <template v-if="contractJobData.job_type.length > 0">
+                              <template v-for="(innerArray, indexOuter) in contractJobData.job_type" :key="indexOuter">
+                                {{ 
+                                  innerArray
+                                    .filter(jy => jy.cjb_id == data.cjb_id)
+                                    .map(jy => jy.job_type)
+                                    .join(', ')
+                                }}
+                              </template>
+                            </template>                          </td>
                           <td style="width: 300px !important;">
                             <AppTextarea
                               v-model="data.cjb_desc"
                               placeholder="Type here..."
                               :rules="[requiredValidator]"
-                              :error-messages="props.errors?.spk_job_description"
+                              :error-messages="props.errors?.cjb_desc"
                               auto-grow
                               clearable
                             />
@@ -655,12 +668,19 @@ watch([() => contractData.con_req_id], (conReqId) => {
                                 </tr>
                               </thead>
                               <tbody>
-                                <tr>
-                                  <td>
-                                    {{ contractJobData.job_labor.find((jl) => jl.cjb_id == data.cjb_id)?.cjl_type || '-' }}
-                                  </td>
-                                  <td>
-                                    {{ contractJobData.job_labor.find((jl) => jl.cjb_id == data.cjb_id)?.cjl_qty || 0 }}
+                                <template v-if="contractJobData.job_labor.length > 0" v-for="(innerArray, indexOuter) in contractJobData.job_labor" :key="indexOuter">
+                                  <tr v-for="(dataCb, indexCb) in innerArray" :key="dataCb.cjb_id">
+                                    <td v-if="dataCb.cjb_id == data.cjb_id">
+                                      {{ dataCb.cjl_type }}
+                                    </td>
+                                    <td v-if="dataCb.cjb_id == data.cjb_id">
+                                      {{ dataCb.cjl_qty }}
+                                    </td>
+                                  </tr>
+                                </template>
+                                <tr v-else>
+                                  <td colspan="2">
+                                    Data is empty
                                   </td>
                                 </tr>
                               </tbody>

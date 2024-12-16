@@ -2,29 +2,35 @@
   import { computed, defineProps } from 'vue';
   
   const props = defineProps({
-    totalPriorityCount: Number,
-    totalNotPriorityCount: Number
+    totalPriorityCount: {
+      type: Number,
+      required: true,
+    },
+    totalNotPriorityCount: {
+      type: Number,
+      required: true,
+    },
   })
 
   const widgetData = computed(() => [
     {
-      title: 'Data Total',
+      title: 'Total Data',
       value: props.totalPriorityCount + props.totalNotPriorityCount,
-      desc: 'Vendor total',
+      desc: 'Total data',
       icon: 'tabler-users',
       iconColor: 'secondary',
     },
     {
       title: 'Priority "Segera"',
       value: props.totalPriorityCount,
-      desc: 'Priority',
+      desc: 'Total Priority "Segera"',
       icon: 'tabler-user-exclamation',
       iconColor: 'error',
     },
     {
       title: 'Priority "Tidak Segera"',
       value: props.totalNotPriorityCount,
-      desc: 'Not Priority',
+      desc: 'Total Priority "Tidak Segera"',
       icon: 'tabler-user-check',
       iconColor: 'success',
     },

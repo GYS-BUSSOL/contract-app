@@ -7,10 +7,10 @@ const totalExpiredCount = ref(0);
 
 const updateTotalNotExpiredCount = (count) => {
   totalNotExpiredCount.value = count;
-};
+}
 const updateTotalExpiredCount = (count) => {
   totalExpiredCount.value = count;
-};
+}
 </script>
 
 <template>

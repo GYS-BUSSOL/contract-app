@@ -13,11 +13,53 @@ const page = ref(1)
 const sortBy = ref()
 const orderBy = ref()
 const selectedRows = ref([])
-
+const isJobTypeDetailDialogVisible = ref(false)
+const conReqId = ref()
+const isTypeDialog = ref('Detail')
+const isSnackbarResponse = ref(false)
+const isSnackbarResponseAlertColor = ref('error')
+const fetchTrigger = ref(0);
+const errorMessages = ref('Internal server error')
+const successMessages = ref('Successfully')
 const updateOptions = options => {
   sortBy.value = options.sortBy[0]?.key
   orderBy.value = options.sortBy[0]?.order
 }
+
+const errors = ref({
+   // PPS form
+  company: undefined,
+  bu: undefined,
+  cc: undefined,
+  wc: undefined,
+  work_location: undefined,
+  id_project: undefined,
+  pps_no: undefined,
+  old_pps_no: undefined,
+  priority: undefined,
+  shift_checklist: undefined,
+  cp_name: undefined,
+  cp_dept: undefined,
+  cp_ext: undefined,
+  cp_email: undefined,
+  comment: undefined,
+  duration: undefined,
+  suggest_vendor: undefined,
+  con_comment_jobtarget: undefined,
+  file_attachment: undefined,
+  // Job Type form
+  job_type: undefined,
+  job_desc: undefined,
+  pic: undefined,
+  payment_type: undefined,
+  total_job_target_qty: undefined,
+  uom: undefined,
+  cjt_type: undefined,
+  cjt_qty: undefined,
+  total: undefined,
+  labor_type: undefined,
+  labor_qty: undefined,
+})
 
 // Headers
 const headers = [
@@ -150,8 +192,30 @@ const resolvePPSPriorityVariant = stat => {
   return 'error'
 }
 
+const updateSnackbarResponse = res => {
+  isSnackbarResponse.value = res;
+}
+
+const updateSnackbarResponseAlertColor = color => {
+  isSnackbarResponseAlertColor.value = color;
+}
+
+const updateErrorMessages = err => {
+  errorMessages.value = err;
+}
+
+const updateErrors = err => {
+  errors.value = err;
+}
+
 const formatDate = (date, time = false) => {
   return dayjs(date).format(`DD MMM YYYY${time ? ", HH:mm" : ""}`);
+}
+const openDialog = async ({ id = null, type, con_req_id = null }) => {
+  if(type == 'Detail')
+    isJobTypeDetailDialogVisible.value = true
+    conReqId.value = con_req_id
+    fetchTrigger.value += 1
 }
 </script>
 
@@ -254,17 +318,12 @@ const formatDate = (date, time = false) => {
         <!-- PPS -->
         <template #item.con_req_no="{ item }">
           <div class="d-flex align-center gap-x-4">
-            <div class="d-flex flex-column">
-              <h6 class="text-base">
-                <RouterLink
-                  :to="{ name: 'apps-user-view-id', params: { id: item.con_id } }"
-                  class="font-weight-medium text-link"
-                >
-                  {{ item.con_req_no }}
-                </RouterLink>
-              </h6>
+            <div class="d-flex flex-column" @click="openDialog({id: item.con_id, type: 'Detail', con_req_id: item.con_req_id})">
+              <span style="cursor: pointer;" class="text-base text-primary">
+                {{ item.con_req_no }}
+              </span>
               <div class="text-sm">
-                {{ item.aud_user == '' || null ? '-' : item.aud_user }}
+                {{ item.aud_user != '' && item.aud_user != null ? item.aud_user : '-' }}
               </div>
             </div>
           </div>
@@ -346,4 +405,34 @@ const formatDate = (date, time = false) => {
       <!-- SECTION -->
     </VCard>
   </section>
+
+  <PPSOngoingDetailDialog
+    v-model:isDialogVisible="isJobTypeDetailDialogVisible"
+    :errors="errors"
+    :type-dialog="isTypeDialog"
+    :contract-req-id="conReqId"
+    :fetch-trigger="fetchTrigger"
+    @isSnackbarResponseAlertColor="updateSnackbarResponseAlertColor"
+    @isSnackbarResponse="updateSnackbarResponse"
+    @errorMessages="updateErrorMessages"
+    @errors="updateErrors"
+  />
+
+  <VSnackbar
+    v-model="isSnackbarResponse"
+    transition="scroll-y-reverse-transition"
+    location="top end"
+    variant="flat"
+    :color="isSnackbarResponseAlertColor"
+  >
+    {{ isSnackbarResponseAlertColor == 'error' ? errorMessages : successMessages }}
+    <template #actions>
+      <VBtn
+        color="white"
+        @click="isSnackbarResponse = false"
+      >
+        Close
+      </VBtn>
+    </template>
+  </VSnackbar>
 </template>

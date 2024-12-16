@@ -1,7 +1,6 @@
-export async function fetchSPKList(currentPage, rowPerPage, rowSearch, expiredFilter) {
+export async function fetchSPKList(currentPage, rowPerPage, rowSearch, expiredFilter, token) {
   let start = 0;
   const url = 'http://localhost:8000/api/apps/spk-list/search';
-  const token = 'YOUR_BEARER_TOKEN_HERE';
   
   if(currentPage != 1 && currentPage > 1)
     start = (currentPage * rowPerPage) - rowPerPage
@@ -116,7 +115,7 @@ export async function fetchSPKList(currentPage, rowPerPage, rowSearch, expiredFi
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // 'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(payload)
     });

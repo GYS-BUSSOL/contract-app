@@ -1,7 +1,4 @@
 export const db = {
-  // TODO: Use jsonwebtoken pkg
-  // ℹ️ Created from https://jwt.io/ using HS256 algorithm
-  // ℹ️ We didn't created it programmatically because jsonwebtoken package have issues with esm support. View Issues: https://github.com/auth0/node-jsonwebtoken/issues/655
   userTokens: [
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MX0.fhc3wykrAnRpcKApKhXiahxaOe8PSHatad31NuIZ0Zg',
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Mn0.cat2xMrZLn0FwicdGtZNzL7ifDTAKWB0k1RurSWjdnw',
@@ -46,4 +43,33 @@ export const db = {
       ],
     },
   ],
+}
+
+export async function login(username, password)
+{
+  const url = 'http://localhost:8000/api/auth/login';
+  const payload = {
+    username,
+    password
+  }
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+
+  } catch (error) {
+    return "Error fetching login";
+  }
 }

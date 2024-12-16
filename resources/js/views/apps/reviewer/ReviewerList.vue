@@ -14,19 +14,35 @@ const page = ref(1)
 const sortBy = ref()
 const orderBy = ref()
 const selectedRows = ref([])
+const isSnackbarResponse = ref(false)
+const isJobTypeDetailDialogVisible = ref(false)
+const isSnackbarResponseAlertColor = ref('error')
+const errorMessages = ref('Internal server error')
+const successMessages = ref('Successfully')
+const isTypeDialog = ref('Detail')
+const fetchTrigger = ref(0)
+const conReqNo = ref(0)
+const conReqId = ref(0)
 
 const updateOptions = options => {
   sortBy.value = options.sortBy[0]?.key
   orderBy.value = options.sortBy[0]?.order
 }
 
+const errors = ref({
+  con_req_id: undefined,
+  cjb_pay_type: undefined,
+  cjb_pay_template: undefined,
+  cjb_rate: undefined,
+  cjb_desc: undefined,
+  suggest_vendor: undefined,
+  duration: undefined,
+  signature_type: undefined,
+  spk_jobdesc_summary: undefined,
+})
+
 // Headers
 const headers = [
-  {
-    title: 'Actions',
-    key: 'actions',
-    sortable: false,
-  },
   {
     title: 'Request No',
     key: 'con_req_no',
@@ -62,6 +78,18 @@ const headers = [
   },
 ]
 
+// search filters
+const expiredStatus = [
+  {
+    title: 'Expired data',
+    value: '1',
+  },
+  {
+    title: 'Not expired yet data',
+    value: 'null',
+  }
+]
+
 const {
   data: reviewerData,
   execute: fetchReviewer,
@@ -81,31 +109,30 @@ const reviewers = computed(() => reviewerData.value.reviewers)
 const totalReviewers = computed(() => reviewerData.value.totalReviewers)
 const totalExpiredCount = computed(() => reviewerData.value.totalExpiredCount)
 const totalNotExpiredCount = computed(() => reviewerData.value.totalNotExpiredCount)
-emit('updateTotalNotExpired', totalNotExpiredCount.value);
-emit('updateTotalExpired', totalExpiredCount.value);
 
-// search filters
-const expiredStatus = [
-  {
-    title: 'Expired data',
-    value: '1',
+watch(
+  [totalNotExpiredCount, totalExpiredCount],
+  ([newNotExpiredStatus, newExpiredStatus]) => {
+    emit('updateTotalNotExpired', newNotExpiredStatus);
+    emit('updateTotalExpired', newExpiredStatus);
   },
-  {
-    title: 'Not expired yet data',
-    value: 'null',
-  }
-]
+  { immediate: true }
+)
 
-const deleteReviewer = async id => {
-  await $api(`/apps/reviewer/${ id }`, { method: 'DELETE' })
+const updateSnackbarResponse = res => {
+  isSnackbarResponse.value = res;
+}
 
-  // Delete from selectedRows
-  const index = selectedRows.value.findIndex(row => row === id)
-  if (index !== -1)
-    selectedRows.value.splice(index, 1)
+const updateSnackbarResponseAlertColor = color => {
+  isSnackbarResponseAlertColor.value = color;
+}
 
-  // Refetch Reviewer
-  fetchReviewer()
+const updateErrorMessages = err => {
+  errorMessages.value = err;
+}
+
+const updateErrors = err => {
+  errors.value = err;
 }
 
 const formatDate = (date, time = false) => {
@@ -132,10 +159,22 @@ const fetchMerContractStatus = async () => {
   } catch (error) {
     console.error('Error fetching mer contract status data',error);
   }
-};
+}
+
+const openDialog = async ({ id = null, type, con_req_no = null, con_req_id = null }) => {
+  isTypeDialog.value = type
+  conReqNo.value = con_req_no
+  conReqId.value = con_req_id
+  if(type == 'Detail') {
+    isJobTypeDetailDialogVisible.value = true
+    fetchTrigger.value += 1;
+  }
+}
+
 onMounted(() => {
   fetchMerContractStatus()
-});
+})
+
 </script>
 
 <template>
@@ -233,13 +272,10 @@ onMounted(() => {
         <template #item.con_req_no="{ item }">
           <div class="d-flex align-center gap-x-4">
             <div class="d-flex flex-column">
-              <h6 class="text-base">
-                <RouterLink
-                  :to="{ name: 'apps-user-view-id', params: { id: item.con_id } }"
-                  class="font-weight-medium text-link"
-                >
-                  {{ item.con_req_no }}
-                </RouterLink>
+              <h6 class="text-base text-primary" style="cursor: pointer;" 
+                @click="openDialog({type: 'Detail', con_req_no: item.con_req_no, con_req_id: item.con_req_id})"
+              >
+                {{ item.con_req_no }}
               </h6>
               <div class="text-sm">
                 {{ item.aud_user == '' || null ? '-' : item.aud_user }}
@@ -297,16 +333,6 @@ onMounted(() => {
           </div>
         </template>
 
-        <!-- Actions -->
-        <template #item.actions="{ item }">
-          <IconBtn @click="deleteReviewer(item.con_id)">
-            <VIcon icon="tabler-eye-edit" />
-            <VTooltip open-delay="200" location="top" activator="parent">
-              <span>Reviewer Request</span>
-            </VTooltip>
-          </IconBtn>
-        </template>
-
         <!-- pagination -->
         <template #bottom>
           <TablePagination
@@ -319,4 +345,35 @@ onMounted(() => {
       <!-- SECTION -->
     </VCard>
   </section>
+
+  <ReviewerDetailDialog
+    v-model:isDialogVisible="isJobTypeDetailDialogVisible"
+    :errors="errors"
+    :type-dialog="isTypeDialog"
+    :contract-req-id="conReqId"
+    :fetch-trigger="fetchTrigger"
+    @isSnackbarResponseAlertColor="updateSnackbarResponseAlertColor"
+    @isSnackbarResponse="updateSnackbarResponse"
+    @errorMessages="updateErrorMessages"
+    @errors="updateErrors"
+  />
+
+  <VSnackbar
+    v-model="isSnackbarResponse"
+    transition="scroll-y-reverse-transition"
+    location="top end"
+    variant="flat"
+    :color="isSnackbarResponseAlertColor"
+  >
+    {{ isSnackbarResponseAlertColor == 'error' ? errorMessages : successMessages }}
+    <template #actions>
+      <VBtn
+        color="white"
+        @click="isSnackbarResponse = false"
+      >
+        Close
+      </VBtn>
+    </template>
+  </VSnackbar>
+
 </template>

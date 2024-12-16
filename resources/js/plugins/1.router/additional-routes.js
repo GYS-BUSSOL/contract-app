@@ -10,7 +10,7 @@ export const redirects = [
     redirect: to => {
       // TODO: Get type from backend
       const userData = useCookie('userData')
-      const userRole = userData.value?.role
+      const userRole = userData.value?.usr_access
       if (userRole === 'admin')
         return { name: 'apps-pps' }
       if (userRole === 'client')

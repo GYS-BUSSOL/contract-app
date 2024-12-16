@@ -166,6 +166,12 @@ export async function fetchApprovalLvl2Completed(currentPage, rowPerPage, rowSea
         "value": "4",
         "table_name": "trn_time_history"
       },
+      {
+        "name": "group_dimension",
+        "logic_operator": "=",
+        "value": "Business Unit",
+        "table_name": "mer_bu_cc_wc"
+      },
     ],
     "group_column": {
       "operator": "AND",
@@ -221,7 +227,7 @@ export async function fetchApprovalLvl2Completed(currentPage, rowPerPage, rowSea
       {
         "name": "mer_bu_cc_wc",
         "column_join": "con_bu",
-        "column_results": ["description"],
+        "column_results": ["description","group_dimension"],
         "column_self": "number"
       },
       {

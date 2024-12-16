@@ -1,15 +1,16 @@
 <script setup>
-import { getListMerPaymentTemplate, getListMerPaymentType, getListMerVendor } from '@db/apps/mer/db';
+import { getListMerPaymentType, getListMerVendor } from '@db/apps/mer/db';
 import dayjs from "dayjs";
 import 'vue-skeletor/dist/vue-skeletor.css';
 
 const emit = defineEmits([
   'update:isDialogVisible',
+  'isAddDialogVisible',
   'vendorData',
   'isSnackbarResponse',
   'isSnackbarResponseAlertColor',
   'errorMessages',
-  'errors'
+  'errors',
 ])
 
 const props = defineProps({
@@ -18,10 +19,6 @@ const props = defineProps({
     required: true,
   },
   typeDialog: {
-    type: String,
-    required: true
-  },
-  contractReqNo: {
     type: String,
     required: true
   },
@@ -42,12 +39,14 @@ const props = defineProps({
 const isLoading = ref(true)
 const refVForm = ref()
 const typeDialog = computed(() => props.typeDialog)
-const contractReqNo = computed(() => props.contractReqNo)
 const contractReqId = computed(() => props.contractReqId)
 const loadingBtn = ref([])
 const loadingBtnSecond = ref([])
 const pathData = ref('')
 const isDialogViewPathVisible = ref(false)
+const isDialogSingleVisible = ref(false)
+const cjbId = ref(0)
+const fetchSingleTrigger = ref(0)
 const token = useCookie('accessToken')
 const contractData = reactive({
   vendor_name: null,
@@ -70,23 +69,26 @@ const contractData = reactive({
   con_duration_end: null,
   con_file_attachment: null,
   vnd_contact_person: null,
-  suggest_vendor: null
+  suggest_vendor: null,
+  vnd_name: null
 })
+
 const contractJobData = reactive({
   contract_job: [],
   job_type: [],
   job_labor: [],
+  job_target: [],
   con_comment_pbl_reject: null
 })
-const dataMerVendor = ref([])
 const dataMerPaymentType = ref([])
-const dataMerPaymentTemplate = ref([])
 const allDataVendor = ref([])
+const dataMerVendor = ref([])
 
 const dialogModelValueUpdate = () => {
   contractJobData.contract_job = [];
   contractJobData.job_type = [];
   contractJobData.job_labor = [];
+  contractJobData.job_target = [];
   contractJobData.con_comment_pbl_reject = null;
   refVForm.value?.reset()
   refVForm.value?.resetValidation()
@@ -143,29 +145,10 @@ const fetchMerPaymentType = async () => {
   }
 }
 
-const fetchMerPaymentTemplate = async () => {
-  try {
-    const response = await getListMerPaymentTemplate();
-    if (response.status === 200) {
-
-      const rows = response.data.rows || [];
-      dataMerPaymentTemplate.value = rows.map((row) => ({
-        title: row.payment_name,
-        value: row.payment_code,
-      }));
-    } else {
-      console.error('Failed to fetch mer payment template data');
-    }
-    
-  } catch (error) {
-    console.error('Error fetching mer payment template data');
-  }
-}
-
 const fetchContractEdit = async () => {
   try {
     isLoading.value = true;
-    const response = await $api(`/apps/contract/edit/${contractReqNo.value}`, {
+    const response = await $api(`/apps/contract/edit/${contractReqId.value}`, {
       method: 'GET',
       onResponseError({ response }) {
         const responseData = response._data;
@@ -202,8 +185,7 @@ const fetchContractEdit = async () => {
       contractData.con_file_attachment = dataResult.con_file_attachment;
       contractData.vnd_contact_person = dataResult.vnd_contact_person;
       contractData.suggest_vendor = dataResult.vnd_id;
-      // contractData.BU = dataResult.bu_id.split(",")
-      //   .map((id) => parseInt(id.trim(), 10));
+      contractData.vnd_name = dataResult.vnd_name;
     } else {
       emit('update:isDialogVisible', false)
       emit('isSnackbarResponse',true)
@@ -245,6 +227,7 @@ const fetchContractJobEdit = async () => {
       contractJobData.job_type = dataResult.job_type.length > 0 ? dataResult.job_type : [];
       contractJobData.contract_job = dataResult.contract_job.length > 0 ? dataResult.contract_job : [];
       contractJobData.job_labor = dataResult.job_labor.length > 0 ? dataResult.job_labor : [];
+      contractJobData.job_target = dataResult.job_target.length > 0 ? dataResult.job_target : [];
     } else {
       emit('update:isDialogVisible', false)
       emit('isSnackbarResponse',true)
@@ -259,71 +242,32 @@ const fetchContractJobEdit = async () => {
   }
 }
 
-const validateCreate = async (type) => {
-  if(type == 'Submit') {
-    refVForm.value?.validate().then(valid => {
-      if (valid.valid) {
-        onSubmit()
-      }
-    })
-  } else if(type == 'Reject') {
-    onReject(type)
-  }
+const openAddJobtypeDialog = () => {
+  emit('isAddDialogVisible', {type: 'Add Job Type', stat: true})
 }
 
-const onSubmit = async () => {
-  refVForm.value?.validate().then(({ valid }) => {
-    try {
-      if (valid) {
-        loadingBtn.value[0] = true
-        const mode = props.typeDialog;
-        const payload = {
-          con_req_id: contractReqId.value,
-          cjb_id: contractJobData.contract_job.length > 0 ? contractJobData.contract_job.map((ci) => ci.cjb_id) : [],
-          cjb_pay_type: contractJobData.contract_job.length > 0 ? contractJobData.contract_job.map((cpt) => cpt.cjb_pay_type) : [],
-          cjb_pay_template: contractJobData.contract_job.length > 0 ? contractJobData.contract_job.map((cpt) => cpt.cjb_pay_template) : [],
-          cjb_rate: contractJobData.contract_job.length > 0 ? contractJobData.contract_job.map((cr) => cr.cjb_rate) : [],
-          suggest_vendor: contractData.suggest_vendor
-        }
-        emit("vendorData", { mode, formData: { ...payload }, dialogUpdate: dialogModelValueUpdate });
-      } else {
-        loadingBtn.value[0] = false
-      }
-    } catch (err) {
-      loadingBtn.value[0] = false
-    }
-  })
+const openSingleJobtypeDialog = (cjb_id) => {
+  emit('isAddDialogVisible', {type: 'Edit Job Type', stat: true, cjb_id})
 }
 
-const onReject = async (type) => {
-    try {
-      loadingBtnSecond.value[0] = true
-      const mode = type;
-      const payload = {
-        con_req_id: contractReqId.value,
-        con_comment_pbl_reject: contractJobData.con_comment_pbl_reject,
-      }
-      emit("vendorData", { mode, formData: { ...payload }, dialogUpdate: dialogModelValueUpdate });
-    } catch (err) {
-      loadingBtnSecond.value[0] = false
-    }
+const openDeleteJobtypeDialog = (cjb_id) => {
+  emit('isDialogDeleteVisible', {type: 'Delete', stat: true, cjb_id})
 }
 
 watch(
-  [() => contractReqNo.value, () => contractReqId.value, () => typeDialog.value, () => props.fetchTrigger],
-    ([newConreqNo,newConreqId,newType]) => {
-      if (newType === "Add" && newConreqNo && newConreqId) {
+  [() => contractReqId.value, () => typeDialog.value, () => props.fetchTrigger],
+    ([newConreqId,newType]) => {
+      if (newConreqId && newType === "List Job Type" || newType === "Edit Job Type" || newType === "Delete") {
         fetchContractEdit()
         fetchContractJobEdit()
+        fetchMerPaymentType()
+        fetchMerVendorData()
       }
-      fetchMerVendorData()
-      fetchMerPaymentType()
-      fetchMerPaymentTemplate()
       loadingBtn.value[0] = false;
       loadingBtnSecond.value[0] = false;
   },
   { immediate: true }
-);
+)
 </script>
 
 <template>
@@ -460,26 +404,15 @@ watch(
                           <td><strong>Vendor Name</strong></td>
                           <td>:</td>
                           <td>
-                            <AppAutocomplete
-                              placeholder="Select suggest vendor"
-                              v-model="contractData.suggest_vendor"
-                              :rules="[requiredValidator]"
-                              :items="dataMerVendor"
-                              :item-title="'title'"
-                              :item-value="'value'"
-                              :error-messages="props.errors?.suggest_vendor"
-                              clearable
-                              />
+                            {{ contractData.vnd_name }}
                           </td>
                         </tr>
                         <tr>
                           <td><strong>Vendor PIC Name</strong></td>
                           <td>:</td>
                           <td>
-                            {{
-                              allDataVendor.find((data) => data.vnd_id === contractData.suggest_vendor)?.vnd_contact_person || 'No PIC Found'
-                            }}
-                          </td>                      
+                            {{ allDataVendor.find((data) => data.vnd_id === contractData.suggest_vendor)?.vnd_contact_person || 'No PIC Found' }}
+                          </td>
                         </tr>
                       </tbody>
                     </VTable>
@@ -492,7 +425,7 @@ watch(
             <Skeletor height="250" />
           </div>
           <!-- Detail -->
-          <VTable class="border text-high-emphasis mt-6" :style="contractJobData.contract_job.length <= 2 ? 'height:max-content;' : 'height:80vh;'" fixed-header  v-if="!isLoading">
+          <VTable class="border text-high-emphasis mt-6" fixed-header :style="contractJobData.contract_job.length <= 2 ? 'height:max-content;' : 'height:80vh;'" v-if="!isLoading">
             <thead>
               <tr>
                 <th scope="col">
@@ -511,13 +444,7 @@ watch(
                   scope="col"
                   class="text-center"
                 >
-                  Job Target Qty
-                </th>
-                <th
-                  scope="col"
-                  class="text-center"
-                >
-                  UoM
+                  PIC
                 </th>
                 <th
                   scope="col"
@@ -529,13 +456,19 @@ watch(
                   scope="col"
                   class="text-center"
                 >
-                  Payment Template
+                  Total Job Target Qty
                 </th>
                 <th
                   scope="col"
                   class="text-center"
                 >
-                  Rate
+                  UoM
+                </th>
+                <th
+                  scope="col"
+                  class="text-center"
+                >
+                  Actions
                 </th>
               </tr>
             </thead>
@@ -561,10 +494,16 @@ watch(
                           .join(', ')
                       }}
                     </template>
-                  </template>                
+                  </template>
                 </td>
                 <td>
                   {{ data.cjb_desc || '-' }}
+                </td>
+                <td>
+                  {{ data.cjb_pic || '' }}
+                </td>
+                <td>
+                  {{ dataMerPaymentType.find((mpt) => mpt.value == data.cjb_pay_type)?.title || '-' }}
                 </td>
                 <td>
                   {{ data.cjb_qty || 0 }}
@@ -572,45 +511,21 @@ watch(
                 <td>
                   {{ data.unt_id || '-' }}
                 </td>
-                <td style="width: 200px;">
-                  <AppAutocomplete
-                    placeholder="Select payment type"
-                    v-model="data.cjb_pay_type"
-                    :rules="[requiredValidator]"
-                    :items="dataMerPaymentType"
-                    :item-title="'title'"
-                    :item-value="'value'"
-                    :error-messages="props.errors?.cjb_pay_type"
-                    clearable
-                  />
-                </td>
-                <td style="width: 200px;">
-                  <AppAutocomplete
-                    placeholder="Select payment template"
-                    v-model="data.cjb_pay_template"
-                    :rules="[requiredValidator]"
-                    :items="dataMerPaymentTemplate"
-                    :item-title="'title'"
-                    :item-value="'value'"
-                    :error-messages="props.errors?.cjb_pay_template"
-                    clearable
-                  />
-                  <VTooltip open-delay="200" location="top" activator="parent" v-if="data.cjb_pay_template != null && data.cjb_pay_template != ''">
-                    <span>{{ dataMerPaymentTemplate.find((mpt) => mpt.value == data.cjb_pay_template)?.title }}</span>
-                  </VTooltip>
-                </td>
-                <td style="width: 200px;">
-                  <AppTextField
-                    v-model="data.cjb_rate"
-                    placeholder="Type here..."
-                    :rules="[requiredValidator]"
-                    :error-messages="props.errors?.cjb_rate"
-                    type="number"
-                    clearable
-                  />
-                  <VTooltip open-delay="200" location="top" activator="parent" v-if="data.cjb_rate != null && data.cjb_rate != ''">
-                    <span>{{ data.cjb_rate }}</span>
-                  </VTooltip>
+                <td>
+                  <div class="d-flex">
+                    <IconBtn @click="openSingleJobtypeDialog(data.cjb_id)">
+                      <VIcon icon="tabler-edit" />
+                      <VTooltip open-delay="200" location="top" activator="parent">
+                        <span>Edit Job Type</span>
+                      </VTooltip>
+                    </IconBtn>
+                    <IconBtn @click="openDeleteJobtypeDialog(data.cjb_id)">
+                      <VIcon icon="tabler-trash" />
+                      <VTooltip open-delay="200" location="top" activator="parent">
+                        <span>Delete data</span>
+                      </VTooltip>
+                    </IconBtn>
+                  </div>
                 </td>
               </tr>
               <tr>
@@ -644,54 +559,87 @@ watch(
                       </tr>
                     </tbody>
                   </VTable>
-                  <VDivider class="my-6 border-dashed" />
+                </td>
+              </tr>
+              <tr>
+                <td colspan="8">
+                  <VTable class="border collapse mt-3 mb-5">
+                    <thead>
+                      <tr>
+                        <th scope="col">
+                          Year-Month
+                        </th>
+                        <th scope="col">
+                          Type
+                        </th>
+                        <th scope="col">
+                          Increment
+                        </th>
+                        <th scope="col">
+                          Total
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <template v-if="contractJobData.job_target.length > 0" v-for="(innerArray, indexOuter) in contractJobData.job_target" :key="indexOuter">
+                        <tr v-for="(dataCt, indexCb) in innerArray" :key="dataCt.cjt_id">                        
+                          <td v-if="dataCt.cjb_id == data.cjb_id">
+                            {{ dayjs(dataCt.cjt_year + '-' + dataCt.cjt_month).format('YYYY-MM') }}
+                          </td>
+                          <td v-if="dataCt.cjb_id == data.cjb_id">
+                            {{ dataCt.cjt_type == '1' ? 'Same With UOM' : 'Percentage' }}
+                          </td>
+                          <td v-if="dataCt.cjb_id == data.cjb_id">
+                            {{ dataCt.cjt_qty }}
+                          </td>
+                          <td v-if="dataCt.cjb_id == data.cjb_id">
+                            {{ dataCt.cjt_total }}
+                          </td>
+                        </tr>
+                      </template>
+                      <tr v-else>
+                        <td colspan="4">
+                          Data is empty
+                        </td>
+                      </tr>
+                    </tbody>
+                  </VTable>
+                  <VDivider v-if="index !== contractJobData.contract_job.length - 1" class="my-6 border-dashed" />
                 </td>
               </tr>
             </tbody>
           </VTable>
-          <div class="mt-4">
-            <Skeletor width="125" height="26" class="mb-2" v-if="isLoading"/>
-            <h6 class="text-h6 mb-2" v-if="!isLoading">
-              Comment Reject:
-            </h6>
-            <Skeletor height="80" v-if="isLoading"/>
-            <VTextarea v-if="!isLoading"
-              v-model="contractJobData.con_comment_pbl_reject"
-              placeholder="Write comment here..."
-              :rows="2"
-            />
-          </div>
-          <VRow class="d-flex justify-end mt-5">
-            <div class="card__actions d-flex justify-end" v-if="isLoading">
-              <Skeletor width="96" height="36" class="me-4"/>
-              <Skeletor width="96" height="36" />
+          <h3 v-if="contractJobData.contract_job.length == 0 && !isLoading" class="mt-5 d-flex justify-center">Data is empty</h3>
+          <VRow class="d-flex justify-center mt-5">
+            <div class="card__actions d-flex justify-center" v-if="isLoading">
+              <Skeletor width="150" height="36" />
             </div>
             <div v-if="!isLoading">
               <VBtn
-                :loading="loadingBtn[0]"
-                :disabled="loadingBtn[0]"
-                type="submit"
                 class="me-4"
-                @click="validateCreate('Submit')"
+                variant="outlined"
+                @click="openAddJobtypeDialog"
               >
-                Submit
-              </VBtn>
-              <VBtn
-                :loading="loadingBtnSecond[0]"
-                :disabled="loadingBtnSecond[0]"
-                color="error"
-                variant="tonal"
-                @click="validateCreate('Reject')"
-              >
-                Reject
+                <VIcon
+                  icon="tabler-plus"
+                  start
+                  class="flip-in-rtl"
+                />
+                Add New Job Type
               </VBtn>
             </div>
           </VRow>
         </VForm>
       </VCard>
   </VDialog>
-  <VendorViewPathDialog
+  <PPSOngoingViewPathDialog
     v-model:isDialogViewPathVisible="isDialogViewPathVisible"
     :path-data="pathData"
+  />
+
+  <PPSOngoingSingleDialog
+    v-model:isDialogSingleVisible="isDialogSingleVisible"
+    :cjb-id="cjbId"
+    :fetch-single-trigger="fetchSingleTrigger"
   />
 </template>
