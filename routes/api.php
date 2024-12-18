@@ -33,6 +33,7 @@ use App\Http\Controllers\Api\{
   TrnJobTypeController,
   ContractController,
   ContractJobController,
+  EstimatedController,
   PaymentTemplateController,
   PenilaianController,
   TimeHistoryController
@@ -75,6 +76,17 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     Route::controller(TimeHistoryController::class)->group(function () {
       Route::get('/history/list/{conReq}', 'list');
       Route::get('/history-reviewer/list/{conReq}', 'listReviewer');
+      Route::get('/history-cost/list/{conReq}', 'listCost');
+    });
+    // Estimated
+    Route::controller(EstimatedController::class)->group(function () {
+      Route::post('/estimated-cost', 'cost');
+      Route::get('/estimated-cost/list/{conReq}/{dayCount}', 'costList');
+    });
+    // Approval 1
+    Route::controller(Approval1Controller::class)->group(function () {
+      Route::post('/approval-lvl1-approve/add', 'addApprove');
+      Route::post('/approval-lvl1-reject/add', 'addReject');
     });
   });
 });

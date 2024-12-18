@@ -111,22 +111,6 @@ return [
             // 'encrypt' => env('DB_ENCRYPT', 'yes'),
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
-
-        'wbms' => [
-            'driver' => 'sqlsrv',
-            'url' => env('DB_URL'),
-            'host' => env('DB_WBMS_HOST', 'localhost'),
-            'port' => env('DB_WBMS_PORT', '1433'),
-            'database' => env('DB_WBMS_DATABASE', 'laravel'),
-            'username' => env('DB_WBMS_USERNAME', 'root'),
-            'password' => env('DB_WBMS_PASSWORD', ''),
-            'charset' => env('DB_CHARSET', 'utf8'),
-            'prefix' => '',
-            'prefix_indexes' => true,
-            'search_path' => 'public',
-            'sslmode' => 'prefer',
-        ],
-
     ],
 
     /*

@@ -1,8 +1,10 @@
+import { BASE_API_URL } from '@/plugins/1.router/additional-routes';
+
 export async function fetchBudgetBU(currentPage, rowPerPage, rowSearch, yearFilter) {
   let start = 0;
   const currentYear = new Date().getFullYear();
   const year = yearFilter || currentYear;
-  const url = 'http://localhost:8000/api/apps/budget-bu/search';
+  const url = `${BASE_API_URL}/api/apps/budget-bu/search`;
   const token = 'YOUR_BEARER_TOKEN_HERE';
   
   if(currentPage != 1 && currentPage > 1)

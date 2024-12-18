@@ -1,5 +1,7 @@
+import { BASE_API_URL } from '@/plugins/1.router/additional-routes';
+
 export async function getListCompany() {
-  const url = 'http://localhost:8000/api/apps/company/list';
+  const url = `${BASE_API_URL}/api/apps/company/list`;
   // const token = localStorage.getItem('token') || 'YOUR_BEARER_TOKEN_HERE';
 
   try {

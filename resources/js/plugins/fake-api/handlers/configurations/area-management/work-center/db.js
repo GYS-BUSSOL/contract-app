@@ -1,6 +1,8 @@
+import { BASE_API_URL } from '@/plugins/1.router/additional-routes';
+
 export async function fetchAreaWC(currentPage, rowPerPage, rowSearch, statusFilter) {
   let start = 0;
-  const url = 'http://localhost:8000/api/configurations/area-management-wc/search';
+  const url = `${BASE_API_URL}/api/configurations/area-management-wc/search`;
   const token = 'YOUR_BEARER_TOKEN_HERE';
   
   if(currentPage != 1 && currentPage > 1)

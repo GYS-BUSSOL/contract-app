@@ -1,5 +1,7 @@
+import { BASE_API_URL } from '@/plugins/1.router/additional-routes';
+
 export async function getListMerContractStatus(tblName,colName) {
-  const url = 'http://localhost:8000/api/apps/years-range/list';
+  const url = `${BASE_API_URL}/api/apps/years-range/list`;
   // const token = localStorage.getItem('token') || 'YOUR_BEARER_TOKEN_HERE';
   const payload = {
     'tbl': tblName,

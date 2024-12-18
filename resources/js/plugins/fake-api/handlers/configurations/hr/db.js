@@ -1,6 +1,8 @@
+import { BASE_API_URL } from '@/plugins/1.router/additional-routes';
+
 export async function fetchHumanResources(currentPage, rowPerPage, rowSearch, roleFilter) {
   let start = 0;
-  const url = 'http://localhost:8000/api/configurations/human-resources/search';
+  const url = `${BASE_API_URL}/api/configurations/human-resources/search`;
   const token = 'YOUR_BEARER_TOKEN_HERE';
   
   if(currentPage != 1 && currentPage > 1)

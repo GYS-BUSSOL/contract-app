@@ -1,5 +1,7 @@
+import { BASE_API_URL } from '@/plugins/1.router/additional-routes';
+
 export async function getListMerUser(accessRole) {
-  const url = `http://localhost:8000/api/configurations/human-resources/list/${accessRole}`;
+  const url = `${BASE_API_URL}/api/configurations/human-resources/list/${accessRole}`;
   // const token = localStorage.getItem('token') || 'YOUR_BEARER_TOKEN_HERE';
 
   try {
@@ -22,7 +24,7 @@ export async function getListMerUser(accessRole) {
 }
 
 export async function getListMerLaborType() {
-  const url = 'http://localhost:8000/api/configurations/labor-type/list';
+  const url = `${BASE_API_URL}/api/configurations/labor-type/list`;
   // const token = localStorage.getItem('token') || 'YOUR_BEARER_TOKEN_HERE';
 
   try {
@@ -45,7 +47,7 @@ export async function getListMerLaborType() {
 }
 
 export async function getListMerJobType() {
-  const url = 'http://localhost:8000/api/configurations/job-type/list';
+  const url = `${BASE_API_URL}/api/configurations/job-type/list`;
   // const token = localStorage.getItem('token') || 'YOUR_BEARER_TOKEN_HERE';
 
   try {
@@ -68,7 +70,7 @@ export async function getListMerJobType() {
 }
 
 export async function getListMerPaymentTemplate() {
-  const url = 'http://localhost:8000/api/apps/mer-payment-template/list';
+  const url = `${BASE_API_URL}/api/apps/mer-payment-template/list`;
   // const token = localStorage.getItem('token') || 'YOUR_BEARER_TOKEN_HERE';
 
   try {
@@ -91,7 +93,7 @@ export async function getListMerPaymentTemplate() {
 }
 
 export async function getListMerPaymentType() {
-  const url = 'http://localhost:8000/api/apps/mer-payment-type/list';
+  const url = `${BASE_API_URL}/api/apps/mer-payment-type/list`;
   // const token = localStorage.getItem('token') || 'YOUR_BEARER_TOKEN_HERE';
 
   try {
@@ -114,7 +116,7 @@ export async function getListMerPaymentType() {
 }
 
 export async function getListMerMeasurementUnit() {
-  const url = 'http://localhost:8000/api/apps/measurement-unit/list';
+  const url = `${BASE_API_URL}/api/apps/measurement-unit/list`;
   // const token = localStorage.getItem('token') || 'YOUR_BEARER_TOKEN_HERE';
 
   try {
@@ -137,7 +139,7 @@ export async function getListMerMeasurementUnit() {
 }
 
 export async function getListMerContractStatus() {
-  const url = 'http://localhost:8000/api/apps/mer-contract-status/list';
+  const url = `${BASE_API_URL}/api/apps/mer-contract-status/list`;
   // const token = localStorage.getItem('token') || 'YOUR_BEARER_TOKEN_HERE';
 
   try {
@@ -160,7 +162,7 @@ export async function getListMerContractStatus() {
 }
 
 export async function getListMerBU() {
-  const url = 'http://localhost:8000/api/apps/mer-bu/list';
+  const url = `${BASE_API_URL}/api/apps/mer-bu/list`;
   // const token = localStorage.getItem('token') || 'YOUR_BEARER_TOKEN_HERE';
 
   try {
@@ -183,7 +185,7 @@ export async function getListMerBU() {
 }
 
 export async function getListMerCC() {
-  const url = 'http://localhost:8000/api/apps/mer-cc/list';
+  const url = `${BASE_API_URL}/api/apps/mer-cc/list`;
   // const token = localStorage.getItem('token') || 'YOUR_BEARER_TOKEN_HERE';
 
   try {
@@ -206,7 +208,7 @@ export async function getListMerCC() {
 }
 
 export async function getListMerWC() {
-  const url = 'http://localhost:8000/api/apps/mer-wc/list';
+  const url = `${BASE_API_URL}/api/apps/mer-wc/list`;
   // const token = localStorage.getItem('token') || 'YOUR_BEARER_TOKEN_HERE';
 
   try {
@@ -229,7 +231,7 @@ export async function getListMerWC() {
 }
 
 export async function getListMerVendor() {
-  const url = 'http://localhost:8000/api/apps/mer-vendor/list';
+  const url = `${BASE_API_URL}/api/apps/mer-vendor/list`;
   // const token = localStorage.getItem('token') || 'YOUR_BEARER_TOKEN_HERE';
 
   try {
@@ -252,7 +254,7 @@ export async function getListMerVendor() {
 }
 
 export async function getListBU() {
-  const url = 'http://localhost:8000/api/apps/bu/list';
+  const url = `${BASE_API_URL}/api/apps/bu/list`;
   // const token = localStorage.getItem('token') || 'YOUR_BEARER_TOKEN_HERE';
 
   try {
@@ -276,7 +278,7 @@ export async function getListBU() {
 }
 
 export async function getListContract() {
-  const url = 'http://localhost:8000/api/apps/contract/list';
+  const url = `${BASE_API_URL}/api/apps/contract/list`;
   // const token = localStorage.getItem('token') || 'YOUR_BEARER_TOKEN_HERE';
 
   try {
@@ -300,7 +302,7 @@ export async function getListContract() {
 }
 
 export async function getListSignatureType() {
-  const url = 'http://localhost:8000/api/configurations/signature-type/list';
+  const url = `${BASE_API_URL}/api/configurations/signature-type/list`;
   // const token = localStorage.getItem('token') || 'YOUR_BEARER_TOKEN_HERE';
 
   try {

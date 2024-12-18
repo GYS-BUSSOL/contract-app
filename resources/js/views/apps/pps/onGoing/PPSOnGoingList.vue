@@ -309,7 +309,6 @@ const fetchAddJobTypeData = async (type, JobTypeData, clearedForm, clearedJobtyp
       }
       formData.append('con_id',conId.value)
       formData.append('periode',rangeIncrement.value)
-      console.log({rangeIncrement: rangeIncrement.value, con_id: conId.value});
       const response = await $api('/apps/trn-job-type/add', {
         method: 'POST',
         body: formData,

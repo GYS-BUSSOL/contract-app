@@ -2,9 +2,15 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
+use Carbon\Carbon;
+use App\Models\Budget;
 use App\Models\Contract;
-use Illuminate\Http\Request;
+use App\Models\BudgetHistory;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use App\Models\TimeHistory;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\{Request, JsonResponse};
 
 class Approval1Controller extends Controller
 {
@@ -87,6 +93,145 @@ class Approval1Controller extends Controller
                     'rows' => [],
                     'total_record' => 0
                 ],
+            ], 500);
+        }
+    }
+
+    public function addApprove(Request $request)
+    {
+        $data = [
+            'con_req_id' => ['required'],
+            'con_comment_coo_approve' => ['required', 'string'],
+            'grand_total' => ['required', 'numeric'],
+            'avg_expense' => ['required', 'numeric'],
+            'avg_balance' => ['required', 'numeric'],
+        ];
+
+        $validated = $this->handleValidationException($request, $data);
+        if ($validated instanceof JsonResponse) {
+            return $validated;
+        }
+
+        try {
+            DB::beginTransaction();
+            $ipAddress = $request->server('REMOTE_ADDR');
+            $currentDate = Carbon::now();
+            $userName = Auth::user()->usr_display_name;
+
+            $contractUpdate = $this->contract
+                ->where('con_req_id', $validated['con_req_id'])
+                ->update([
+                    'sts_id' => 4,
+                    'con_comment_coo_approve' => $validated['con_comment_coo_approve'],
+                    'grandTotal' => $validated['grand_total'],
+                ]);
+            $contract = $this->contract->firstWhere('con_req_id', $validated['con_req_id']);
+
+            $budget = Budget::where([
+                ['bgt_bu', $contract['con_bu']],
+                ['bgt_year', Carbon::parse($contract['con_duration_start'])->format('Y')]
+            ])
+                ->update([
+                    'bgt_expense' => $validated['avg_expense'],
+                    'bgt_balance' => $validated['avg_balance'],
+                ]);
+
+            $budgetHistory = BudgetHistory::create([
+                [
+                    'bgth_year' => Carbon::parse($contract['con_duration_start'])->format('Y'),
+                    'bgth_bu' => $contract->con_bu,
+                    'bgth_amount' => $validated['avg_expense'],
+                    'bgth_category' => 'expense',
+                    'aud_user' => $userName,
+                    'aud_date' => $currentDate,
+                    'aud_machine' => $ipAddress,
+                ],
+                [
+                    'bgth_year' => Carbon::parse($contract['con_duration_start'])->format('Y'),
+                    'bgth_bu' => $contract->con_bu,
+                    'bgth_amount' => $validated['avg_balance'],
+                    'bgth_category' => 'balance',
+                    'aud_user' => $userName,
+                    'aud_date' => $currentDate,
+                    'aud_machine' => $ipAddress,
+                ]
+            ]);
+
+            $timeHistory = TimeHistory::create([
+                'con_id' => $validated['con_req_id'],
+                'sts_id' => 4,
+                'aud_user' => $userName,
+                'aud_date' => $currentDate,
+                'aud_prog' => 'CMSY',
+                'aud_machine' => $ipAddress,
+                'ths_comment' => $validated['con_comment_coo_approve'],
+            ]);
+
+            if ($contractUpdate && $budget && $budgetHistory && $timeHistory) {
+                DB::commit();
+                return response()->json([
+                    'status' => 200,
+                    'message' => 'Approval 1 updated successfully'
+                ], 200);
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => 500,
+                'error' => 'Server error',
+                'message' => 'Approval 1 failed to update',
+            ], 500);
+        }
+    }
+
+    public function addReject(Request $request)
+    {
+        $data = [
+            'con_req_id' => ['required'],
+            'con_comment_coo_approve' => ['required', 'string'],
+        ];
+
+        $validated = $this->handleValidationException($request, $data);
+        if ($validated instanceof JsonResponse) {
+            return $validated;
+        }
+
+        try {
+            DB::beginTransaction();
+            $ipAddress = $request->server('REMOTE_ADDR');
+            $currentDate = Carbon::now();
+            $userName = Auth::user()->usr_display_name;
+
+            $contractUpdate = $this->contract
+                ->where('con_req_id', $validated['con_req_id'])
+                ->update([
+                    'sts_id' => 5,
+                    'con_comment_coo_approve' => $validated['con_comment_coo_approve'],
+                ]);
+
+            $timeHistory = TimeHistory::create([
+                'con_id' => $validated['con_req_id'],
+                'sts_id' => 5,
+                'aud_user' => $userName,
+                'aud_date' => $currentDate,
+                'aud_prog' => 'CMSY',
+                'aud_machine' => $ipAddress,
+                'ths_comment' => $validated['con_comment_coo_approve'],
+            ]);
+
+            if ($contractUpdate && $timeHistory) {
+                DB::commit();
+                return response()->json([
+                    'status' => 200,
+                    'message' => 'Approval 1 updated successfully'
+                ], 200);
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => 500,
+                'error' => 'Server error',
+                'message' => 'Approval 1 failed to update',
             ], 500);
         }
     }

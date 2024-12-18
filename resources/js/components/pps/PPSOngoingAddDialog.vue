@@ -82,6 +82,7 @@ const dataMerJobType = ref([])
 const dataMerMeasurementUnit = ref([])
 const dataMerPaymentType = ref([])
 const dataMerLaborType = ref([])
+const numberedSteps = ref([])
 const jobTarget = ref()
 const isPPSOngoingDialogViewPathVisible = ref(false)
 const pathData = ref('')
@@ -151,9 +152,6 @@ const ppsOngoingData = reactive({
   cjt_qty: null,
   total: null,
 })
-
-const numberedSteps = ref([]);
-
 
 // Editor Target Estimate
 const editorTargetEstimate = useEditor({
@@ -664,7 +662,7 @@ const onSubmitPPS = () => {
   try {
     loadingBtn.value[0] = true
     const mode = props.typeDialog;
-    emit("PPSData", { mode, formData: {... formDataToObject}, dialogUpdate: dialogModelValueUpdate });
+    emit("PPSData", { mode, formData: {...formDataToObject}, dialogUpdate: dialogModelValueUpdate });
   } catch (err) {
     loadingBtn.value[0] = false
   }
@@ -693,7 +691,7 @@ const onSubmitJobType = (type) => {
       loadingBtn.value[0] = true;
     else if(type == 'Continue')
       loadingBtnSecond.value[0] = true;
-    emit("JobTypeData", { type ,formData: {... formDataToObject}, dialogUpdate: dialogModelValueUpdate, dialogJobtypeUpdate: dialogModelJobtypeValueUpdate });
+    emit("JobTypeData", { type ,formData: {...formDataToObject}, dialogUpdate: dialogModelValueUpdate, dialogJobtypeUpdate: dialogModelJobtypeValueUpdate });
   } catch (err) {
     isDisabled.value = false;
     loadingBtn.value[0] = false;

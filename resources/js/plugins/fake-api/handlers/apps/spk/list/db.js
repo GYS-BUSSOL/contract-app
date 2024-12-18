@@ -1,6 +1,8 @@
+import { BASE_API_URL } from '@/plugins/1.router/additional-routes';
+
 export async function fetchSPKList(currentPage, rowPerPage, rowSearch, expiredFilter, token) {
   let start = 0;
-  const url = 'http://localhost:8000/api/apps/spk-list/search';
+  const url = `${BASE_API_URL}/api/apps/spk-list/search`;
   
   if(currentPage != 1 && currentPage > 1)
     start = (currentPage * rowPerPage) - rowPerPage

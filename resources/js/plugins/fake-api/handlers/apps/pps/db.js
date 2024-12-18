@@ -1,6 +1,8 @@
+import { BASE_API_URL } from '@/plugins/1.router/additional-routes';
+
 export async function fetchPPSOnGoing(currentPage, rowPerPage, rowSearch, priorityFilter, statusFilter, expiredFilter) {
   let start = 0;
-  const url = 'http://localhost:8000/api/apps/pps-ongoing/search';
+  const url = `${BASE_API_URL}/api/apps/pps-ongoing/search`;
   const token = 'YOUR_BEARER_TOKEN_HERE';
 
   if(currentPage != 1 && currentPage > 1)
@@ -149,7 +151,7 @@ export async function fetchPPSOnGoing(currentPage, rowPerPage, rowSearch, priori
 
 export async function fetchPPSCompleted(currentPage, rowPerPage, rowSearch, priorityFilter, statusFilter, expiredFilter) {
   let start = 0;
-  const url = 'http://localhost:8000/api/apps/pps-completed/search';
+  const url = `${BASE_API_URL}/api/apps/pps-completed/search`;
   const token = 'YOUR_BEARER_TOKEN_HERE';
 
   if(currentPage != 1 && currentPage > 1)

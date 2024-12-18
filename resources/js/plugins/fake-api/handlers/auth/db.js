@@ -1,3 +1,5 @@
+import { BASE_API_URL } from '@/plugins/1.router/additional-routes';
+
 export const db = {
   userTokens: [
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MX0.fhc3wykrAnRpcKApKhXiahxaOe8PSHatad31NuIZ0Zg',
@@ -47,7 +49,7 @@ export const db = {
 
 export async function login(username, password)
 {
-  const url = 'http://localhost:8000/api/auth/login';
+  const url = `${BASE_API_URL}/api/auth/login`;
   const payload = {
     username,
     password

@@ -22,12 +22,12 @@ const props = defineProps({
     type: String,
     required: true
   },
-  contractReqNo: {
+  conReqNo: {
     type: String,
     required: true
   },
-  contractReqId: {
-    type: String,
+  conReqId: {
+    type: Number,
     required: true
   },
   fetchTrigger: {
@@ -48,8 +48,8 @@ const props = defineProps({
 const isLoading = ref(true)
 const refVForm = ref()
 const typeDialog = computed(() => props.typeDialog)
-const contractReqNo = computed(() => props.contractReqNo)
-const contractReqId = computed(() => props.contractReqId)
+const conReqNo = computed(() => props.conReqNo)
+const conReqId = computed(() => props.conReqId)
 const loadingBtn = ref([])
 const loadingBtnSecond = ref([])
 const refSPKForm = ref()
@@ -376,7 +376,7 @@ const printSPK = async () => {
 }
 
 watch(
-  [() => contractReqNo.value, () => contractReqId.value, () => typeDialog.value, () => props.fetchTrigger, () => props.isSuccessNextStep],
+  [() => conReqNo.value, () => conReqId.value, () => typeDialog.value, () => props.fetchTrigger, () => props.isSuccessNextStep],
     ([newConreqNo,newConreqId,newType]) => {
       if (newType === "Add") {
         isLoading.value = false;

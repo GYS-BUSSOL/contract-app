@@ -1,6 +1,8 @@
+import { BASE_API_URL } from '@/plugins/1.router/additional-routes';
+
 export async function fetchApprovalLvl2OnGoing(currentPage, rowPerPage, rowSearch, priorityFilter, expiredFilter) {
   let start = 0;
-  const url = 'http://localhost:8000/api/apps/approval-lvl2-ongoing/search';
+  const url = `${BASE_API_URL}/api/apps/approval-lvl2-ongoing/search`;
   const token = 'YOUR_BEARER_TOKEN_HERE';
 
   if(currentPage != 1 && currentPage > 1)
@@ -138,7 +140,7 @@ export async function fetchApprovalLvl2OnGoing(currentPage, rowPerPage, rowSearc
 
 export async function fetchApprovalLvl2Completed(currentPage, rowPerPage, rowSearch, priorityFilter, expiredFilter) {
   let start = 0;
-  const url = 'http://localhost:8000/api/apps/approval-lvl2-completed/search';
+  const url = `${BASE_API_URL}/api/apps/approval-lvl2-completed/search`;
   const token = 'YOUR_BEARER_TOKEN_HERE';
 
   if(currentPage != 1 && currentPage > 1)
@@ -299,7 +301,7 @@ export async function fetchApprovalLvl2Completed(currentPage, rowPerPage, rowSea
 }
 
 export async function addPPS(request) {
-  const url = 'http://localhost:8000/api/apps/pps/add';
+  const url = `${BASE_API_URL}/api/apps/pps/add`;
   // const token = localStorage.getItem('token') || 'YOUR_BEARER_TOKEN_HERE';
 
   const formData = new FormData();

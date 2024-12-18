@@ -22,6 +22,7 @@ declare module 'vue' {
     AppLoadingIndicator: typeof import('./resources/js/components/AppLoadingIndicator.vue')['default']
     AppPricing: typeof import('./resources/js/components/AppPricing.vue')['default']
     Approval1ViewPathDialog: typeof import('./resources/js/components/approval/Approval1ViewPathDialog.vue')['default']
+    ApprovalAddDialog: typeof import('./resources/js/components/approval/ApprovalAddDialog.vue')['default']
     ApprovalDetailDialog: typeof import('./resources/js/components/approval/ApprovalDetailDialog.vue')['default']
     ApprovalViewPathDialog: typeof import('./resources/js/components/approval/ApprovalViewPathDialog.vue')['default']
     AppSearchHeader: typeof import('./resources/js/components/AppSearchHeader.vue')['default']

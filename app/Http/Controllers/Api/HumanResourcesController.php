@@ -6,7 +6,6 @@ use App\Models\User;
 use Illuminate\Http\{Request, JsonResponse};
 use App\Http\Controllers\Controller;
 use App\Models\MerBUCCWC;
-use Illuminate\Support\Facades\Log;
 
 class HumanResourcesController extends Controller
 {

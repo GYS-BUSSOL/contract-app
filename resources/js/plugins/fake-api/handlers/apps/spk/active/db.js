@@ -1,7 +1,9 @@
 
+import { BASE_API_URL } from '@/plugins/1.router/additional-routes';
+
 export async function fetchSPKActive(currentPage, rowPerPage, rowSearch, vendorFilter, buFilter, token) {
   let start = 0;
-  const url = 'http://localhost:8000/api/apps/spk-active/search';
+  const url = `${BASE_API_URL}/api/apps/spk-active/search`;
   
   if(currentPage != 1 && currentPage > 1)
     start = (currentPage * rowPerPage) - rowPerPage

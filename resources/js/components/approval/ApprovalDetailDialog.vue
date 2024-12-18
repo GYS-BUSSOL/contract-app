@@ -545,6 +545,12 @@ watch(
                 scope="col"
                 class="text-center"
               >
+                PIC	
+              </th>
+              <th
+                scope="col"
+                class="text-center"
+              >
                 Job Target Qty
               </th>
               <th
@@ -600,6 +606,9 @@ watch(
                 <td>
                   {{ data.cjb_desc || '-' }}
                 </td>
+                <td>
+                  {{ data.cjb_pic || '-' }}
+                </td>
                 <td class="text-center">
                   {{ data.cjb_qty || 0 }}
                 </td>
@@ -607,19 +616,19 @@ watch(
                   {{ data.unt_id || '-' }}
                 </td>
                 <td class="text-center">
-                  {{ dataMerPaymentType.find((mpt) => mpt.value == data.cjb_pay_type)?.title }}
+                  {{ dataMerPaymentType.find((mpt) => mpt.value == data.cjb_pay_type)?.title || '-' }}
                   <VTooltip open-delay="200" location="top" activator="parent" v-if="data.cjb_pay_type != null && data.cjb_pay_type != ''">
                     <span>{{ dataMerPaymentType.find((mpt) => mpt.value == data.cjb_pay_type)?.title }}</span>
                   </VTooltip>
                 </td>
                 <td class="text-center">
-                  {{ dataMerPaymentTemplate.find((mpt) => mpt.value == data.cjb_pay_template)?.title }}
+                  {{ dataMerPaymentTemplate.find((mpt) => mpt.value == data.cjb_pay_template)?.title || '-' }}
                   <VTooltip open-delay="200" location="top" activator="parent" v-if="data.cjb_pay_template != null && data.cjb_pay_template != ''">
                     <span>{{ dataMerPaymentTemplate.find((mpt) => mpt.value == data.cjb_pay_template)?.title }}</span>
                   </VTooltip>
                 </td>
                 <td class="text-center">
-                  {{ data.cjb_rate }}
+                  {{ data.cjb_rate || '-' }}
                   <VTooltip open-delay="200" location="top" activator="parent" v-if="data.cjb_rate != null && data.cjb_rate != ''">
                     <span>{{ data.cjb_rate }}</span>
                   </VTooltip>
@@ -627,7 +636,7 @@ watch(
               </tr>
             </template>
             <tr>
-              <td colspan="8">
+              <td colspan="9">
                 <VTable class="border collapse mt-3 mb-5">
                   <thead>
                     <tr>
@@ -660,7 +669,7 @@ watch(
               </td>
             </tr>
             <tr>
-              <td colspan="8">
+              <td colspan="9">
                 <VTable class="border collapse mt-3 mb-5">
                   <thead>
                     <tr>
