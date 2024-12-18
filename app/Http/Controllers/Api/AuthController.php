@@ -88,8 +88,14 @@ class AuthController extends Controller
                         return response()->json([
                             'status' => 201,
                             'message' => 'Login successfully',
-                            'data' => $user,
-                            'token' => $token
+                            'userAbilityRules' => [
+                                [
+                                    'action' => 'manage',
+                                    'subject' => 'all',
+                                ],
+                            ],
+                            'userData' => $user,
+                            'accessToken' => $token
                         ], 201);
                     }
                 }
