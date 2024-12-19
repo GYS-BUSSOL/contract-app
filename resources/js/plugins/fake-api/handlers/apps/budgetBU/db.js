@@ -1,11 +1,11 @@
 import { BASE_API_URL } from '@/plugins/1.router/additional-routes';
+const token = useCookie('accessToken').value
 
 export async function fetchBudgetBU(currentPage, rowPerPage, rowSearch, yearFilter) {
   let start = 0;
   const currentYear = new Date().getFullYear();
   const year = yearFilter || currentYear;
   const url = `${BASE_API_URL}/api/apps/budget-bu/search`;
-  const token = 'YOUR_BEARER_TOKEN_HERE';
   
   if(currentPage != 1 && currentPage > 1)
     start = (currentPage * rowPerPage) - rowPerPage
@@ -69,7 +69,7 @@ export async function fetchBudgetBU(currentPage, rowPerPage, rowSearch, yearFilt
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // 'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(payload)
     });
@@ -82,7 +82,7 @@ export async function fetchBudgetBU(currentPage, rowPerPage, rowSearch, yearFilt
     return data;
 
   } catch (error) {
-    console.error("Error fetching budget bu data:", error);
+    console.error("Error fetching budget bu data:");
     throw error;
   }
 }

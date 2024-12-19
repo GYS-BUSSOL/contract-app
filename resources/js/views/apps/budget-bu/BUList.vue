@@ -12,8 +12,22 @@ const page = ref(1)
 const sortBy = ref()
 const orderBy = ref()
 const selectedRows = ref([])
-const isRenewalAddDialogVisible = ref(false)
-
+const isDialogVisible = ref(false)
+const isTypeDialog = ref('')
+const IDBU = ref(0)
+const yearData = ref('')
+const isSnackbarResponse = ref(false)
+const isSnackbarResponseAlertColor = ref('error')
+const fetchTrigger = ref(0);
+const errorMessages = ref('Internal server error')
+const successMessages = ref('Successfully')
+const token = useCookie('accessToken')
+const errors = ref({
+  year: undefined,
+  number: undefined,
+  description: undefined,
+  bgt_bu_head: undefined,
+})
 const updateOptions = options => {
   sortBy.value = options.sortBy[0]?.key
   orderBy.value = options.sortBy[0]?.order
@@ -72,24 +86,14 @@ const sumBudget = computed(() => budgetBUData.value.sumBudgetBU || 0)
 const sumExpense = computed(() => budgetBUData.value.sumExpenseBU || 0)
 const sumBalance = computed(() => budgetBUData.value.sumBalanceBU || 0)
 
-watch([sumBudget, sumExpense, sumBalance, selectedYears],([newBudget, newExpense, newBalance, activeYear], [oldBudget,oldExpense, oldBalance, oldActiveYear]) => {
-  emit('sumBudget', newBudget);
-  emit('sumExpense', newExpense);
-  emit('sumBalance', newBalance);
-  emit('activeYear', activeYear);
+watch(
+  [sumBudget, sumExpense, sumBalance, selectedYears],
+  ([newBudget, newExpense, newBalance, activeYear]) => {
+    emit('sumBudget', newBudget);
+    emit('sumExpense', newExpense);
+    emit('sumBalance', newBalance);
+    emit('activeYear', activeYear);
 }, { immediate: true })
-
-const deleteBudgetBU = async id => {
-  await $api(`/apps/budget-bu/${ id }`, { method: 'DELETE' })
-
-  // Delete from selectedRows
-  const index = selectedRows.value.findIndex(row => row === id)
-  if (index !== -1)
-    selectedRows.value.splice(index, 1)
-
-  // Refetch Budget BU
-  fetchBudgetBU()
-}
 
 const fetchRangeYear = async () => {
   try {
@@ -117,16 +121,132 @@ const IDRFormat = (data) => {
 
 onMounted(() => {
   fetchRangeYear();
-});
+})
+
+const updateSnackbarResponse = res => {
+  isSnackbarResponse.value = res;
+}
+
+const updateSnackbarResponseAlertColor = color => {
+  isSnackbarResponseAlertColor.value = color;
+}
+
+const alertErrorResponse = () => {
+  fetchTrigger.value += 1;
+  isSnackbarResponse.value = true;
+  isSnackbarResponseAlertColor.value = 'error'
+}
+
+const alertSuccessResponse = () => {
+  fetchTrigger.value += 1;
+  isSnackbarResponse.value = true;
+  isSnackbarResponseAlertColor.value = 'success'
+}
+
+const updateErrorMessages = err => {
+  errorMessages.value = err;
+}
+
+const updateErrors = err => {
+  errors.value = err;
+}
+
+const fetchAddData = async (jobTypeData, clearedForm) => {
+  try {
+      const response = await $api('/apps/budget-bu/add', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(jobTypeData),
+        onResponseError({ response }) {
+          alertErrorResponse()
+          const responseData = response._data;
+          const responseMessage = responseData.message;
+          const responseErrors = responseData.errors;
+          errors.value = responseErrors;
+          errorMessages.value = responseMessage;
+          throw new Error("Created data failed");
+        },
+      });
+
+    const responseStringify = JSON.stringify(response);
+    const responseParse = JSON.parse(responseStringify);
+
+    if(responseParse?.status == 200) {
+      clearedForm()
+      fetchBudgetBU()
+      alertSuccessResponse()
+      const responseMessage = responseParse?.message;
+      successMessages.value = responseMessage;
+      isDialogVisible.value = false
+    } else {
+      alertErrorResponse()
+      throw new Error("Created data failed");
+    }
+  } catch (error) {
+    alertErrorResponse()
+    throw new Error("Created data failed");
+  }
+}
+
+const fetchUpdateData = async (id, formData, clearedForm) => {
+  try {
+    const response = await $api(`/apps/budget-bu/update/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(formData),
+        onResponseError({ response }) {
+          alertErrorResponse()
+          const responseData = response._data;
+          const responseMessage = responseData.message;
+          const responseErrors = responseData.errors;
+          errors.value = responseErrors;
+          errorMessages.value = responseMessage;
+          throw new Error("Updated data failed");
+        },
+      });
+    
+    const responseStringify = JSON.stringify(response);
+    const responseParse = JSON.parse(responseStringify);
+
+    if(responseParse?.status == 200) {
+      clearedForm()
+      fetchBudgetBU()
+      alertSuccessResponse()
+      const responseMessage = responseParse?.message;
+      successMessages.value = responseMessage;
+      isDialogVisible.value = false
+    } else {
+      alertErrorResponse()
+      throw new Error("Updated data failed");
+    }
+  } catch (error) {
+    alertErrorResponse()
+  }
+}
+
+const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
+  if (mode === "Add") {
+    fetchAddData(formData, dialogUpdate)
+  } else if(mode === 'Edit') {
+    fetchUpdateData(IDBU.value, formData, dialogUpdate)
+  }
+}
+
+const openDialog = async ({ id = null, type, year = null }) => {
+  isTypeDialog.value = type
+  isDialogVisible.value = true
+  if(type == 'Edit')
+    IDBU.value = id;
+    yearData.value = year;
+    fetchTrigger.value += 1;
+}
 </script>
 
 <template>
   <section>
     <VCard class="mb-6">
-      <VCardItem class="pb-4">
-        <VCardTitle>Filters</VCardTitle>
-      </VCardItem>
-
       <VCardText>
         <VRow>
           <!-- Select Year -->
@@ -136,10 +256,10 @@ onMounted(() => {
           >
             <AppSelect
               v-model="selectedYears"
-              placeholder="Select Year"
+              placeholder="Select year"
               :items="dataRangeYear"
               clearable
-              clear-icon="tabler-x"
+              prepend-inner-icon="tabler-calendar-month"
             />
           </VCol>
         </VRow>
@@ -170,6 +290,7 @@ onMounted(() => {
               v-model="searchQuery"
               placeholder="Search..."
               clearable
+              prepend-inner-icon="tabler-search"
             />
           </div>
 
@@ -185,7 +306,7 @@ onMounted(() => {
           <VBtn
             color="primary"
             prepend-icon="tabler-plus"
-            @click="isRenewalAddDialogVisible = !isRenewalAddDialogVisible"
+            @click="openDialog({type:'Add'})"
           >
             Create New
           </VBtn>
@@ -200,7 +321,7 @@ onMounted(() => {
         v-model:model-value="selectedRows"
         v-model:page="page"
         :items="budgets"
-        item-value="con_id"
+        item-value="id"
         :items-length="totalBudgetBU"
         :headers="headers"
         class="text-no-wrap"
@@ -210,7 +331,7 @@ onMounted(() => {
         <!-- Year -->
         <template #item.join_first_bgt_year="{ item }">
           <div class="text-body-1 text-high-emphasis text-capitalize">
-            {{ item.join_first_bgt_year }}
+            {{ item.join_first_bgt_year || '-' }}
           </div>
         </template>
 
@@ -231,27 +352,27 @@ onMounted(() => {
         <!-- Budget -->
         <template #item.join_first_bgt_amount="{ item }">
           <div class="text-body-1 text-high-emphasis text-capitalize">
-            {{ IDRFormat(item.join_first_bgt_amount) ?? '-' }}
+            {{ IDRFormat(item.join_first_bgt_amount || 0) }}
           </div>
         </template>
         
         <!-- Expense -->
         <template #item.join_first_bgt_expense="{ item }">
           <div class="text-body-1 text-high-emphasis text-capitalize">
-            {{ IDRFormat(item.join_first_bgt_expense) ?? '-' }}
+            {{ IDRFormat(item.join_first_bgt_expense || 0) }}
           </div>
         </template>
 
         <!-- Balance -->
         <template #item.join_first_bgt_balance="{ item }">
           <div class="text-body-1 text-high-emphasis text-capitalize">
-            {{ IDRFormat(item.join_first_bgt_balance) ?? '-' }}
+            {{ IDRFormat(item.join_first_bgt_balance || 0) }}
           </div>
         </template>
 
         <!-- Actions -->
         <template #item.actions="{ item }">
-          <IconBtn @click="deleteBudgetBU(item.con_id)">
+          <IconBtn @click="openDialog({id: item.number, type: 'Edit', year: item.join_first_bgt_year })">
             <VIcon icon="tabler-edit" />
             <VTooltip open-delay="200" location="top" activator="parent">
               <span>Edit Data</span>
@@ -271,8 +392,36 @@ onMounted(() => {
       <!-- SECTION -->
     </VCard>
   </section>
-  <RenewalAddDialog
-    v-model:isDialogVisible="isRenewalAddDialogVisible"
-    :user-data="customerData"
+  <BUAddDialog
+    v-model:isDialogVisible="isDialogVisible"
+    :errors="errors"
+    :typeDialog="isTypeDialog"
+    :BuId="IDBU"
+    :year-data="yearData"
+    :fetch-trigger="fetchTrigger"
+    @isSnackbarResponseAlertColor="updateSnackbarResponseAlertColor"
+    @isSnackbarResponse="updateSnackbarResponse"
+    @BUData="handleFormSubmit"
+    @errorMessages="updateErrorMessages"
+    @errors="updateErrors"
   />
+
+  <VSnackbar
+    v-model="isSnackbarResponse"
+    transition="scroll-y-reverse-transition"
+    location="top end"
+    variant="flat"
+    :color="isSnackbarResponseAlertColor"
+  >
+    {{ isSnackbarResponseAlertColor == 'error' ? errorMessages : successMessages }}
+    <template #actions>
+      <VBtn
+        color="white"
+        @click="isSnackbarResponse = false"
+      >
+        Close
+      </VBtn>
+    </template>
+  </VSnackbar>
+
 </template>

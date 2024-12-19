@@ -1,4 +1,3 @@
-import { BASE_API_URL } from '@/plugins/1.router/additional-routes';
 
 // export const db = {
 //   userTokens: [
@@ -47,31 +46,31 @@ import { BASE_API_URL } from '@/plugins/1.router/additional-routes';
 //   ],
 // }
 
-export async function login(username, password)
-{
-  const url = `${BASE_API_URL}/api/auth/login`;
-  const payload = {
-    username,
-    password
-  }
+// export async function login(username, password)
+// {
+//   const url = `${BASE_API_URL}/api/auth/login`;
+//   const payload = {
+//     username,
+//     password
+//   }
 
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload)
-    });
+//   try {
+//     const response = await fetch(url, {
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/json',
+//       },
+//       body: JSON.stringify(payload)
+//     });
 
-    if (!response.ok) {
-      throw new Error(`Error: ${response.status}`);
-    }
+//     if (!response.ok) {
+//       throw new Error(`Error: ${response.status}`);
+//     }
 
-    const data = await response.json();
-    return data;
+//     const data = await response.json();
+//     return data;
 
-  } catch (error) {
-    return "Error fetching login";
-  }
-}
+//   } catch (error) {
+//     return "Error fetching login";
+//   }
+// }

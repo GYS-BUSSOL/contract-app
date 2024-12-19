@@ -411,10 +411,6 @@ const openDialog = async ({ id = null, type, con_req_id = null }) => {
 <template>
   <section>
     <VCard class="mb-6">
-      <VCardItem class="pb-4">
-        <VCardTitle>Filters</VCardTitle>
-      </VCardItem>
-
       <VCardText>
         <VRow>
           <!-- Select Expired Status -->
@@ -424,7 +420,7 @@ const openDialog = async ({ id = null, type, con_req_id = null }) => {
               placeholder="Select expired status"
               :items="expiredStatus"
               clearable
-              clear-icon="tabler-x"
+              prepend-inner-icon="tabler-filter-search"
             />
           </VCol>
           <!-- Select Priority -->
@@ -437,7 +433,7 @@ const openDialog = async ({ id = null, type, con_req_id = null }) => {
               placeholder="Select Priority"
               :items="priority"
               clearable
-              clear-icon="tabler-x"
+              prepend-inner-icon="tabler-filter-search"
             />
           </VCol>
           <!-- Select Status -->
@@ -450,7 +446,7 @@ const openDialog = async ({ id = null, type, con_req_id = null }) => {
               placeholder="Select Status"
               :items="status"
               clearable
-              clear-icon="tabler-x"
+              prepend-inner-icon="tabler-filter-search"
             />
           </VCol>
         </VRow>
@@ -481,6 +477,7 @@ const openDialog = async ({ id = null, type, con_req_id = null }) => {
               v-model="searchQuery"
               placeholder="Search..."
               clearable
+              prepend-inner-icon="tabler-search"
             />
           </div>
 
@@ -522,7 +519,7 @@ const openDialog = async ({ id = null, type, con_req_id = null }) => {
         <template #item.con_req_no="{ item }">
           <div class="d-flex align-center gap-x-4">
             <div class="d-flex flex-column">
-              <span style="cursor: pointer;" class="text-base">
+              <span class="text-base">
                 {{ item.con_req_no }}
               </span>
               <div class="text-sm">

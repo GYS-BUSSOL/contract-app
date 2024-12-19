@@ -180,10 +180,6 @@ onMounted(() => {
 <template>
   <section>
     <VCard class="mb-6">
-      <VCardItem class="pb-4">
-        <VCardTitle>Filters</VCardTitle>
-      </VCardItem>
-
       <VCardText>
         <VRow>
           <!-- Select Expired Status -->
@@ -193,7 +189,7 @@ onMounted(() => {
               placeholder="Select expired status"
               :items="expiredStatus"
               clearable
-              clear-icon="tabler-x"
+              prepend-inner-icon="tabler-filter-search"
             />
           </VCol>
           <!-- Select Status -->
@@ -208,7 +204,7 @@ onMounted(() => {
               :item-title="'title'"
               :item-value="'value'"
               clearable
-              clear-icon="tabler-x"
+              prepend-inner-icon="tabler-filter-search"
             />
           </VCol>
         </VRow>
@@ -239,6 +235,7 @@ onMounted(() => {
               v-model="searchQuery"
               placeholder="Search..."
               clearable
+              prepend-inner-icon="tabler-search"
             />
           </div>
 
@@ -272,7 +269,7 @@ onMounted(() => {
         <template #item.con_req_no="{ item }">
           <div class="d-flex align-center gap-x-4">
             <div class="d-flex flex-column">
-              <h6 class="text-base text-primary" style="cursor: pointer;" 
+              <h6 class="text-base text-primary cursor-pointer"
                 @click="openDialog({type: 'Detail', con_req_no: item.con_req_no, con_req_id: item.con_req_id})"
               >
                 {{ item.con_req_no }}

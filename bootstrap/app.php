@@ -2,9 +2,10 @@
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Foundation\Application;
-use App\Http\Middleware\ForceJsonResponse;
+use App\Http\Middleware\{ForceJsonResponse};
 use Illuminate\Validation\ValidationException;
 use Illuminate\Foundation\Configuration\{Exceptions, Middleware};
+use Illuminate\Support\Facades\Auth;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -14,9 +15,6 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // $middleware->validateCsrfTokens(except: [
-        //     '/api/apps/vendor-assigment/search',
-        // ]);
         $middleware->append([
             ForceJsonResponse::class,
         ]);
@@ -27,7 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 'method' => request()->getMethod(),
                 'url' => request()->fullUrl(),
                 'message' => $e->getMessage(),
-                'userId' => 1,
+                'userId' => Auth::user()->usr_display_name ?? 'System',
                 'data' => request()->all(),
             ];
 

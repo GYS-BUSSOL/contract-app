@@ -793,9 +793,6 @@ watch(
 watch(
   () => props.rangeIncrement,
   (newRange) => {
-    console.log("newRange:", newRange);
-    console.log("newRange length:", newRange.length);
-
     if (Array.isArray(newRange)) {
       ppsOngoingData.rows = newRange.map(() => ({
         cjt_type: null,
@@ -803,9 +800,6 @@ watch(
         total: null
       }));
     }
-
-    console.log("ppsOngoingData.rows:", ppsOngoingData.rows);
-    console.log("ppsOngoingData.rows length:", ppsOngoingData.rows.length);
   },
   { immediate: true }
 )
@@ -941,7 +935,6 @@ watch(
                       multiple
                       :closable-chips="false"
                     />
-                    
                     <AppTextField
                       v-else
                       label="Work Location"

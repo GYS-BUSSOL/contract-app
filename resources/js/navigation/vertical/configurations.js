@@ -9,10 +9,6 @@ export default [
         to: 'configurations-man-days-rate',
       },
       {
-        title: 'Request Management',
-        to: 'configurations-request-management',
-      },
-      {
         title: 'Human Resources',
         to: 'configurations-hr',
       },

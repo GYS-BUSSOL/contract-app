@@ -198,7 +198,7 @@ const fetchApprove = async (payload, clearedForm) => {
           const responseErrors = responseData.errors;
           errors.value = responseErrors;
           errorMessages.value = responseMessage;
-          throw new Error("Created data failed");
+          throw new Error("Updated data failed");
         },
       });
 
@@ -214,7 +214,7 @@ const fetchApprove = async (payload, clearedForm) => {
       successMessages.value = responseMessage;
     } else {
       alertErrorResponse()
-      throw new Error("Created data failed");
+      throw new Error("Updated data failed");
     }
   } catch (error) {
     alertErrorResponse()
@@ -237,7 +237,7 @@ const fetchReject = async (payload, clearedForm) => {
           const responseErrors = responseData.errors;
           errors.value = responseErrors;
           errorMessages.value = responseMessage;
-          throw new Error("Created data failed");
+          throw new Error("Updated data failed");
         },
       });
 
@@ -253,7 +253,7 @@ const fetchReject = async (payload, clearedForm) => {
       successMessages.value = responseMessage;
     } else {
       alertErrorResponse()
-      throw new Error("Created data failed");
+      throw new Error("Updated data failed");
     }
   } catch (error) {
     alertErrorResponse()
@@ -287,10 +287,6 @@ const openDialog = async ({ type, item }) => {
 <template>
   <section>
     <VCard class="mb-6">
-      <VCardItem class="pb-4">
-        <VCardTitle>Filters</VCardTitle>
-      </VCardItem>
-
       <VCardText>
         <VRow>
           <!-- Select Expired Status -->
@@ -300,7 +296,7 @@ const openDialog = async ({ type, item }) => {
               placeholder="Select expired status"
               :items="expiredStatus"
               clearable
-              clear-icon="tabler-x"
+              prepend-inner-icon="tabler-filter-search"
             />
           </VCol>
           <!-- Select Priority -->
@@ -310,7 +306,7 @@ const openDialog = async ({ type, item }) => {
               placeholder="Select Priority"
               :items="priority"
               clearable
-              clear-icon="tabler-x"
+              prepend-inner-icon="tabler-filter-search"
             />
           </VCol>
         </VRow>
@@ -341,6 +337,7 @@ const openDialog = async ({ type, item }) => {
               v-model="searchQuery"
               placeholder="Search..."
               clearable
+              prepend-inner-icon="tabler-search"
             />
           </div>
 
@@ -376,13 +373,13 @@ const openDialog = async ({ type, item }) => {
         <template #item.con_req_no="{ item }">
           <div class="d-flex align-center gap-x-4">
             <div class="d-flex flex-column">
-              <h6 class="text-base text-primary" style="cursor: pointer;" 
+              <h6 class="text-base text-primary cursor-pointer"
                 @click="openDialog({type: 'Add', item})"
               >
                 {{ item.con_req_no }}
               </h6>
               <div class="text-sm">
-                {{ item.aud_user ?? '-'}}
+                {{ item.aud_user != null && item.aud_user != '' ? item.aud_user : '-'}}
               </div>
             </div>
           </div>
@@ -465,7 +462,7 @@ const openDialog = async ({ type, item }) => {
     </VCard>
   </section>
 
-  <ApprovalAddDialog
+  <Approval1AddDialog
     v-model:isDialogVisible="isAddDialogVisible"
     :errors="errors"
     :type-dialog="isTypeDialog"

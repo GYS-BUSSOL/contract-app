@@ -390,7 +390,7 @@ watch(
                         <tr>
                           <td><strong>File Attachment</strong></td>
                           <td>:</td>
-                          <td @click="openPathDialog(contractData.con_file_attachment)" class="text-primary" style="cursor: pointer;">
+                          <td @click="openPathDialog(contractData.con_file_attachment)" class="text-primary cursor-pointer">
                             <VBtn style="box-shadow: none;" icon color="transparent">
                               <VIcon icon="tabler-file" />
                               <VTooltip open-delay="200" location="top" activator="parent">

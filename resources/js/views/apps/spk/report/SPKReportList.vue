@@ -225,10 +225,6 @@ onMounted(() => {
 <template>
   <section>
     <VCard class="mb-6">
-      <VCardItem class="pb-4">
-        <VCardTitle>Filters</VCardTitle>
-      </VCardItem>
-
       <VCardText>
         <VRow>
           <!-- Select From Date -->
@@ -240,6 +236,7 @@ onMounted(() => {
               :config="{ 
                 dateFormat: 'F Y',
               }"
+              prepend-inner-icon="tabler-calendar-month"
             />
           </VCol>
           <!-- Select To Date -->
@@ -251,6 +248,7 @@ onMounted(() => {
               :config="{
                 dateFormat: 'F Y',
               }"
+              prepend-inner-icon="tabler-calendar-month"
             />
           </VCol>
           <!-- Select SPK Status -->
@@ -260,6 +258,7 @@ onMounted(() => {
               v-model="selectedSPKStatus"
               placeholder="Select SPK status"
               :items="SPKStatus"
+              prepend-inner-icon="tabler-filter-search"
             />
           </VCol>
         </VRow>
@@ -273,6 +272,7 @@ onMounted(() => {
               :items="dataMerVendor"
               :item-title="'title'"
               :item-value="'value'"
+              prepend-inner-icon="tabler-filter-search"
             />
           </VCol>
           <!-- Select BU -->
@@ -284,6 +284,7 @@ onMounted(() => {
               :items="dataMerBU"
               :item-title="'title'"
               :item-value="'value'"
+              prepend-inner-icon="tabler-filter-search"
             />
           </VCol>
         </VRow>
@@ -314,6 +315,7 @@ onMounted(() => {
               v-model="searchQuery"
               placeholder="Search..."
               clearable
+              prepend-inner-icon="tabler-search"
             />
           </div>
 

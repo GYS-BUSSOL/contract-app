@@ -254,28 +254,26 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
 <template>
   <section>
     <VCard class="mb-6">
-      <VCardItem class="pb-4">
-        <VCardTitle>Filters</VCardTitle>
-      </VCardItem>
-
       <VCardText>
         <VRow>
           <!-- Select Expired Status -->
-          <VCol cols="12" sm="6">
+          <VCol cols="12" sm="4">
             <AppSelect
               v-model="selectedExpiredStatus"
               placeholder="Select expired status"
               :items="expiredStatus"
               clearable
+              prepend-inner-icon="tabler-filter-search"
             />
           </VCol>
           <!-- Select Status -->
-          <VCol cols="12" sm="6">
+          <VCol cols="12" sm="4">
             <AppSelect
               v-model="selectedStatus"
               placeholder="Select last process status"
               :items="status"
               clearable
+              prepend-inner-icon="tabler-filter-search"
             />
           </VCol>
         </VRow>
@@ -306,6 +304,7 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
               v-model="searchQuery"
               placeholder="Search..."
               clearable
+              prepend-inner-icon="tabler-search"
             />
           </div>
 
@@ -347,7 +346,7 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
         <template #item.con_req_no="{ item }">
           <div class="d-flex align-center gap-x-4">
             <div class="d-flex flex-column">
-              <h6 class="text-base text-primary" style="cursor: pointer;" 
+              <h6 class="text-base text-primary cursor-pointer"
                 @click="openDialog({type: 'Detail', con_req_no: item.con_req_no, con_req_id: item.con_req_id})"
               >
                 {{ item.con_req_no }}

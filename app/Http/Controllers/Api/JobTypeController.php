@@ -190,7 +190,7 @@ class JobTypeController extends Controller
             if (empty($jt)) {
                 return response()->json([
                     "status" => 404,
-                    "message" => "Job type not found",
+                    "message" => "Data not found",
                 ], 404);
             }
 
@@ -199,13 +199,13 @@ class JobTypeController extends Controller
             ])) {
                 return response()->json([
                     "status" => 200,
-                    "message" => "Successfully deleted job type data"
+                    "message" => "Successfully deleted data"
                 ], 200);
             }
         } catch (\Exception $e) {
             return response()->json([
                 "status" => 500,
-                "message" => "Failed to delete job type data",
+                "message" => "Failed to delete data",
                 "error" => "Server error",
             ], 500);
         }

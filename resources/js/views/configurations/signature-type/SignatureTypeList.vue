@@ -241,6 +241,7 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
               v-model="searchQuery"
               placeholder="Search..."
               clearable
+              prepend-inner-icon="tabler-search"
             />
           </div>
 

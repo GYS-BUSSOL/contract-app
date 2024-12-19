@@ -1,6 +1,6 @@
 <script setup>
-import { VerticalNav } from '@layouts/components'
-import { useLayoutConfigStore } from '@layouts/stores/config'
+import { VerticalNav } from '@layouts/components';
+import { useLayoutConfigStore } from '@layouts/stores/config';
 
 const props = defineProps({
   navItems: {

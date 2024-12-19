@@ -36,6 +36,7 @@ use App\Http\Controllers\Api\{
   EstimatedController,
   PaymentTemplateController,
   PenilaianController,
+  RejectCategoryController,
   TimeHistoryController
 };
 
@@ -88,13 +89,30 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
       Route::post('/approval-lvl1-approve/add', 'addApprove');
       Route::post('/approval-lvl1-reject/add', 'addReject');
     });
+    // Approval 2
+    Route::controller(Approval2Controller::class)->group(function () {
+      Route::post('/approval-lvl2-approve/add', 'addApprove');
+      Route::post('/approval-lvl2-reject-cancel/add', 'addRejectCancel');
+      Route::post('/approval-lvl2-send-bu/add', 'sendBU');
+    });
+    // Reject Category
+    Route::controller(RejectCategoryController::class)->group(function () {
+      Route::get('/reject-category/list', 'list');
+    });
+    // Budget BU
+    Route::controller(BudgetBUController::class)->group(function () {
+      Route::post('/budget-bu/search', 'search');
+      Route::post('/budget-bu/add', 'add');
+      Route::get('/budget-bu/edit/{id}/{year}', 'edit');
+      Route::put('/budget-bu/update/{id}', 'update');
+    });
   });
 });
 
 Route::group(['prefix' => 'apps'], function () {
   // Range Years
   Route::controller(RangeController::class)->group(function () {
-    Route::post('/years-range/list', 'listYear');
+    Route::post('/years-range/list', 'list');
   });
   // Mer CC,BU,WC
   Route::controller(MerCCBUWCController::class)->group(function () {
@@ -161,10 +179,6 @@ Route::group(['prefix' => 'apps'], function () {
   // Reviewer
   Route::controller(ReviewerController::class)->group(function () {
     Route::post('/reviewer/search', 'search');
-  });
-  // Budget BU
-  Route::controller(BudgetBUController::class)->group(function () {
-    Route::post('/budget-bu/search', 'search');
   });
   // Approval 1
   Route::controller(Approval1Controller::class)->group(function () {

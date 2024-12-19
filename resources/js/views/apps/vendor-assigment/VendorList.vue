@@ -68,36 +68,6 @@ const headers = [
   },
 ]
 
-const {
-  data: vendorData,
-  execute: fetchVendor,
-} = await useApi(createUrl('/apps/vendor-assigment/search', {
-  query: {
-    q: searchQuery,
-    status: selectedStatus,
-    priority: selectedPriority,
-    expiredStatus: selectedExpiredStatus,
-    itemsPerPage,
-    page,
-    sortBy,
-    orderBy,
-  },
-}))
-
-const vendors = computed(() => vendorData.value.vendors)
-const totalVendors = computed(() => vendorData.value.totalVendors)
-const totalPriorityCount = computed(() => vendorData.value.totalPriorityCount)
-const totalNotPriorityCount = computed(() => vendorData.value.totalNotPriorityCount)
-
-watch(
-  [totalNotPriorityCount, totalPriorityCount],
-  ([newNotPriorityStatus, newPriorityStatus]) => {
-    emit('updateTotalNotPriority', newNotPriorityStatus);
-    emit('updateTotalPriority', newPriorityStatus);
-  },
-  { immediate: true }
-)
-
 // search filters
 const expiredStatus = [
   {
@@ -159,6 +129,36 @@ const status = [
     value: 'Canceled',
   }
 ]
+
+const {
+  data: vendorData,
+  execute: fetchVendor,
+} = await useApi(createUrl('/apps/vendor-assigment/search', {
+  query: {
+    q: searchQuery,
+    status: selectedStatus,
+    priority: selectedPriority,
+    expiredStatus: selectedExpiredStatus,
+    itemsPerPage,
+    page,
+    sortBy,
+    orderBy,
+  },
+}))
+
+const vendors = computed(() => vendorData.value.vendors)
+const totalVendors = computed(() => vendorData.value.totalVendors)
+const totalPriorityCount = computed(() => vendorData.value.totalPriorityCount)
+const totalNotPriorityCount = computed(() => vendorData.value.totalNotPriorityCount)
+
+watch(
+  [totalNotPriorityCount, totalPriorityCount],
+  ([newNotPriorityStatus, newPriorityStatus]) => {
+    emit('updateTotalNotPriority', newNotPriorityStatus);
+    emit('updateTotalPriority', newPriorityStatus);
+  },
+  { immediate: true }
+)
 
 const resolveVendorPriorityVariant = stat => {
   const statLowerCase = stat.toLowerCase()
@@ -314,7 +314,7 @@ const handleFormSubmit = async ({mode,formData,dialogUpdate}) => {
               placeholder="Select expired status"
               :items="expiredStatus"
               clearable
-              clear-icon="tabler-x"
+              prepend-inner-icon="tabler-filter-search"
             />
           </VCol>
           <!-- Select Priority -->
@@ -327,7 +327,7 @@ const handleFormSubmit = async ({mode,formData,dialogUpdate}) => {
               placeholder="Select Priority"
               :items="priority"
               clearable
-              clear-icon="tabler-x"
+              prepend-inner-icon="tabler-filter-search"
             />
           </VCol>
           <!-- Select Status -->
@@ -340,7 +340,7 @@ const handleFormSubmit = async ({mode,formData,dialogUpdate}) => {
               placeholder="Select Status"
               :items="status"
               clearable
-              clear-icon="tabler-x"
+              prepend-inner-icon="tabler-filter-search"
             />
           </VCol>
         </VRow>
@@ -371,6 +371,7 @@ const handleFormSubmit = async ({mode,formData,dialogUpdate}) => {
               v-model="searchQuery"
               placeholder="Search..."
               clearable
+              prepend-inner-icon="tabler-search"
             />
           </div>
 
@@ -404,7 +405,7 @@ const handleFormSubmit = async ({mode,formData,dialogUpdate}) => {
         <template #item.con_req_no="{ item }">
           <div class="d-flex align-center gap-x-4">
             <div class="d-flex flex-column">
-              <h6 class="text-base text-primary" style="cursor: pointer;" @click="openDialog({type: 'Add', con_req_no: item.con_req_no, con_req_id: item.con_req_id})">
+              <h6 class="text-base text-primary cursor-pointer" @click="openDialog({type: 'Add', con_req_no: item.con_req_no, con_req_id: item.con_req_id})">
                 {{ item.con_req_no }}
               </h6>
               <div class="text-sm">

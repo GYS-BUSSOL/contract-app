@@ -50,6 +50,22 @@ const headers = [
   },
 ]
 
+// search filters
+const status = [
+  {
+    title: 'Active',
+    value: '0',
+  },
+  {
+    title: 'Not Active',
+    value: '1',
+  },
+  {
+    title: 'Undifinied',
+    value: 'null',
+  },
+]
+
 const {
   data: areaWCData,
   execute: fetchAreaWC,
@@ -76,23 +92,7 @@ watch(
     emit('updateTotalActive', newActiveStatus);
   },
   { immediate: true }
-);
-
-// search filters
-const status = [
-  {
-    title: 'Active',
-    value: '0',
-  },
-  {
-    title: 'Not Active',
-    value: '1',
-  },
-  {
-    title: 'Undifinied',
-    value: 'null',
-  },
-]
+)
 
 const openDialog = async ({ id = null, type }) => {
   isAreaWCTypeDialog.value = type
@@ -258,10 +258,6 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
 <template>
   <section>
     <VCard class="mb-6">
-      <VCardItem class="pb-4">
-        <VCardTitle>Filters</VCardTitle>
-      </VCardItem>
-
       <VCardText>
         <VRow>
           <!-- Select Status -->
@@ -271,6 +267,7 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
               placeholder="Select status"
               :items="status"
               clearable
+              prepend-inner-icon="tabler-filter-search"
             />
           </VCol>
         </VRow>
@@ -301,6 +298,7 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
               v-model="searchQuery"
               placeholder="Search..."
               clearable
+              prepend-inner-icon="tabler-search"
             />
           </div>
 

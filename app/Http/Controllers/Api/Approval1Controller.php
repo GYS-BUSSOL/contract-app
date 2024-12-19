@@ -101,7 +101,7 @@ class Approval1Controller extends Controller
     {
         $data = [
             'con_req_id' => ['required'],
-            'con_comment_coo_approve' => ['required', 'string'],
+            'con_comment_coo_approve' => ['nullable', 'string'],
             'grand_total' => ['required', 'numeric'],
             'avg_expense' => ['required', 'numeric'],
             'avg_balance' => ['required', 'numeric'],

@@ -1,5 +1,5 @@
 <script setup>
-import { getListMerPaymentTemplate, getListMerPaymentType, getListMerVendor } from '@db/apps/mer/db';
+import { getListMerPaymentTemplate, getListMerPaymentType, getListMerVendor, getListRejectCategory } from '@db/apps/mer/db';
 import { Link } from '@tiptap/extension-link';
 import { Placeholder } from '@tiptap/extension-placeholder';
 import { Underline } from '@tiptap/extension-underline';
@@ -72,7 +72,10 @@ const isDialogViewPathVisible = ref(false)
 const token = useCookie('accessToken')
 const loadingBtn = ref([])
 const loadingBtnSecond = ref([])
+const loadingBtnThree = ref([])
+const loadingBtnFour = ref([])
 const isDisabled = ref(false)
+const isMenuVisible = ref(false)
 const contractData = reactive({
   vendor_name: null,
   bu: null,
@@ -114,6 +117,7 @@ const estimatedCostDetailData = reactive({
 const dataMerVendor = ref([])
 const dataMerPaymentType = ref([])
 const dataMerPaymentTemplate = ref([])
+const dataRejectCategory = ref([])
 const valuationData = ref([])
 const historyData = ref([])
 const allDataVendor = ref([])
@@ -262,6 +266,27 @@ const fetchMerPaymentTemplate = async () => {
     
   } catch (error) {
     console.error('Error fetching mer payment template data');
+  }
+}
+
+const fetchRejectCategory = async () => {
+  try {
+    const response = await getListRejectCategory();
+    if (response.status === 200) {
+
+      const rows = response.data.rows || [];
+      console.log({rows});
+      
+      dataRejectCategory.value = rows.map((row) => ({
+        title: row.katrj_name,
+        value: row.katrj_id,
+      }));
+    } else {
+      console.error('Failed to fetch reject category data');
+    }
+    
+  } catch (error) {
+    console.error('Error fetching reject category data');
   }
 }
 
@@ -508,7 +533,7 @@ const fetchCostData = async () => {
   }
 }
 
-const onSubmit = (type) => {
+const onSubmit = ({type, id = null}) => {
   let payload;
   try {
     isDisabled.value = true
@@ -517,27 +542,39 @@ const onSubmit = (type) => {
       payload = {
         con_comment_coo_approve: con_comment_coo_approve.value,
         con_req_id: conReqId.value,
-        grand_total: parseInt(estimatedCostDetailData.grand_total || 0),
-        avg_expense: costData.total_expense,
-        avg_balance: costData.total_balance
       }
-    } else if(type == 'Reject') {
+    } else if(type == 'Reject Cancel') {
       loadingBtnSecond.value[0] = true
       payload = {
-        con_comment_coo_approve: con_comment_coo_approve.value,
+        con_comment_ceo: con_comment_coo_approve.value,
         con_req_id: conReqId.value,
+        con_bu: contractData.bu,
+        avg_expense: costData.total_expense,
       }
+    } else if(type == 'Send BU') {
+      loadingBtnFour.value[0] = true
+      payload = {
+        con_comment_ceo: con_comment_coo_approve.value,
+        con_req_id: conReqId.value,
+        avg_expense: costData.total_expense,
+        con_bu: contractData.bu,
+        con_katrj_ceo_id: id,
+      }
+    } else if(type == 'View SPK') {
+      loadingBtnThree.value[0] = true
+      payload = {}
     }
     emit("ApprovalData", { type, payload, dialogUpdate: dialogModelValueUpdate });
   } catch (err) {
     loadingBtn.value[0] = false
+    loadingBtnSecond.value[0] = false
+    loadingBtnFour.value[0] = false
   }
 }
 
 watch(
   [() => conReqId.value, () => conBU.value, () => conDurationStart.value, () => typeDialog.value, () => props.fetchTrigger],
     ([newConreqId,newConReqBU,newConDurationStart,newType]) => {
-      console.log({newConreqId,newConReqBU,newConDurationStart,newType});
       if (newType === "Add" && newConreqId && newConReqBU && newConDurationStart) {
         fetchContractEdit()
         fetchValuationList()
@@ -545,9 +582,15 @@ watch(
         fetchCostData()
         fetchCostDetail()
       }
+      isDisabled.value = false
+      loadingBtn.value[0] = false
+      loadingBtnSecond.value[0] = false
+      loadingBtnThree.value[0] = false
+      loadingBtnFour.value[0] = false
       fetchMerVendorData()
       fetchMerPaymentType()
       fetchMerPaymentTemplate()
+      fetchRejectCategory()
   }
 )
 </script>
@@ -668,7 +711,7 @@ watch(
                       <tr>
                         <td><strong>File Attachment</strong></td>
                         <td>:</td>
-                        <td @click="openPathDialog(contractData.con_file_attachment)" class="text-primary" style="cursor: pointer;">
+                        <td @click="openPathDialog(contractData.con_file_attachment)" class="text-primary cursor-pointer">
                           <VBtn style="box-shadow: none;" icon color="transparent">
                             <VIcon icon="tabler-file" />
                             <VTooltip open-delay="200" location="top" activator="parent">
@@ -906,15 +949,10 @@ watch(
                       {{ h.aud_user }}
                     </td>
                     <td>
-                      {{ dayjs(h.aud_date).format('YYYY-MM') }}
+                      {{ dayjs(h.aud_date).format('YYYY-MM-DD') }}
                     </td>
                     <td>
-                      <div v-if="h.sts_id == '5' || h.sts_id == '4' || h.sts_id == '7'">
-                        {{ h.ths_comment }}
-                      </div>
-                      <div v-else>
-                        -
-                      </div>
+                      {{ h.ths_comment }}
                     </td>
                   </tr>
                 </template>
@@ -976,18 +1014,34 @@ watch(
         <VRow class="d-flex justify-end mt-5">
           <div class="card__actions d-flex justify-end" v-if="isLoading">
             <Skeletor width="96" height="36" class="me-3"/>
-            <Skeletor width="96" height="36" />
+            <Skeletor width="96" height="36" class="me-3"/>
+            <Skeletor width="150" height="36" class="me-3"/>
+            <Skeletor width="150" height="36" />
           </div>
           <div v-if="!isLoading">
             <!-- Action Button -->
             <VCol cols="12">
               <div class="d-flex flex-wrap gap-4 justify-end mt-8">
                 <VBtn
+                  color="primary"
+                  type="submit"
+                  :loading="loadingBtnThree[0]"
+                  :disabled="isDisabled"
+                  @click="onSubmit('View SPK')"
+                >
+                  <VIcon
+                    icon="tabler-eye"
+                    start
+                    class="flip-in-rtl"
+                  />
+                  Draft SPK
+                </VBtn>
+                <VBtn
                   color="success"
                   type="submit"
                   :loading="loadingBtn[0]"
                   :disabled="isDisabled"
-                  @click="onSubmit('Approve')"
+                  @click="onSubmit({ type: 'Approve' })"
                 >
                   <VIcon
                     icon="tabler-checklist"
@@ -996,13 +1050,51 @@ watch(
                   />
                   Approve
                 </VBtn>
-                
+                <VMenu
+                  v-model="isMenuVisible"
+                  transition="slide-y-transition"
+                >
+                  <!-- v-menu activator -->
+                  <template #activator="{ props }">
+                    <VBtn 
+                      v-bind="props" 
+                      color="error" 
+                      :loading="loadingBtnFour[0]"
+                      :disabled="isDisabled"
+                    >
+                      Reject & Send Back To BU
+                      <VIcon
+                        size="20"
+                        icon="tabler-chevron-up"
+                        class="ms-2"
+                      />
+                    </VBtn>
+                  </template>
+
+                  <!-- v-menu list -->
+                  <VList>
+                    <VListItem>
+                      <VListItemTitle class="mb-2" v-for="(category, indexCat) in dataRejectCategory">
+                        <VBtn
+                          color="secondary"
+                          size="small"
+                          type="submit"
+                          class="me-3"
+                          variant="plain"
+                          @click="onSubmit({ type: 'Send BU', id: category.value })"
+                        >
+                          {{ category.title }}
+                        </VBtn>
+                      </VListItemTitle>
+                    </VListItem>
+                  </VList>
+                </VMenu>
                 <VBtn
                   color="error"
                   type="submit"
                   :loading="loadingBtnSecond[0]"
                   :disabled="isDisabled"
-                  @click="onSubmit('Reject')"
+                  @click="onSubmit({ type: 'Reject Cancel' })"
                 >
                   <VIcon
                     icon="tabler-ban"
@@ -1010,7 +1102,7 @@ watch(
                     type="submit"
                     class="flip-in-rtl"
                   />
-                  Reject
+                  Reject & Cancel Contract
                 </VBtn>
               </div>
             </VCol>

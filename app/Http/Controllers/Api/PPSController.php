@@ -325,20 +325,20 @@ class PPSController extends Controller
       if (empty($PPSOngoing)) {
         return response()->json([
           "status" => 404,
-          "message" => "PPS on going not found",
+          "message" => "Data not found",
         ], 404);
       }
 
       if ($PPSOngoing->delete()) {
         return response()->json([
           "status" => 200,
-          "message" => "Successfully deleted pps on going data"
+          "message" => "Successfully deleted data"
         ], 200);
       }
     } catch (\Exception $e) {
       return response()->json([
         "status" => 500,
-        "message" => "Failed to delete pps on going data",
+        "message" => "Failed to delete data",
         "error" => "Server error",
       ], 500);
     }

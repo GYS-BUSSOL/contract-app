@@ -179,10 +179,6 @@ const openDialog = async ({ id = null, type, con_req_no = null, con_req_id = nul
 <template>
   <section>
     <VCard class="mb-6">
-      <VCardItem class="pb-4">
-        <VCardTitle>Filters</VCardTitle>
-      </VCardItem>
-
       <VCardText>
         <VRow>
           <!-- Select Expired Status -->
@@ -192,7 +188,7 @@ const openDialog = async ({ id = null, type, con_req_no = null, con_req_id = nul
               placeholder="Select expired status"
               :items="expiredStatus"
               clearable
-              clear-icon="tabler-x"
+              prepend-inner-icon="tabler-filter-search"
             />
           </VCol>
           <!-- Select Priority -->
@@ -202,7 +198,7 @@ const openDialog = async ({ id = null, type, con_req_no = null, con_req_id = nul
               placeholder="Select Priority"
               :items="priorityCompleted"
               clearable
-              clear-icon="tabler-x"
+              prepend-inner-icon="tabler-filter-search"
             />
           </VCol>
         </VRow>
@@ -233,6 +229,7 @@ const openDialog = async ({ id = null, type, con_req_no = null, con_req_id = nul
               v-model="searchQuery"
               placeholder="Search..."
               clearable
+              prepend-inner-icon="tabler-search"
             />
           </div>
 
@@ -266,7 +263,7 @@ const openDialog = async ({ id = null, type, con_req_no = null, con_req_id = nul
         <template #item.con_req_no="{ item }">
           <div class="d-flex align-center gap-x-4">
             <div class="d-flex flex-column">
-              <h6 class="text-base text-primary" style="cursor: pointer;" 
+              <h6 class="text-base text-primary cursor-pointer"
                 @click="openDialog({type: 'Detail', con_req_no: item.con_req_no, con_req_id: item.con_req_id})"
               >
                 {{ item.con_req_no }}

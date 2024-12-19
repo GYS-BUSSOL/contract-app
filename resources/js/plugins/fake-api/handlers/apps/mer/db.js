@@ -1,4 +1,5 @@
 import { BASE_API_URL } from '@/plugins/1.router/additional-routes';
+const token = useCookie('accessToken').value
 
 export async function getListMerUser(accessRole) {
   const url = `${BASE_API_URL}/api/configurations/human-resources/list/${accessRole}`;
@@ -134,6 +135,32 @@ export async function getListMerMeasurementUnit() {
 
   } catch (error) {
     console.error("Error fetching measurement unit data");
+    throw error;
+  }
+}
+
+export async function getListRejectCategory() {
+  const url = `${BASE_API_URL}/api/apps/reject-category/list`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Error: ${response.status}, ${errorData.message || 'Unknown error'}`);
+    }
+
+    const data = await response.json();
+    return data;
+
+  } catch (error) {
+    console.error("Error fetching reject category data");
     throw error;
   }
 }

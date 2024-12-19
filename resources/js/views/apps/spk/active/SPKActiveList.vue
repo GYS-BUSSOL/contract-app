@@ -193,10 +193,6 @@ onMounted(() => {
 <template>
   <section>
     <VCard class="mb-6">
-      <VCardItem class="pb-4">
-        <VCardTitle>Filters</VCardTitle>
-      </VCardItem>
-
       <VCardText>
         <VRow>
           <!-- Select Vendor -->
@@ -208,6 +204,7 @@ onMounted(() => {
               :items="dataMerVendor"
               :item-title="'title'"
               :item-value="'value'"
+              prepend-inner-icon="tabler-filter-search"
             />
           </VCol>
           <!-- Select BU -->
@@ -219,6 +216,7 @@ onMounted(() => {
               :items="dataMerBU"
               :item-title="'title'"
               :item-value="'value'"
+              prepend-inner-icon="tabler-filter-search"
             />
           </VCol>
         </VRow>
@@ -249,6 +247,7 @@ onMounted(() => {
               v-model="searchQuery"
               placeholder="Search..."
               clearable
+              prepend-inner-icon="tabler-search"
             />
           </div>
 

@@ -12,7 +12,7 @@ const orderBy = ref()
 const selectedRows = ref([])
 const isJobTypeDialogVisible = ref(false)
 const isJobTypeDialogDeleteVisible = ref(false)
-const isJobTypeTypeDialog = ref('Add')
+const isJobTypeTypeDialog = ref('')
 const IDJobType = ref(0)
 const isSnackbarResponse = ref(false)
 const isSnackbarResponseAlertColor = ref('error')
@@ -45,6 +45,18 @@ const headers = [
   },
 ]
 
+// search filters
+const status = [
+  {
+    title: 'Active',
+    value: 'null',
+  },
+  {
+    title: 'Not Active',
+    value: '1',
+  },
+]
+
 const {
   data: jobTypeData,
   execute: fetchJobType,
@@ -71,27 +83,7 @@ watch(
     emit('updateTotalActive', newActiveStatus);
   },
   { immediate: true }
-);
-
-// search filters
-const status = [
-  {
-    title: 'Active',
-    value: 'null',
-  },
-  {
-    title: 'Not Active',
-    value: '1',
-  },
-]
-
-const openDialog = async ({ id = null, type }) => {
-  isJobTypeTypeDialog.value = type
-  isJobTypeDialogVisible.value = true
-  if(type == 'Edit')
-    IDJobType.value = id
-    fetchTrigger.value += 1;
-}
+)
 
 const openDialogDelete = async (id) => {
   IDJobType.value = id
@@ -244,6 +236,14 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
     fetchJobTypeUpdate(IDJobType.value, formData, dialogUpdate)
   }
 }
+
+const openDialog = async ({ id = null, type }) => {
+  isJobTypeTypeDialog.value = type
+  isJobTypeDialogVisible.value = true
+  if(type == 'Edit')
+    IDJobType.value = id
+    fetchTrigger.value += 1;
+}
 </script>
 
 <template>
@@ -262,6 +262,7 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
               placeholder="Select status"
               :items="status"
               clearable
+              prepend-inner-icon="tabler-filter-search"
             />
           </VCol>
         </VRow>
@@ -292,6 +293,7 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
               v-model="searchQuery"
               placeholder="Search..."
               clearable
+              prepend-inner-icon="tabler-search"
             />
           </div>
 
@@ -376,6 +378,7 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
       <!-- SECTION -->
     </VCard>
   </section>
+
   <JobTypeAddDialog
     v-model:isDialogVisible="isJobTypeDialogVisible"
     :errors="errors"
@@ -394,6 +397,7 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
     :fetch-trigger="fetchTrigger"
     @id-deleted="deleteJobType"
   />
+
   <VSnackbar
     v-model="isSnackbarResponse"
     transition="scroll-y-reverse-transition"
@@ -411,4 +415,5 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
       </VBtn>
     </template>
   </VSnackbar>
+
 </template>

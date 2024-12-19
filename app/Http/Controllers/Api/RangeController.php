@@ -9,7 +9,7 @@ use App\Http\Controllers\Controller;
 
 class RangeController extends Controller
 {
-    public function listYear(Request $request)
+    public function list(Request $request)
     {
         try {
             $validated = $request->validate([

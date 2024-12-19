@@ -21,11 +21,6 @@ const updateOptions = options => {
 // Headers
 const headers = [
   {
-    title: 'Actions',
-    key: 'actions',
-    sortable: false,
-  },
-  {
     title: 'SPK No',
     key: 'join_second_spk_no',
   },
@@ -115,20 +110,16 @@ const formatDate = (date, time = false) => {
 <template>
   <section>
     <VCard class="mb-6">
-      <VCardItem class="pb-4">
-        <VCardTitle>Filters</VCardTitle>
-      </VCardItem>
-
       <VCardText>
         <VRow>
           <!-- Select Expired Status -->
-          <VCol cols="12" sm="6">
+          <VCol cols="12" sm="4">
             <AppSelect
               v-model="selectedExpiredStatus"
               placeholder="Select expired status"
               :items="expiredStatus"
               clearable
-              clear-icon="tabler-x"
+              prepend-inner-icon="tabler-filter-search"
             />
           </VCol>
         </VRow>
@@ -159,6 +150,7 @@ const formatDate = (date, time = false) => {
               v-model="searchQuery"
               placeholder="Search..."
               clearable
+              prepend-inner-icon="tabler-search"
             />
           </div>
 
@@ -209,14 +201,14 @@ const formatDate = (date, time = false) => {
           <div v-if="item.arr_con_req_no.length > 0" class="text-body-1 text-high-emphasis text-capitalize">
             <ul>
               <div v-for="(req, index) in item.arr_con_req_no" :key="req.con_id">
-                <RouterLink :to="{ name: 'apps-pbl', params: { id: req.con_id } }" class="text-primary font-weight-medium text-link">
+                <div>
                   <template v-if="item.arr_con_req_no.length > 1">
                     <li class="list-unstyled">{{ req.con_req_no }}</li>
                   </template>
                   <template v-else>
                     {{ req.con_req_no }}
                   </template>
-                </RouterLink>
+                </div>
               </div>
             </ul>
           </div>
@@ -230,14 +222,12 @@ const formatDate = (date, time = false) => {
           <div v-if="item.arr_con_pps_no.length > 0" class="text-body-1 text-high-emphasis text-capitalize">
             <ul>
               <div v-for="(pps, index) in item.arr_con_pps_no" :key="pps.con_id">
-                <RouterLink :to="{ name: 'apps-pbl', params: { id: pps.con_id } }" class="text-primary font-weight-medium text-link">
-                  <template v-if="item.arr_con_pps_no.length > 1">
-                    <li class="list-unstyled">{{ pps.con_pps_no }}</li>
-                  </template>
-                  <template v-else>
-                    {{ pps.con_pps_no }}
-                  </template>
-                </RouterLink>
+                <template v-if="item.arr_con_pps_no.length > 1">
+                  <li class="list-unstyled">{{ pps.con_pps_no }}</li>
+                </template>
+                <template v-else>
+                  {{ pps.con_pps_no }}
+                </template>
               </div>
             </ul>
           </div>
@@ -283,16 +273,6 @@ const formatDate = (date, time = false) => {
           <div class="text-body-1 text-wrap text-high-emphasis text-capitalize">
             {{ item.join_second_spk_jobdesc_summary }}
           </div>
-        </template>
-
-        <!-- Actions -->
-        <template #item.actions="{ item }">
-          <IconBtn @click="deleteSPKList(item.con_id)">
-            <VIcon icon="tabler-eye" />
-            <VTooltip open-delay="200" location="top" activator="parent">
-              <span>View Detail</span>
-            </VTooltip>
-          </IconBtn>
         </template>
 
         <!-- pagination -->
