@@ -82,6 +82,7 @@ const dataMerJobType = ref([])
 const dataMerMeasurementUnit = ref([])
 const dataMerPaymentType = ref([])
 const dataMerLaborType = ref([])
+const allShiftData = ref([])
 const numberedSteps = ref([])
 const jobTarget = ref()
 const isPPSOngoingDialogViewPathVisible = ref(false)
@@ -260,6 +261,7 @@ const dialogModelValueUpdate = () => {
   loadingBtnSecond.value[0] = false;
   isDisabled.value = false;
   emit('updateRangeIncrement',[])
+  emit('updateTypeDialog','Add')
   emit('update:isDialogVisible', false)
 }
 
@@ -411,6 +413,35 @@ const fetchMerCCData = async () => {
   }
 }
 
+const fetchMerShiftData = async () => {
+  try {
+    const response = await $api(`/apps/shift/list`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      onResponseError({ response }) {
+        const responseData = response._data;
+        const responseMessage = responseData.message;
+        emit('errorMessages', responseMessage);
+        throw new Error("Get data failed");
+      },
+    });
+    
+    const dataResponse = JSON.parse(JSON.stringify(response));
+    if (dataResponse.status == 200) {
+      const dataResult = dataResponse.data.rows;
+      allShiftData.value = dataResult;
+    } else {
+      throw new Error("Get data failed");
+    }
+    
+  } catch (error) {
+    throw new Error("Get data failed");
+  }
+}
+
 const fetchMerWCData = async () => {
   try {
     const response = await getListMerWC();
@@ -524,6 +555,10 @@ const fetchPPSOngodingEdit = async () => {
     isLoading.value = true;
     const response = await $api(`/apps/pps-ongoing/edit/${conId.value}`, {
       method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
       onResponseError({ response }) {
         const responseData = response._data;
         const responseMessage = responseData.message;
@@ -720,13 +755,14 @@ watch(
       if(newType === 'Add Job Type') {
         dialogModelJobtypeValueUpdate()
       }
-
+      
       if(newType !== 'List Job Type' && newType != '') {
         fetchCompanyData()
         fetchMerBUData()
         fetchMerCCData()
         fetchMerWCData()
         fetchMerVendorData()
+        fetchMerShiftData()
       } 
       if(newType == 'Edit Job Type' && newType != '') {
         fetchContractJobSingleEdit()
@@ -999,48 +1035,15 @@ watch(
                   <VCol>
                     <label>Shift*</label>
                     <div class="demo-space-x">
-                      <div>
+                      <div v-for="(shift, indexShift) in allShiftData" :key="shift.shift_code">
                         <VCheckbox
                           v-model="ppsOngoingData.shift_checklist"
-                          label="Non Shift"
-                          value="4"
+                          :label="shift.shift_description"
+                          :value="shift.shift_code"
                           :error-messages="props.errors?.shift_checklist"
                         />
-                        <VTooltip open-delay="200" location="top" activator="parent">
-                          <span>At 08.00-17.00</span>
-                        </VTooltip>
-                      </div>
-                      <div>
-                        <VCheckbox
-                          v-model="ppsOngoingData.shift_checklist"
-                          label="Shift 1"
-                          value="1"
-                          :error-messages="props.errors?.shift_checklist"
-                        />
-                        <VTooltip open-delay="300" location="top" activator="parent">
-                          <span>At 07.00-15.00</span>
-                        </VTooltip>
-                      </div>
-                      <div>
-                        <VCheckbox
-                          v-model="ppsOngoingData.shift_checklist"
-                          label="Shift 2"
-                          value="2"
-                          :error-messages="props.errors?.shift_checklist"
-                        />
-                        <VTooltip open-delay="300" location="top" activator="parent">
-                          <span>At 15.00-23.00</span>
-                        </VTooltip>
-                      </div>
-                      <div>
-                        <VCheckbox
-                          v-model="ppsOngoingData.shift_checklist"
-                          label="Shift 3"
-                          value="3"
-                          :error-messages="props.errors?.shift_checklist"
-                        />
-                        <VTooltip open-delay="300" location="top" activator="parent">
-                          <span>At 23.00-07.00</span>
+                        <VTooltip open-delay="150" location="top" activator="parent">
+                          <span>At {{ shift.shift_jam }}</span>
                         </VTooltip>
                       </div>
                     </div>
@@ -1155,14 +1158,14 @@ watch(
                   </VCol>
                   <VCol>
                     <AppAutocomplete
-                    placeholder="Select suggest vendor"
-                    label="Suggest Vendor"
-                    v-model="ppsOngoingData.suggest_vendor"
-                    :items="dataMerVendor"
-                    :item-title="'title'"
-                    :item-value="'value'"
-                    :error-messages="props.errors?.suggest_vendor"
-                    clearable
+                      placeholder="Select suggest vendor"
+                      label="Suggest Vendor"
+                      v-model="ppsOngoingData.suggest_vendor"
+                      :items="dataMerVendor"
+                      :item-title="'title'"
+                      :item-value="'value'"
+                      :error-messages="props.errors?.suggest_vendor"
+                      clearable
                     />
                   </VCol>
                   <VCol>
@@ -1268,7 +1271,7 @@ watch(
             </VForm>
           </VWindowItem>
           <!-- Job Type Form -->
-          <VWindowItem v-if="typeDialog != 'Edit'">
+          <VWindowItem v-if="typeDialog != 'Edit' && typeDialog != 'Add'">
             <VForm ref="refJobTypeForm">
               <VRow>
                 <VCol cols="12">

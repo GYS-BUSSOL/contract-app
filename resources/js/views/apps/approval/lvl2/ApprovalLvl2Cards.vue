@@ -5,18 +5,22 @@ const props = defineProps({
   totalNotPriorityCount: {
     type: Number,
     required: true,
+    default: 0
   },
   totalPriorityCount: {
     type: Number,
     required: true,
+    default: 0
   },
   totalExpiredCount: {
     type: Number,
     required: true,
+    default: 0
   },
   totalNotExpiredCount: {
     type: Number,
     required: true,
+    default: 0
   },
   isActiveTab: {
     type: Number,
@@ -26,22 +30,22 @@ const props = defineProps({
     
 const widgetApprovalOnGoing = computed(() => [
 {
-    icon: 'tabler-users',
+    icon: 'tabler-file',
     color: 'info',
     title: 'Total Data',
     value: props.totalPriorityCount + props.totalNotPriorityCount,
     isHover: true,
   },
   {
-    icon: 'tabler-user-exclamation',
-    color: 'error',
+    icon: 'tabler-file-report',
+    color: 'success',
     title: 'Total Priority "Tidak Segera"',
     value: props.totalNotPriorityCount,
     isHover: true,
   },
   {
-    icon: 'tabler-user-check',
-    color: 'success',
+    icon: 'tabler-file-alert',
+    color: 'warning',
     title: 'Total Priority "Segera"',
     value: props.totalPriorityCount,
     isHover: true,
@@ -50,23 +54,23 @@ const widgetApprovalOnGoing = computed(() => [
 
 const widgetApprovalCompleted = computed(() => [
   {
-    icon: 'tabler-users',
+    icon: 'tabler-file',
     color: 'info',
     title: 'Total Data',
     value: props.totalExpiredCount + props.totalNotExpiredCount,
     isHover: true,
   },
   {
-    icon: 'tabler-user-exclamation',
+    icon: 'tabler-file-x',
     color: 'error',
-    title: 'Expired Data',
+    title: 'Total Expired Data',
     value: props.totalExpiredCount,
     isHover: true,
   },
   {
-    icon: 'tabler-user-check',
+    icon: 'tabler-file-check',
     color: 'success',
-    title: 'Not Expired Yet Data',
+    title: 'Total Not Expired Data',
     value: props.totalNotExpiredCount,
     isHover: true,
   },

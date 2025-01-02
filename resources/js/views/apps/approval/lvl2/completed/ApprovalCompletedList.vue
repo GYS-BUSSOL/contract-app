@@ -140,9 +140,9 @@ watch(
 const resolveApprovalLvl2PriorityVariant = stat => {
   const statLowerCase = stat.toLowerCase()
   if (statLowerCase === '1')
-    return 'success'
+    return 'warning'
 
-  return 'error'
+  return 'success'
 }
 
 const formatDate = (date, time = false) => {
@@ -232,15 +232,6 @@ const openDialog = async ({ id = null, type, con_req_no = null, con_req_id = nul
               prepend-inner-icon="tabler-search"
             />
           </div>
-
-          <!-- Export button -->
-          <VBtn
-            variant="tonal"
-            color="secondary"
-            prepend-icon="tabler-upload"
-          >
-            Export
-          </VBtn>
         </div>
       </VCardText>
 
@@ -256,7 +247,6 @@ const openDialog = async ({ id = null, type, con_req_no = null, con_req_id = nul
         :items-length="totalApprovalLvl2Completed"
         :headers="headers"
         class="text-no-wrap"
-        show-select
         @update:options="updateOptions"
       >
         <!-- Approval Level 2 -->

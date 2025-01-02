@@ -153,23 +153,23 @@ const updateErrors = err => {
 
 const fetchAddData = async (jobTypeData, clearedForm) => {
   try {
-      const response = await $api('/apps/budget-bu/add', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(jobTypeData),
-        onResponseError({ response }) {
-          alertErrorResponse()
-          const responseData = response._data;
-          const responseMessage = responseData.message;
-          const responseErrors = responseData.errors;
-          errors.value = responseErrors;
-          errorMessages.value = responseMessage;
-          throw new Error("Created data failed");
-        },
-      });
+    const response = await $api('/apps/budget-bu/add', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(jobTypeData),
+      onResponseError({ response }) {
+        alertErrorResponse()
+        const responseData = response._data;
+        const responseMessage = responseData.message;
+        const responseErrors = responseData.errors;
+        errors.value = responseErrors;
+        errorMessages.value = responseMessage;
+        throw new Error("Created data failed");
+      },
+    });
 
     const responseStringify = JSON.stringify(response);
     const responseParse = JSON.parse(responseStringify);
@@ -293,15 +293,6 @@ const openDialog = async ({ id = null, type, year = null }) => {
               prepend-inner-icon="tabler-search"
             />
           </div>
-
-          <!-- Export button -->
-          <VBtn
-            variant="tonal"
-            color="secondary"
-            prepend-icon="tabler-upload"
-          >
-            Export
-          </VBtn>
           <!-- Create New Renewal button -->
           <VBtn
             color="primary"
@@ -325,7 +316,6 @@ const openDialog = async ({ id = null, type, year = null }) => {
         :items-length="totalBudgetBU"
         :headers="headers"
         class="text-no-wrap"
-        show-select
         @update:options="updateOptions"
       >
         <!-- Year -->

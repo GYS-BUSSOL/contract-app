@@ -5,10 +5,12 @@ const props = defineProps({
   totalActiveCount: {
     type: Number,
     required: true,
+    default: 0
   },
   totalNotActiveCount: {
     type: Number,
     required: true,
+    default: 0
   }
 })
 
@@ -18,7 +20,7 @@ const widgetData = computed(() => [
     value: props.totalActiveCount + props.totalNotActiveCount,
     desc: 'Total SPK report',
     icon: 'tabler-report',
-    iconColor: 'secondary',
+    iconColor: 'info',
   },
   {
     title: 'SPK Active',

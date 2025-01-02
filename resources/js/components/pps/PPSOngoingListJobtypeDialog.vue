@@ -150,6 +150,10 @@ const fetchContractEdit = async () => {
     isLoading.value = true;
     const response = await $api(`/apps/contract/edit/${contractReqId.value}`, {
       method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
       onResponseError({ response }) {
         const responseData = response._data;
         const responseMessage = responseData.message;

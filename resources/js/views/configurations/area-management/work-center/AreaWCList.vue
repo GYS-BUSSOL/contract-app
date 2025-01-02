@@ -180,18 +180,18 @@ const fetchAddData = async (areaWCData, clearedForm) => {
 const fetchAreaWCUpdate = async (id, formData, clearedForm) => {
   try {
     const response = await $api(`/configurations/area-management-wc/update/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(formData),
-        onResponseError({ response }) {
-          alertErrorResponse()
-          const responseData = response._data;
-          const responseMessage = responseData.message;
-          const responseErrors = responseData.errors;
-          errors.value = responseErrors;
-          errorMessages.value = responseMessage;
-          throw new Error("Updated data failed");
-        },
-      });
+      method: 'PUT',
+      body: JSON.stringify(formData),
+      onResponseError({ response }) {
+        alertErrorResponse()
+        const responseData = response._data;
+        const responseMessage = responseData.message;
+        const responseErrors = responseData.errors;
+        errors.value = responseErrors;
+        errorMessages.value = responseMessage;
+        throw new Error("Updated data failed");
+      },
+    });
     
     const responseStringify = JSON.stringify(response);
     const responseParse = JSON.parse(responseStringify);
@@ -217,8 +217,8 @@ const deleteAreaWC = async id => {
     isAreaWCTypeDialog.value = 'Delete'
     const idAreaWC = Number(id);
     const response = await $api(`/configurations/area-management-wc/delete/${idAreaWC}`, {
-        method: 'DELETE',
-        onResponseError({ response }) {
+      method: 'DELETE',
+      onResponseError({ response }) {
         alertErrorResponse()
         const responseData = response._data;
         const responseMessage = responseData.message;
@@ -302,14 +302,6 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
             />
           </div>
 
-          <!-- Export button -->
-          <VBtn
-            variant="tonal"
-            color="secondary"
-            prepend-icon="tabler-upload"
-          >
-            Export
-          </VBtn>
           <!-- Create New PBL button -->
           <VBtn
             color="primary"
@@ -333,7 +325,6 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
         :items-length="totalAreaWC"
         :headers="headers"
         class="text-no-wrap"
-        show-select
         @update:options="updateOptions"
       >
         <!-- Number -->

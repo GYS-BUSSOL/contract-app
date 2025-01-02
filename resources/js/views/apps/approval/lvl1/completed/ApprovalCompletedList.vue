@@ -186,15 +186,6 @@ const openDialog = async ({ id = null, type, con_req_no = null, con_req_id = nul
               prepend-inner-icon="tabler-search"
             />
           </div>
-
-          <!-- Export button -->
-          <VBtn
-            variant="tonal"
-            color="secondary"
-            prepend-icon="tabler-upload"
-          >
-            Export
-          </VBtn>
         </div>
       </VCardText>
 
@@ -210,7 +201,6 @@ const openDialog = async ({ id = null, type, con_req_no = null, con_req_id = nul
         :items-length="totalApprovalLvl1Completed"
         :headers="headers"
         class="text-no-wrap"
-        show-select
         @update:options="updateOptions"
       >
         <!-- Approval Lvl1 -->

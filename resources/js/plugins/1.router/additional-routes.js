@@ -25,6 +25,11 @@ export const redirects = [
     redirect: () => ({ name: 'pages-user-profile-tab', params: { tab: 'profile' } }),
   },
   {
+    path: '/apps/pbl/preview',
+    name: 'apps-pbl-preview',
+    redirect: () => ({ name: 'apps-pbl-preview-id' }),
+  },
+  {
     path: '/pages/account-settings',
     name: 'pages-account-settings',
     redirect: () => ({ name: 'pages-account-settings-tab', params: { tab: 'account' } }),

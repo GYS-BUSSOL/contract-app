@@ -5,10 +5,12 @@ const props = defineProps({
   totalActiveCount: {
     type: Number,
     required: true,
+    default: 0
   },
   totalNotActiveCount: {
     type: Number,
     required: true,
+    default: 0
   }
 })
 
@@ -16,22 +18,22 @@ const widgetData = computed(() => [
   {
     title: 'Total Data',
     value: props.totalActiveCount + props.totalNotActiveCount,
-    desc: 'Total Area Cost Center',
-    icon: 'tabler-users',
-    iconColor: 'secondary',
+    desc: 'Total area cost center',
+    icon: 'tabler-file',
+    iconColor: 'info',
   },
   {
     title: 'Not Active Data',
     value: props.totalNotActiveCount,
     desc: 'Total not active data',
-    icon: 'tabler-user-exclamation',
+    icon: 'tabler-file-x',
     iconColor: 'error',
   },
   {
     title: 'Active Data',
     value: props.totalActiveCount,
     desc: 'Total active data',
-    icon: 'tabler-user-check',
+    icon: 'tabler-file-check',
     iconColor: 'success',
   },
 ])

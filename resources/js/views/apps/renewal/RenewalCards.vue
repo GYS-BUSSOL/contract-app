@@ -5,10 +5,12 @@
     totalPriorityCount: {
       type: Number,
       required: true,
+      default: 0
     },
     totalNotPriorityCount: {
       type: Number,
       required: true,
+      default: 0
     },
   })
 
@@ -17,24 +19,24 @@
       title: 'Total Data',
       value: props.totalPriorityCount + props.totalNotPriorityCount,
       desc: 'Total data',
-      icon: 'tabler-users',
-      iconColor: 'secondary',
-    },
-    {
-      title: 'Priority "Segera"',
-      value: props.totalPriorityCount,
-      desc: 'Total Priority "Segera"',
-      icon: 'tabler-user-exclamation',
-      iconColor: 'error',
+      icon: 'tabler-file',
+      iconColor: 'info',
     },
     {
       title: 'Priority "Tidak Segera"',
       value: props.totalNotPriorityCount,
       desc: 'Total Priority "Tidak Segera"',
-      icon: 'tabler-user-check',
+      icon: 'tabler-file-report',
       iconColor: 'success',
     },
-  ]);
+    {
+      title: 'Priority "Segera"',
+      value: props.totalPriorityCount,
+      desc: 'Total Priority "Segera"',
+      icon: 'tabler-file-alert',
+      iconColor: 'warning',
+    },
+  ])
 </script>
 <template>
   <!-- Widgets -->

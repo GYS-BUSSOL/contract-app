@@ -1,5 +1,4 @@
 <script setup>
-import dayjs from "dayjs";
 
 const emit = defineEmits(['updateTotalNotExpired','updateTotalExpired'])
 // Store
@@ -11,7 +10,6 @@ const page = ref(1)
 const sortBy = ref()
 const orderBy = ref()
 const selectedRows = ref([])
-const isPBLAddDialogVisible = ref(false)
 const token = useCookie('accessToken')
 const updateOptions = options => {
   sortBy.value = options.sortBy[0]?.key
@@ -73,38 +71,15 @@ const SPKList = computed(() => SPKListData.value.SPKList)
 const totalSPKList = computed(() => SPKListData.value.totalSPKList)
 const totalExpiredCount = computed(() => SPKListData.value.totalExpiredCount)
 const totalNotExpiredCount = computed(() => SPKListData.value.totalNotExpiredCount)
-emit('updateTotalNotExpired', totalNotExpiredCount.value);
-emit('updateTotalExpired', totalExpiredCount.value);
 
-// search filters
-const expiredStatus = [
-  {
-    title: 'Expired data',
-    value: '1',
+watch(
+  [totalNotExpiredCount, totalExpiredCount],
+  ([newNotExpiredStatus, newExpiredStatus]) => {
+    emit('updateTotalNotExpired', newNotExpiredStatus);
+    emit('updateTotalExpired', newExpiredStatus);
   },
-  {
-    title: 'Not expired yet data',
-    value: 'null',
-  }
-]
-
-const deleteSPKList = async id => {
-  await $api(`/apps/spk-list/${ id }`, { method: 'DELETE' })
-
-  // Delete from selectedRows
-  const index = selectedRows.value.findIndex(row => row === id)
-  if (index !== -1)
-    selectedRows.value.splice(index, 1)
-
-  // Refetch SPK List
-  fetchSPKList()
-}
-
-const formatDate = (date, time = false) => {
-  return dayjs(date).format(`DD MMM YYYY${time ? ", HH:mm" : ""}`);
-}
-
-
+  { immediate: true }
+)
 </script>
 
 <template>
@@ -153,23 +128,6 @@ const formatDate = (date, time = false) => {
               prepend-inner-icon="tabler-search"
             />
           </div>
-
-          <!-- Export button -->
-          <VBtn
-            variant="tonal"
-            color="secondary"
-            prepend-icon="tabler-upload"
-          >
-            Export
-          </VBtn>
-          <!-- Create New SPK List button -->
-          <VBtn
-            color="primary"
-            prepend-icon="tabler-plus"
-            @click="isPBLAddDialogVisible = !isPBLAddDialogVisible"
-          >
-            Create New
-          </VBtn>
         </div>
       </VCardText>
 
@@ -185,7 +143,6 @@ const formatDate = (date, time = false) => {
         :items-length="totalSPKList"
         :headers="headers"
         class="text-no-wrap"
-        show-select
         @update:options="updateOptions"
       >
       
@@ -287,8 +244,4 @@ const formatDate = (date, time = false) => {
       <!-- SECTION -->
     </VCard>
   </section>
-  <PBLAddDialog
-    v-model:isDialogVisible="isPBLAddDialogVisible"
-    :user-data="customerData"
-  />
 </template>

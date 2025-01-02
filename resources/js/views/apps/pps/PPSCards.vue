@@ -1,47 +1,50 @@
 <script setup>
-import { computed, defineProps } from 'vue';
-
 const props = defineProps({
   totalPriorityCount: {
     type: Number,
     required: true,
+    default: 0
   },
   totalNotPriorityCount: {
     type: Number,
     required: true,
+    default: 0
   },
   totalPriorityCompletedCount: {
     type: Number,
     required: true,
+    default: 0
   },
   totalNotPriorityCompletedCount: {
     type: Number,
     required: true,
+    default: 0
   },
   isActiveTab: {
     type: Number,
     required: true,
+    default: 0
   },
 })
     
 const widgetPPS = computed(() => [
   {
-    icon: 'tabler-users',
+    icon: 'tabler-file',
     color: 'info',
     title: 'Total Data',
     value: props.isActiveTab == 0 ? (props.totalPriorityCount + props.totalNotPriorityCount) : (props.totalPriorityCompletedCount + props.totalNotPriorityCompletedCount),
     isHover: true,
   },
   {
-    icon: 'tabler-user-exclamation',
-    color: 'error',
+    icon: 'tabler-file-report',
+    color: 'success',
     title: 'Total Priority "Tidak Segera"',
     value: props.isActiveTab == 0 ? (props.totalNotPriorityCount) : (props.totalNotPriorityCompletedCount),
     isHover: true,
   },
   {
-    icon: 'tabler-user-check',
-    color: 'success',
+    icon: 'tabler-file-alert',
+    color: 'warning',
     title: 'Total Priority "Segera"',
     value: props.isActiveTab == 0 ? (props.totalPriorityCount) : (props.totalPriorityCompletedCount),
     isHover: true,

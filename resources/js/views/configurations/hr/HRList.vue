@@ -328,14 +328,6 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
             />
           </div>
 
-          <!-- Export button -->
-          <VBtn
-            variant="tonal"
-            color="secondary"
-            prepend-icon="tabler-upload"
-          >
-            Export
-          </VBtn>
           <!-- Create New HR button -->
           <VBtn
             color="primary"
@@ -359,7 +351,6 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
         :items-length="totalUserHR"
         :headers="headers"
         class="text-no-wrap"
-        show-select
         @update:options="updateOptions"
       >
         <!-- Username -->

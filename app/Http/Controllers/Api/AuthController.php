@@ -65,25 +65,8 @@ class AuthController extends Controller
                 if ($result) {
                     $entries = ldap_get_entries($ldap, $result);
                     if ($entries['count'] > 0) {
-                        $userInfo = $entries[0];
-
-                        Session::put('GROUP', $userInfo['memberof'][2] ?? '');
-                        Session::put('ext', $userInfo['telephonenumber'][0] ?? '');
-                        Session::put('email', $userInfo['mail'][0] ?? '');
-                        Session::put('start', time());
-                        Session::put('expire', time() + 300);
-
                         $user = $this->user->firstWhere('usr_name', $validated['username']);
                         $token = $user->createToken('access_token')->plainTextToken;
-
-                        if ($user) {
-                            Session::put('role', $user['usr_access']);
-                            Session::put('nama', $user['usr_display_name']);
-                            Session::put('usr_name', $user['usr_name']);
-                            Session::put('usr_id', $user['usr_id']);
-                            Session::put('bu_id', $user['bu_id']);
-                            Session::put('app_id', $user['usr_approver2']);
-                        }
 
                         return response()->json([
                             'status' => 201,

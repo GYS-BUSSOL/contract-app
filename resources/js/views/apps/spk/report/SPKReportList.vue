@@ -318,15 +318,6 @@ onMounted(() => {
               prepend-inner-icon="tabler-search"
             />
           </div>
-
-          <!-- Export button -->
-          <VBtn
-            variant="tonal"
-            color="secondary"
-            prepend-icon="tabler-upload"
-          >
-            Export
-          </VBtn>
         </div>
       </VCardText>
 
@@ -342,7 +333,6 @@ onMounted(() => {
         :items-length="totalSPKReport"
         :headers="headers"
         class="text-no-wrap"
-        show-select
         @update:options="updateOptions"
       >
       

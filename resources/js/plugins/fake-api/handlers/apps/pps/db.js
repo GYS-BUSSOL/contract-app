@@ -1,9 +1,9 @@
 import { BASE_API_URL } from '@/plugins/1.router/additional-routes';
+const token = useCookie('accessToken').value
 
 export async function fetchPPSOnGoing(currentPage, rowPerPage, rowSearch, priorityFilter, statusFilter, expiredFilter) {
   let start = 0;
   const url = `${BASE_API_URL}/api/apps/pps-ongoing/search`;
-  const token = 'YOUR_BEARER_TOKEN_HERE';
 
   if(currentPage != 1 && currentPage > 1)
     start = (currentPage * rowPerPage) - rowPerPage
@@ -131,7 +131,7 @@ export async function fetchPPSOnGoing(currentPage, rowPerPage, rowSearch, priori
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // 'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(payload)
     });
@@ -152,7 +152,6 @@ export async function fetchPPSOnGoing(currentPage, rowPerPage, rowSearch, priori
 export async function fetchPPSCompleted(currentPage, rowPerPage, rowSearch, priorityFilter, statusFilter, expiredFilter) {
   let start = 0;
   const url = `${BASE_API_URL}/api/apps/pps-completed/search`;
-  const token = 'YOUR_BEARER_TOKEN_HERE';
 
   if(currentPage != 1 && currentPage > 1)
     start = (currentPage * rowPerPage) - rowPerPage
@@ -280,7 +279,7 @@ export async function fetchPPSCompleted(currentPage, rowPerPage, rowSearch, prio
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // 'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(payload)
     });

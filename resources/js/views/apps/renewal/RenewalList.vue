@@ -29,6 +29,7 @@ const rangeIncrement = ref([])
 const isDisabled = ref(false)
 const isSuccessNextStep = ref(false)
 const cjbId = ref()
+const token = useCookie('accessToken')
 
 const errors = ref({
    // PPS form
@@ -204,9 +205,9 @@ watch(
 const resolveRenewalsPriorityVariant = stat => {
   const statLowerCase = stat.toLowerCase()
   if (statLowerCase === '1')
-    return 'success'
+    return 'warning'
 
-  return 'error'
+  return 'success'
 }
 
 const updateSnackbarResponse = res => {
@@ -258,6 +259,10 @@ const fetchAddPPSData = async (PPSData) => {
       const response = await $api('/apps/pps-ongoing/add', {
         method: 'POST',
         body: formData,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
         onResponseError({ response }) {
           alertErrorResponse()
           const responseData = response._data;
@@ -480,15 +485,6 @@ const openDialog = async ({ id = null, type, con_req_id = null }) => {
               prepend-inner-icon="tabler-search"
             />
           </div>
-
-          <!-- Export button -->
-          <VBtn
-            variant="tonal"
-            color="secondary"
-            prepend-icon="tabler-upload"
-          >
-            Export
-          </VBtn>
           <!-- Create New Renewal button -->
           <VBtn
             color="primary"
@@ -512,7 +508,6 @@ const openDialog = async ({ id = null, type, con_req_id = null }) => {
         :items-length="totalRenewals"
         :headers="headers"
         class="text-no-wrap"
-        show-select
         @update:options="updateOptions"
       >
         <!-- Renewal -->

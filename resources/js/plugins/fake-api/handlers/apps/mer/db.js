@@ -306,11 +306,14 @@ export async function getListBU() {
 
 export async function getListContract() {
   const url = `${BASE_API_URL}/api/apps/contract/list`;
-  // const token = localStorage.getItem('token') || 'YOUR_BEARER_TOKEN_HERE';
 
   try {
     const response = await fetch(url, {
-      method: 'GET'
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
     });
 
     if (!response.ok) {

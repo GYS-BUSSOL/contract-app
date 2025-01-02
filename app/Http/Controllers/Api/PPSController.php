@@ -109,7 +109,11 @@ class PPSController extends Controller
 
       Log::info(['validated' => $validated]);
       $contractData = $this->addContract($arrContract);
-      $shiftChecklistArray = json_decode($validated['shift_checklist'], true);
+      if (is_string($validated['shift_checklist'])) {
+        $shiftChecklistArray = explode(',', trim($validated['shift_checklist'], '"'));
+      } else {
+        $shiftChecklistArray = json_decode($validated['shift_checklist'], true);
+      }
 
       if (isset($shiftChecklistArray)) {
         $this->addShift($shiftChecklistArray, $arrContract);
@@ -318,32 +322,6 @@ class PPSController extends Controller
     }
   }
 
-  public function destroy(int $id)
-  {
-    try {
-      $PPSOngoing = $this->contract->firstWhere('con_id', $id);
-      if (empty($PPSOngoing)) {
-        return response()->json([
-          "status" => 404,
-          "message" => "Data not found",
-        ], 404);
-      }
-
-      if ($PPSOngoing->delete()) {
-        return response()->json([
-          "status" => 200,
-          "message" => "Successfully deleted data"
-        ], 200);
-      }
-    } catch (\Exception $e) {
-      return response()->json([
-        "status" => 500,
-        "message" => "Failed to delete data",
-        "error" => "Server error",
-      ], 500);
-    }
-  }
-
   private function fileAttachment($file, $newRequestId)
   {
     $filename = now();
@@ -491,30 +469,17 @@ class PPSController extends Controller
   {
     Log::info(['shiftChecklistArray' => $shiftChecklistArray]);
     foreach ($shiftChecklistArray as $shift) {
-      if (count($shiftChecklistArray) == 1) {
-        $merShift =  MerShift::firstWhere('shift_code', $shift);
-        Log::info(['merShift' => $merShift]);
-        $arrShiftData = [
-          'sh_con_req_id' => $arrContract['request_id'],
-          'sh_shift' => $shift,
-          'sh_jam' => $merShift['shift_jam'],
-          'aud_user' => $arrContract['user_name'],
-          'aud_date' => $arrContract['current_date'],
-          'aud_prog' => 'CMSY',
-          'aud_machine' => $arrContract['ip']
-        ];
-      } else {
-        $arrShiftData = [
-          'sh_con_req_id' => $arrContract['request_id'],
-          'sh_shift' => $shift,
-          'aud_user' => $arrContract['user_name'],
-          'aud_date' => $arrContract['current_date'],
-          'aud_prog' => 'CMSY',
-          'aud_machine' => $arrContract['ip']
-        ];
-      }
-      $result = TrnShift::create($arrShiftData);
-      Log::info(['arrShiftData' => $result]);
+      $merShift =  MerShift::firstWhere('shift_code', $shift);
+      $arrShiftData = [
+        'sh_con_req_id' => $arrContract['request_id'],
+        'sh_shift' => $shift,
+        'sh_jam' => $merShift['shift_jam'],
+        'aud_user' => $arrContract['user_name'],
+        'aud_date' => $arrContract['current_date'],
+        'aud_prog' => 'CMSY',
+        'aud_machine' => $arrContract['ip']
+      ];
+      TrnShift::create($arrShiftData);
     }
   }
 
@@ -522,27 +487,17 @@ class PPSController extends Controller
   {
     Log::info(['shiftChecklistArray' => $shiftChecklistArray]);
     foreach ($shiftChecklistArray as $shift) {
-      if (count($shiftChecklistArray) == 1) {
-        $merShift =  MerShift::firstWhere('shift_code', $shift);
-        Log::info(['merShift' => $merShift]);
-        $arrShiftData = [
-          'sh_shift' => $shift,
-          'sh_jam' => $merShift['shift_jam'],
-          'aud_user' => $arrContract['user_name'],
-          'aud_date' => $arrContract['current_date'],
-          'aud_prog' => 'CMSY',
-          'aud_machine' => $arrContract['ip']
-        ];
-      } else {
-        $arrShiftData = [
-          'sh_shift' => $shift,
-          'aud_user' => $arrContract['user_name'],
-          'aud_date' => $arrContract['current_date'],
-          'aud_prog' => 'CMSY',
-          'aud_machine' => $arrContract['ip']
-        ];
-      }
-      $result = TrnShift::where('sh_con_req_id', $arrContract['request_id'])->first();
+      $merShift =  MerShift::firstWhere('shift_code', $shift);
+      Log::info(['merShift' => $merShift]);
+      $arrShiftData = [
+        'sh_shift' => $shift,
+        'sh_jam' => $merShift['shift_jam'],
+        'aud_user' => $arrContract['user_name'],
+        'aud_date' => $arrContract['current_date'],
+        'aud_prog' => 'CMSY',
+        'aud_machine' => $arrContract['ip']
+      ];
+      $result = TrnShift::firstWhere('sh_con_req_id', $arrContract['request_id']);
       $result->update($arrShiftData);
       Log::info(['arrShiftData' => $result]);
     }

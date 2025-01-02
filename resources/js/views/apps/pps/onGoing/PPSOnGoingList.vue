@@ -16,7 +16,7 @@ const isAddDialogVisible = ref(false)
 const isDeleteDialogVisible = ref(false)
 const isListJobTypeDialogVisible = ref(false)
 const isJobTypeDetailDialogVisible = ref(false)
-const isTypeDialog = ref('Add')
+const isTypeDialog = ref('')
 const conId = ref()
 const conReqId = ref()
 const cjbId = ref()
@@ -28,6 +28,7 @@ const successMessages = ref('Successfully')
 const isSuccessNextStep = ref(false)
 const isDisabled = ref(false)
 const rangeIncrement = ref([])
+const token = useCookie('accessToken')
 const errors = ref({
    // PPS form
   company: undefined,
@@ -233,13 +234,17 @@ const updateErrors = err => {
 const resolvePPSPriorityVariant = stat => {
   const statLowerCase = stat.toLowerCase()
   if (statLowerCase === '1')
-    return 'success'
+    return 'warning'
 
-  return 'error'
+  return 'success'
 }
 
 const updateRangeIncrement = data => {
   rangeIncrement.value = data
+}
+
+const updateTypeDialog = data => {
+  isTypeDialog.value = data
 }
 
 const formatDate = (date, time = false) => {
@@ -262,6 +267,9 @@ const fetchAddPPSData = async (PPSData) => {
       const response = await $api('/apps/pps-ongoing/add', {
         method: 'POST',
         body: formData,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
         onResponseError({ response }) {
           alertErrorResponse()
           const responseData = response._data;
@@ -279,10 +287,11 @@ const fetchAddPPSData = async (PPSData) => {
     if(responseParse?.status == 200) {
       fetchPPS()
       alertSuccessResponse()
+      isTypeDialog.value = 'Add Job Type'
       const responseMessage = responseParse?.message;
       const data = responseParse?.data.rows;
       conReqId.value = data.con_req_id;
-      await getIncrementPPSOngoing(conReqId)
+      await getIncrementPPSOngoing(data.con_req_id)
       successMessages.value = responseMessage;
       isSuccessNextStep.value = true;
     } else {
@@ -448,6 +457,10 @@ const fetchPPSOngoingUpdate = async (id, PPSData, clearedForm) => {
     const response = await $api(`/apps/pps-ongoing/update/${idPPSOngoing}`, {
         method: 'POST',
         body: formData,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
         onResponseError({ response }) {
           alertErrorResponse()
           const responseData = response._data;
@@ -622,15 +635,6 @@ const updateDeleteDialogVisible =  async ({type, stat, cjb_id = null}) => {
             />
           </div>
 
-          <!-- Export button -->
-          <VBtn
-            variant="tonal"
-            color="secondary"
-            prepend-icon="tabler-upload"
-          >
-            Export
-          </VBtn>
-
           <!-- Create New PPS button -->
           <VBtn
             color="primary"
@@ -654,7 +658,6 @@ const updateDeleteDialogVisible =  async ({type, stat, cjb_id = null}) => {
         :items-length="totalPPS"
         :headers="headers"
         class="text-no-wrap"
-        show-select
         expand-on-click
         @update:options="updateOptions"
       >
@@ -821,6 +824,7 @@ const updateDeleteDialogVisible =  async ({type, stat, cjb_id = null}) => {
     :is-success-next-step="isSuccessNextStep"
     :is-disabled="isDisabled"
     @updateRangeIncrement="updateRangeIncrement"
+    @updateTypeDialog="updateTypeDialog"
     @isSnackbarResponseAlertColor="updateSnackbarResponseAlertColor"
     @isSnackbarResponse="updateSnackbarResponse"
     @PPSData="handlePPSFormSubmit"

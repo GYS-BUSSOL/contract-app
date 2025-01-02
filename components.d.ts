@@ -7,6 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    '[id]': typeof import('./resources/js/components/pbl/preview/[id].vue')['default']
     AddAuthenticatorAppDialog: typeof import('./resources/js/components/dialogs/AddAuthenticatorAppDialog.vue')['default']
     AddEditAddressDialog: typeof import('./resources/js/components/dialogs/AddEditAddressDialog.vue')['default']
     AddEditPermissionDialog: typeof import('./resources/js/components/dialogs/AddEditPermissionDialog.vue')['default']
@@ -396,6 +397,8 @@ declare module 'vue' {
     PaymentProvidersDialog: typeof import('./resources/js/components/dialogs/PaymentProvidersDialog.vue')['default']
     PBLAddDialog: typeof import('./resources/js/components/pbl/PBLAddDialog.vue')['default']
     PBLDetailDialog: typeof import('./resources/js/components/pbl/PBLDetailDialog.vue')['default']
+    PBLPreviewPrintDialog: typeof import('./resources/js/components/pbl/preview/PBLPreviewPrintDialog.vue')['default']
+    PBLPrintSPKDialog: typeof import('./resources/js/components/pbl/PBLPrintSPKDialog.vue')['default']
     PBLViewPathDialog: typeof import('./resources/js/components/pbl/PBLViewPathDialog.vue')['default']
     PPSOngoingAddDialog: typeof import('./resources/js/components/pps/PPSOngoingAddDialog.vue')['default']
     PPSOngoingAddJobtypeDialog: typeof import('./resources/js/components/pps/PPSOngoingAddJobtypeDialog.vue')['default']
@@ -406,6 +409,7 @@ declare module 'vue' {
     PPSOngoingSingleDialog: typeof import('./resources/js/components/pps/PPSOngoingSingleDialog.vue')['default']
     PPSOngoingViewImageDialog: typeof import('./resources/js/components/pps/PPSOngoingViewImageDialog.vue')['default']
     PPSOngoingViewPathDialog: typeof import('./resources/js/components/pps/PPSOngoingViewPathDialog.vue')['default']
+    Preview: typeof import('./resources/js/components/pbl/preview/index.vue')['default']
     PricingPlanDialog: typeof import('./resources/js/components/dialogs/PricingPlanDialog.vue')['default']
     ProductDescriptionEditor: typeof import('./resources/js/@core/components/ProductDescriptionEditor.vue')['default']
     ReferAndEarnDialog: typeof import('./resources/js/components/dialogs/ReferAndEarnDialog.vue')['default']

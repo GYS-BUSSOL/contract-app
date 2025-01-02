@@ -1,8 +1,16 @@
 <script setup>
   import { computed, defineProps } from 'vue';
   const props = defineProps({
-    totalPriorityCount: Number,
-    totalNotPriorityCount: Number
+    totalPriorityCount: {
+      type: Number,
+      required: true,
+      default: 0
+    },
+    totalNotPriorityCount: {
+      type: Number,
+      required: true,
+      default: 0
+    },
   })
 
   const widgetData = computed(() => [
@@ -10,24 +18,24 @@
       title: 'Data Total',
       value: props.totalPriorityCount + props.totalNotPriorityCount,
       desc: 'Total vendor assignment',
-      icon: 'tabler-users',
-      iconColor: 'secondary',
-    },
-    {
-      title: 'Priority "Segera"',
-      value: props.totalPriorityCount,
-      desc: 'Total priority',
-      icon: 'tabler-user-exclamation',
-      iconColor: 'error',
+      icon: 'tabler-file',
+      iconColor: 'info',
     },
     {
       title: 'Priority "Tidak Segera"',
       value: props.totalNotPriorityCount,
-      desc: 'Total non priority',
-      icon: 'tabler-user-check',
+      desc: 'Total Priority "Tidak Segera"',
+      icon: 'tabler-file-report',
       iconColor: 'success',
     },
-  ]);
+    {
+      title: 'Priority "Segera"',
+      value: props.totalPriorityCount,
+      desc: 'Total Priority "Segera"',
+      icon: 'tabler-file-alert',
+      iconColor: 'warning',
+    },
+  ])
 </script>
 <template>
   <!-- Widgets -->

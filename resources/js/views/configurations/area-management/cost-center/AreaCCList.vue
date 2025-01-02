@@ -144,19 +144,19 @@ const updateErrors = err => {
 
 const fetchAddData = async (areaCCData, clearedForm) => {
   try {
-      const response = await $api('/configurations/area-management-cc/add', {
-        method: 'POST',
-        body: JSON.stringify(areaCCData),
-        onResponseError({ response }) {
-          alertErrorResponse()
-          const responseData = response._data;
-          const responseMessage = responseData.message;
-          const responseErrors = responseData.errors;
-          errors.value = responseErrors;
-          errorMessages.value = responseMessage;
-          throw new Error("Created data failed");
-        },
-      });
+    const response = await $api('/configurations/area-management-cc/add', {
+      method: 'POST',
+      body: JSON.stringify(areaCCData),
+      onResponseError({ response }) {
+        alertErrorResponse()
+        const responseData = response._data;
+        const responseMessage = responseData.message;
+        const responseErrors = responseData.errors;
+        errors.value = responseErrors;
+        errorMessages.value = responseMessage;
+        throw new Error("Created data failed");
+      },
+    });
 
     const responseStringify = JSON.stringify(response);
     const responseParse = JSON.parse(responseStringify);
@@ -302,14 +302,6 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
             />
           </div>
 
-          <!-- Export button -->
-          <VBtn
-            variant="tonal"
-            color="secondary"
-            prepend-icon="tabler-upload"
-          >
-            Export
-          </VBtn>
           <!-- Create New PBL button -->
           <VBtn
             color="primary"
@@ -333,7 +325,6 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
         :items-length="totalAreaCC"
         :headers="headers"
         class="text-no-wrap"
-        show-select
         @update:options="updateOptions"
       >
         <!-- Number -->

@@ -163,18 +163,18 @@ const fetchAddData = async (jobTypeData, clearedForm) => {
 const fetchJobTypeUpdate = async (id, formData, clearedForm) => {
   try {
     const response = await $api(`/configurations/job-type/update/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(formData),
-        onResponseError({ response }) {
-          alertErrorResponse()
-          const responseData = response._data;
-          const responseMessage = responseData.message;
-          const responseErrors = responseData.errors;
-          errors.value = responseErrors;
-          errorMessages.value = responseMessage;
-          throw new Error("Updated data failed");
-        },
-      });
+      method: 'PUT',
+      body: JSON.stringify(formData),
+      onResponseError({ response }) {
+        alertErrorResponse()
+        const responseData = response._data;
+        const responseMessage = responseData.message;
+        const responseErrors = responseData.errors;
+        errors.value = responseErrors;
+        errorMessages.value = responseMessage;
+        throw new Error("Updated data failed");
+      },
+    });
     
     const responseStringify = JSON.stringify(response);
     const responseParse = JSON.parse(responseStringify);
@@ -297,14 +297,6 @@ const openDialog = async ({ id = null, type }) => {
             />
           </div>
 
-          <!-- Export button -->
-          <VBtn
-            variant="tonal"
-            color="secondary"
-            prepend-icon="tabler-upload"
-          >
-            Export
-          </VBtn>
           <!-- Create New PBL button -->
           <VBtn
             color="primary"
@@ -328,7 +320,6 @@ const openDialog = async ({ id = null, type }) => {
         :items-length="totalJobType"
         :headers="headers"
         class="text-no-wrap"
-        show-select
         @update:options="updateOptions"
       >
         <!-- Job Type -->

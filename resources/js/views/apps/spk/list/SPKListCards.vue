@@ -5,33 +5,35 @@ const props = defineProps({
   totalExpiredCount: {
     type: Number,
     required: true,
+    default: 0
   },
   totalNotExpiredCount: {
     type: Number,
     required: true,
+    default: 0
   }
 })
 
 const widgetData = computed(() => [
   {
-    title: 'Data Total',
+    title: 'Total Data',
     value: props.totalExpiredCount + props.totalNotExpiredCount,
-    desc: 'Total SPK data',
-    icon: 'tabler-users',
-    iconColor: 'secondary',
+    desc: 'Total data SPK',
+    icon: 'tabler-file',
+    iconColor: 'info',
   },
   {
     title: 'Expired Data',
     value: props.totalExpiredCount,
     desc: 'Total expired data',
-    icon: 'tabler-user-exclamation',
+    icon: 'tabler-file-x',
     iconColor: 'error',
   },
   {
     title: 'Not Expired Yet Data',
     value: props.totalNotExpiredCount,
     desc: 'Total not expired data',
-    icon: 'tabler-user-check',
+    icon: 'tabler-file-check',
     iconColor: 'success',
   },
 ])

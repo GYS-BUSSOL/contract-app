@@ -2,7 +2,6 @@
 import dayjs from "dayjs";
 
 const emit = defineEmits(['updateTotalNotExpired','updateTotalExpired'])
-// Store
 const searchQuery = ref('')
 const selectedStatus = ref()
 const selectedExpiredStatus = ref()
@@ -12,15 +11,15 @@ const page = ref(1)
 const sortBy = ref()
 const orderBy = ref()
 const selectedRows = ref([])
-const isTypeDialog = ref('Add')
+const isTypeDialog = ref('')
 const isAddDialogVisible = ref(false)
 const isSnackbarResponse = ref(false)
 const isJobTypeDetailDialogVisible = ref(false)
 const isSnackbarResponseAlertColor = ref('error')
 const errorMessages = ref('Internal server error')
 const successMessages = ref('Successfully')
-const conReqNo = ref(0)
-const conReqId = ref(0)
+const conReqId = ref()
+const SPKId = ref()
 const fetchTrigger = ref(0)
 const isSuccessNextStep = ref(false)
 const token = useCookie('accessToken')
@@ -78,35 +77,6 @@ const headers = [
   },
 ]
 
-const {
-  data: PBLData,
-  execute: fetchPBL,
-} = await useApi(createUrl('/apps/pbl/search', {
-  query: {
-    q: searchQuery,
-    status: selectedStatus,
-    expiredStatus: selectedExpiredStatus,
-    itemsPerPage,
-    page,
-    sortBy,
-    orderBy,
-  },
-}))
-
-const pbl = computed(() => PBLData.value.pbl)
-const totalPBL = computed(() => PBLData.value.totalPBL)
-const totalExpiredCount = computed(() => PBLData.value.totalExpiredCount)
-const totalNotExpiredCount = computed(() => PBLData.value.totalNotExpiredCount)
-
-watch(
-  [totalNotExpiredCount, totalExpiredCount],
-  ([newNotExpiredStatus, newExpiredStatus]) => {
-    emit('updateTotalNotExpired', newNotExpiredStatus);
-    emit('updateTotalExpired', newExpiredStatus);
-  },
-  { immediate: true }
-)
-
 // search filters
 const expiredStatus = [
   {
@@ -119,6 +89,7 @@ const expiredStatus = [
   }
 ]
 
+// Status
 const status = [
   {
     title: 'New Request',
@@ -158,6 +129,35 @@ const status = [
   }
 ]
 
+const {
+  data: PBLData,
+  execute: fetchPBL,
+} = await useApi(createUrl('/apps/pbl/search', {
+  query: {
+    q: searchQuery,
+    status: selectedStatus,
+    expiredStatus: selectedExpiredStatus,
+    itemsPerPage,
+    page,
+    sortBy,
+    orderBy,
+  },
+}))
+
+const pbl = computed(() => PBLData.value.pbl)
+const totalPBL = computed(() => PBLData.value.totalPBL)
+const totalExpiredCount = computed(() => PBLData.value.totalExpiredCount)
+const totalNotExpiredCount = computed(() => PBLData.value.totalNotExpiredCount)
+
+watch(
+  [totalNotExpiredCount, totalExpiredCount],
+  ([newNotExpiredStatus, newExpiredStatus]) => {
+    emit('updateTotalNotExpired', newNotExpiredStatus);
+    emit('updateTotalExpired', newExpiredStatus);
+  },
+  { immediate: true }
+)
+
 const formatDate = (date, time = false) => {
   return dayjs(date).format(`DD MMM YYYY${time ? ", HH:mm" : ""}`);
 }
@@ -190,29 +190,33 @@ const updateErrors = err => {
   errors.value = err;
 }
 
+const onUpdateTypeDialog = () => {
+  isTypeDialog.value = '';
+}
+
 const updateSucccessStep = stat => {
   isSuccessNextStep.value = stat;
 }
 
 const fetchAddData = async (SPKData) => {
   try {
-      const response = await $api('/apps/spk/add', {
-        method: 'POST',
-        body: JSON.stringify(SPKData),
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        onResponseError({ response }) {
-          alertErrorResponse()
-          const responseData = response._data;
-          const responseMessage = responseData.message;
-          const responseErrors = responseData.errors;
-          errors.value = responseErrors;
-          errorMessages.value = responseMessage;
-          throw new Error("Created data failed");
-        },
-      });
+    const response = await $api('/apps/spk/add', {
+      method: 'POST',
+      body: JSON.stringify(SPKData),
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      onResponseError({ response }) {
+        alertErrorResponse()
+        const responseData = response._data;
+        const responseMessage = responseData.message;
+        const responseErrors = responseData.errors;
+        errors.value = responseErrors;
+        errorMessages.value = responseMessage;
+        throw new Error("Created data failed");
+      },
+    });
 
     const responseStringify = JSON.stringify(response);
     const responseParse = JSON.parse(responseStringify);
@@ -221,32 +225,120 @@ const fetchAddData = async (SPKData) => {
       fetchPBL()
       alertSuccessResponse()
       const responseMessage = responseParse?.message;
+      const data = responseParse?.data;
+
       successMessages.value = responseMessage;
       isSuccessNextStep.value = true;
+      SPKId.value = data.spk_id;
     } else {
       alertErrorResponse()
       throw new Error("Created data failed");
     }
   } catch (error) {
     alertErrorResponse()
+    throw new Error("Created data failed");
   }
 }
 
-const openDialog = async ({ id = null, type, con_req_no = null, con_req_id = null }) => {
+const fetchSaveData = async (SPKData, clearedForm) => {
+  try {
+    const response = await $api('/apps/spk-save', {
+      method: 'POST',
+      body: JSON.stringify(SPKData),
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      onResponseError({ response }) {
+        alertErrorResponse()
+        const responseData = response._data;
+        const responseMessage = responseData.message;
+        const responseErrors = responseData.errors;
+        errors.value = responseErrors;
+        errorMessages.value = responseMessage;
+        throw new Error("Created data failed");
+      },
+    });
+
+    const responseStringify = JSON.stringify(response);
+    const responseParse = JSON.parse(responseStringify);
+
+    if(responseParse?.status == 200) {
+      clearedForm();
+      fetchPBL()
+      alertSuccessResponse()
+      const responseMessage = responseParse?.message;
+      successMessages.value = responseMessage;
+    } else {
+      alertErrorResponse()
+      throw new Error("Created data failed");
+    }
+  } catch (error) {
+    alertErrorResponse()
+    throw new Error("Created data failed");
+  }
+}
+
+const fetchPrintData = async (SPKData, clearedForm) => {
+  try {
+    const response = await $api('/apps/spk-save-print', {
+      method: 'POST',
+      body: JSON.stringify(SPKData),
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      onResponseError({ response }) {
+        alertErrorResponse()
+        const responseData = response._data;
+        const responseMessage = responseData.message;
+        const responseErrors = responseData.errors;
+        errors.value = responseErrors;
+        errorMessages.value = responseMessage;
+        throw new Error("Created data failed");
+      },
+    });
+
+    const responseStringify = JSON.stringify(response);
+    const responseParse = JSON.parse(responseStringify);
+
+    if(responseParse?.status == 200) {
+      clearedForm()
+      fetchPBL()
+      alertSuccessResponse()
+      const responseMessage = responseParse?.message;
+      successMessages.value = responseMessage;
+    } else {
+      alertErrorResponse()
+      throw new Error("Created data failed");
+    }
+  } catch (error) {
+    alertErrorResponse()
+    throw new Error("Created data failed");
+  }
+}
+
+const openDialog = async ({ type, con_req_id = null }) => {
   isTypeDialog.value = type
-  conReqNo.value = con_req_no
   conReqId.value = con_req_id
   if(type == 'Add') {
     isAddDialogVisible.value = true
   } else if(type == 'Detail') {
     isJobTypeDetailDialogVisible.value = true
-    fetchTrigger.value += 1;
   }
+  fetchTrigger.value += 1;
 }
 
 const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
   if (mode === "Add") {
     fetchAddData(formData, dialogUpdate)
+  }
+}
+const handleForPrint = async ({mode, formData, dialogUpdate}) => {
+  if (mode === "Save") {
+    fetchSaveData(formData, dialogUpdate)
+  } else if(mode === 'Print') {
+    fetchPrintData(formData, dialogUpdate)
   }
 }
 </script>
@@ -308,14 +400,6 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
             />
           </div>
 
-          <!-- Export button -->
-          <VBtn
-            variant="tonal"
-            color="secondary"
-            prepend-icon="tabler-upload"
-          >
-            Export
-          </VBtn>
           <!-- Create New PBL button -->
           <VBtn
             color="primary"
@@ -339,7 +423,6 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
         :items-length="totalPBL"
         :headers="headers"
         class="text-no-wrap"
-        show-select
         @update:options="updateOptions"
       >
         <!-- PBL -->
@@ -347,7 +430,7 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
           <div class="d-flex align-center gap-x-4">
             <div class="d-flex flex-column">
               <h6 class="text-base text-primary cursor-pointer"
-                @click="openDialog({type: 'Detail', con_req_no: item.con_req_no, con_req_id: item.con_req_id})"
+                @click="openDialog({type: 'Detail', con_req_id: item.con_req_id})"
               >
                 {{ item.con_req_no }}
               </h6>
@@ -424,13 +507,14 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
     v-model:isDialogVisible="isAddDialogVisible"
     :errors="errors"
     :type-dialog="isTypeDialog"
-    :con-req-no="conReqNo"
-    :con-req-id="conReqId"
+    :SPKId="SPKId"
     :fetch-trigger="fetchTrigger"
     :is-success-next-step="isSuccessNextStep"
     @isSnackbarResponseAlertColor="updateSnackbarResponseAlertColor"
     @isSnackbarResponse="updateSnackbarResponse"
     @createSPK="handleFormSubmit"
+    @printSPK="handleForPrint"
+    @updateTypeDialog="onUpdateTypeDialog"
     @errorMessages="updateErrorMessages"
     @errors="updateErrors"
     @isSuccessNextStep="updateSucccessStep"

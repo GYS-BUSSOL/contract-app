@@ -15,7 +15,7 @@ const configStore = useConfigStore()
       v-if="configStore.appContentLayoutNav === 'vertical'"
       class="d-none d-md-flex align-center text-disabled ms-2"
     >
-      <marquee behavior="scroll" direction="right" scrollamount="12">Selamat Merayakan Natal & Tahun Baru 🎉 PT. Garuda Yamato Steel</marquee>
+      <marquee behavior="scroll" direction="right" scrollamount="12">🎅 HOHOHO! Selamat Merayakan Natal & Tahun Baru 🎉</marquee>
     </span>
   </div>
 </template>

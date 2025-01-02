@@ -37,7 +37,8 @@ use App\Http\Controllers\Api\{
   PaymentTemplateController,
   PenilaianController,
   RejectCategoryController,
-  TimeHistoryController
+  TimeHistoryController,
+  MerShiftController
 };
 
 RateLimiter::for('api', function (Request $request) {
@@ -59,8 +60,12 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     Route::controller(SPKController::class)->group(function () {
       Route::post('/spk-list/search', 'search');
       Route::post('/spk/add', 'add');
+      Route::get('/spk/edit/{id}', 'edit');
+      Route::get('/spk/latest-number', 'latestSPKNumber');
       Route::post('/spk-report/search', 'searchReport');
       Route::post('/spk-active/search', 'searchActive');
+      Route::post('/spk-save', 'save');
+      Route::post('/spk-save-print', 'savePrint');
     });
     // Contract Job
     Route::controller(ContractJobController::class)->group(function () {
@@ -106,6 +111,23 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
       Route::get('/budget-bu/edit/{id}/{year}', 'edit');
       Route::put('/budget-bu/update/{id}', 'update');
     });
+    // Contract
+    Route::controller(ContractController::class)->group(function () {
+      Route::get('/contract/edit/{conReq}', 'edit');
+      Route::get('/contract/list', 'list');
+    });
+    // Shift
+    Route::controller(MerShiftController::class)->group(function () {
+      Route::get('/shift/list', 'list');
+    });
+    // PPS
+    Route::controller(PPSController::class)->group(function () {
+      Route::post('/pps-ongoing/search', 'searchOngoing');
+      Route::post('/pps-completed/search', 'searchCompleted');
+      Route::post('/pps-ongoing/add', 'add');
+      Route::get('/pps-ongoing/edit/{id}', 'edit');
+      Route::post('/pps-ongoing/update/{id}', 'update');
+    });
   });
 });
 
@@ -144,20 +166,6 @@ Route::group(['prefix' => 'apps'], function () {
   Route::controller(VendorAssigmentController::class)->group(function () {
     Route::post('/vendor-assigment/search', 'search');
     Route::post('/vendor-assigment/add', 'add');
-  });
-  // Contract
-  Route::controller(ContractController::class)->group(function () {
-    Route::get('/contract/edit/{conReq}', 'edit');
-    Route::get('/contract/list', 'list');
-  });
-  // PPS
-  Route::controller(PPSController::class)->group(function () {
-    Route::post('/pps-ongoing/search', 'searchOngoing');
-    Route::post('/pps-completed/search', 'searchCompleted');
-    Route::post('/pps-ongoing/add', 'add');
-    Route::get('/pps-ongoing/edit/{id}', 'edit');
-    Route::post('/pps-ongoing/update/{id}', 'update');
-    Route::delete('/pps-ongoing/delete/{id}', 'destroy');
   });
   // Renewal
   Route::controller(RenewalController::class)->group(function () {

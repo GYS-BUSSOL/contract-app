@@ -104,19 +104,19 @@ const updateErrors = err => {
 
 const fetchAddData = async (signatureTypeData, clearedForm) => {
   try {
-      const response = await $api('/configurations/signature-type/add', {
-        method: 'POST',
-        body: JSON.stringify(signatureTypeData),
-        onResponseError({ response }) {
-          alertErrorResponse()
-          const responseData = response._data;
-          const responseMessage = responseData.message;
-          const responseErrors = responseData.errors;
-          errors.value = responseErrors;
-          errorMessages.value = responseMessage;
-          throw new Error("Created data failed");
-        },
-      });
+    const response = await $api('/configurations/signature-type/add', {
+      method: 'POST',
+      body: JSON.stringify(signatureTypeData),
+      onResponseError({ response }) {
+        alertErrorResponse()
+        const responseData = response._data;
+        const responseMessage = responseData.message;
+        const responseErrors = responseData.errors;
+        errors.value = responseErrors;
+        errorMessages.value = responseMessage;
+        throw new Error("Created data failed");
+      },
+    });
 
     const responseStringify = JSON.stringify(response);
     const responseParse = JSON.parse(responseStringify);
@@ -140,18 +140,18 @@ const fetchAddData = async (signatureTypeData, clearedForm) => {
 const fetchSignatureTypeUpdate = async (id, formData, clearedForm) => {
   try {
     const response = await $api(`/configurations/signature-type/update/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(formData),
-        onResponseError({ response }) {
-          alertErrorResponse()
-          const responseData = response._data;
-          const responseMessage = responseData.message;
-          const responseErrors = responseData.errors;
-          errors.value = responseErrors;
-          errorMessages.value = responseMessage;
-          throw new Error("Updated data failed");
-        },
-      });
+      method: 'PUT',
+      body: JSON.stringify(formData),
+      onResponseError({ response }) {
+        alertErrorResponse()
+        const responseData = response._data;
+        const responseMessage = responseData.message;
+        const responseErrors = responseData.errors;
+        errors.value = responseErrors;
+        errorMessages.value = responseMessage;
+        throw new Error("Updated data failed");
+      },
+    });
     
     const responseStringify = JSON.stringify(response);
     const responseParse = JSON.parse(responseStringify);
@@ -245,14 +245,6 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
             />
           </div>
 
-          <!-- Export button -->
-          <VBtn
-            variant="tonal"
-            color="secondary"
-            prepend-icon="tabler-upload"
-          >
-            Export
-          </VBtn>
           <!-- Create New PBL button -->
           <VBtn
             color="primary"
@@ -276,7 +268,6 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
         :items-length="totalSignatureType"
         :headers="headers"
         class="text-no-wrap"
-        show-select
         @update:options="updateOptions"
       >
         <!-- Signature Type -->

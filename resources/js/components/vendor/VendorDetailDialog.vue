@@ -167,6 +167,10 @@ const fetchContractEdit = async () => {
     isLoading.value = true;
     const response = await $api(`/apps/contract/edit/${contractReqNo.value}`, {
       method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
       onResponseError({ response }) {
         const responseData = response._data;
         const responseMessage = responseData.message;
@@ -583,6 +587,9 @@ watch(
                     :error-messages="props.errors?.cjb_pay_type"
                     clearable
                   />
+                  <VTooltip open-delay="200" location="top" activator="parent" v-if="data.cjb_pay_type != null && data.cjb_pay_type != ''">
+                    <span>{{ dataMerPaymentType.find((mpt) => mpt.value == data.cjb_pay_type)?.title }}</span>
+                  </VTooltip>
                 </td>
                 <td style="width: 200px;">
                   <AppAutocomplete

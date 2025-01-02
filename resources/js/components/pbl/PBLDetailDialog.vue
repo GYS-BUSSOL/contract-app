@@ -120,11 +120,10 @@ const fetchMerVendorData = async () => {
       }));
       allDataVendor.value = rows;
     } else {
-      console.error('Failed to fetch mer vendor data');
+      throw new Error("Failed to fetch mer vendor data");
     }
-    
   } catch (error) {
-    console.error('Error fetching mer vendor data');
+    throw new Error("Failed to fetch mer vendor data");
   }
 }
 
@@ -139,11 +138,10 @@ const fetchMerPaymentType = async () => {
         value: row.paytype_code,
       }));
     } else {
-      console.error('Failed to fetch mer payment type data');
+      throw new Error("Failed to fetch mer payment type data");
     }
-    
   } catch (error) {
-    console.error('Error fetching mer payment type data');
+    throw new Error("Failed to fetch mer payment type data");
   }
 }
 
@@ -158,11 +156,10 @@ const fetchMerPaymentTemplate = async () => {
         value: row.payment_code,
       }));
     } else {
-      console.error('Failed to fetch mer payment template data');
+      throw new Error("Failed to fetch mer payment template data");
     }
-    
   } catch (error) {
-    console.error('Error fetching mer payment template data');
+    throw new Error("Failed to fetch mer payment template data");
   }
 }
 
@@ -171,6 +168,10 @@ const fetchContractEdit = async () => {
     isLoading.value = true;
     const response = await $api(`/apps/contract/edit/${conReqId.value}`, {
       method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
       onResponseError({ response }) {
         const responseData = response._data;
         const responseMessage = responseData.message;
@@ -331,6 +332,7 @@ const fetchHistoryList = async () => {
     const dataResponse = JSON.parse(JSON.stringify(response));
     if (dataResponse.status == 200) {
       const rows = dataResponse.data || [];
+
       historyData.value = rows.map((row) => ({
         ths_id: row.ths_id,
         sts_id: row.sts_id,
@@ -339,7 +341,7 @@ const fetchHistoryList = async () => {
         sts_description: row.sts_description,
         ths_comment: row.ths_comment != null && row.ths_comment != '' ? row.ths_comment : '-',
       }));
-      console.log({historyData: historyData.value.length, data : JSON.stringify(historyData.value)});
+
     } else {
       emit('update:isDialogVisible', false)
       emit('isSnackbarResponse',true)
@@ -356,21 +358,19 @@ const fetchHistoryList = async () => {
 
 watch(
   [() => conReqId.value, () => typeDialog.value, () => props.fetchTrigger],
-    ([newConreqId,newType]) => {
-      if (newType === "Detail"&& newConreqId) {
+    ([newConreqId, newType]) => {
+      
+      if (newType === "Detail" && newConreqId) {
         fetchContractEdit()
         fetchContractJobList()
         fetchValuationList()
         fetchHistoryList()
+        fetchMerVendorData()
+        fetchMerPaymentType()
+        fetchMerPaymentTemplate()
       }
-      fetchMerVendorData()
-      fetchMerPaymentType()
-      fetchMerPaymentTemplate()
-      loadingBtn.value[0] = false;
-      loadingBtnSecond.value[0] = false;
-  },
-  { immediate: true }
-);
+  }
+)
 </script>
 
 <template>
@@ -859,21 +859,6 @@ watch(
               </VExpansionPanel>
             </VExpansionPanels>
           </VCol>
-        </VRow>
-        <VRow class="d-flex justify-end mt-5">
-          <div class="card__actions d-flex justify-end" v-if="isLoading">
-            <Skeletor width="96" height="36" />
-          </div>
-          <div v-if="!isLoading">
-            <VBtn
-              class="me-4"
-              color="secondary"
-              variant="tonal"
-              @click="dialogModelValueUpdate"
-            >
-              Discard
-            </VBtn>
-          </div>
         </VRow>
       </VCard>
   </VDialog>

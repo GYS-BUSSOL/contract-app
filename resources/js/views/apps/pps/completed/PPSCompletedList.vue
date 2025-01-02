@@ -187,9 +187,9 @@ const status = [
 const resolvePPSPriorityVariant = stat => {
   const statLowerCase = stat.toLowerCase()
   if (statLowerCase === '1')
-    return 'success'
+    return 'warning'
 
-  return 'error'
+  return 'success'
 }
 
 const updateSnackbarResponse = res => {
@@ -285,15 +285,6 @@ const openDialog = async ({ id = null, type, con_req_id = null }) => {
               prepend-inner-icon="tabler-search"
             />
           </div>
-
-          <!-- Export button -->
-          <VBtn
-            variant="tonal"
-            color="secondary"
-            prepend-icon="tabler-upload"
-          >
-            Export
-          </VBtn>
         </div>
       </VCardText>
 
@@ -309,7 +300,6 @@ const openDialog = async ({ id = null, type, con_req_id = null }) => {
         :items-length="totalPPSCompleted"
         :headers="headers"
         class="text-no-wrap"
-        show-select
         @update:options="updateOptions"
       >
         <!-- PPS -->

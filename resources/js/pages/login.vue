@@ -1,6 +1,4 @@
 <script setup>
-import authV1BottomShape from '@images/svg/auth-v1-bottom-shape.svg?raw';
-import authV1TopShape from '@images/svg/auth-v1-top-shape.svg?raw';
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer';
 import { themeConfig } from '@themeConfig';
 import { VForm } from 'vuetify/components/VForm';
@@ -41,7 +39,7 @@ const login = async () => {
       onResponseError({ response }) {
         loadingBtn.value[0] = false
         console.log(JSON.stringify(response));
-        errors.value = response._data.errors
+        errors.value = {username: response._data.message}
       },
     });
     const { accessToken, userData, userAbilityRules, status } = res
@@ -72,18 +70,6 @@ const onSubmit = () => {
 <template>
   <div class="auth-wrapper d-flex align-center justify-center pa-4">
     <div class="position-relative my-sm-16">
-      <!-- Top shape -->
-      <VNodeRenderer
-        :nodes="h('div', { innerHTML: authV1TopShape })"
-        class="text-primary auth-v1-top-shape d-none d-sm-block"
-      />
-
-      <!-- Bottom shape -->
-      <VNodeRenderer
-        :nodes="h('div', { innerHTML: authV1BottomShape })"
-        class="text-primary auth-v1-bottom-shape d-none d-sm-block"
-      />
-
       <!-- Auth Card -->
       <VCard
         class="auth-card"
