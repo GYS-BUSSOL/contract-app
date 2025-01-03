@@ -9,7 +9,8 @@ const emit = defineEmits([
   'isSnackbarResponse',
   'isSnackbarResponseAlertColor',
   'errorMessages',
-  'errors'
+  'errors',
+  'updateTypeDialog'
 ])
 
 const props = defineProps({
@@ -46,6 +47,7 @@ const contractReqNo = computed(() => props.contractReqNo)
 const contractReqId = computed(() => props.contractReqId)
 const loadingBtn = ref([])
 const loadingBtnSecond = ref([])
+const isDisabled = ref(false)
 const pathData = ref('')
 const isDialogViewPathVisible = ref(false)
 const token = useCookie('accessToken')
@@ -93,6 +95,7 @@ const dialogModelValueUpdate = () => {
   loadingBtn.value[0] = false;
   loadingBtnSecond.value[0] = false;
   emit('update:isDialogVisible', false)
+  emit('updateTypeDialog')
 }
 
 const formatDate = (date, time = false) => {
@@ -116,11 +119,10 @@ const fetchMerVendorData = async () => {
       }));
       allDataVendor.value = rows;
     } else {
-      console.error('Failed to fetch mer vendor data');
+      throw new Error("Failed to fetch mer vendor data");
     }
-    
   } catch (error) {
-    console.error('Error fetching mer vendor data');
+    throw new Error("Failed to fetch mer vendor data");
   }
 }
 
@@ -135,11 +137,10 @@ const fetchMerPaymentType = async () => {
         value: row.paytype_code,
       }));
     } else {
-      console.error('Failed to fetch mer payment type data');
+      throw new Error("Failed to fetch mer payment data");
     }
-    
   } catch (error) {
-    console.error('Error fetching mer payment type data');
+    throw new Error("Failed to fetch mer payment data");
   }
 }
 
@@ -154,11 +155,10 @@ const fetchMerPaymentTemplate = async () => {
         value: row.payment_code,
       }));
     } else {
-      console.error('Failed to fetch mer payment template data');
+      throw new Error("Failed to fetch payment template data");
     }
-    
   } catch (error) {
-    console.error('Error fetching mer payment template data');
+    throw new Error("Failed to fetch payment template data");
   }
 }
 
@@ -206,8 +206,6 @@ const fetchContractEdit = async () => {
       contractData.con_file_attachment = dataResult.con_file_attachment;
       contractData.vnd_contact_person = dataResult.vnd_contact_person;
       contractData.suggest_vendor = dataResult.vnd_id;
-      // contractData.BU = dataResult.bu_id.split(",")
-      //   .map((id) => parseInt(id.trim(), 10));
     } else {
       emit('update:isDialogVisible', false)
       emit('isSnackbarResponse',true)
@@ -279,6 +277,7 @@ const onSubmit = async () => {
   refVForm.value?.validate().then(({ valid }) => {
     try {
       if (valid) {
+        isDisabled.value = true
         loadingBtn.value[0] = true
         const mode = props.typeDialog;
         const payload = {
@@ -301,6 +300,7 @@ const onSubmit = async () => {
 
 const onReject = async (type) => {
     try {
+      isDisabled.value = true
       loadingBtnSecond.value[0] = true
       const mode = type;
       const payload = {
@@ -319,14 +319,14 @@ watch(
       if (newType === "Add" && newConreqNo && newConreqId) {
         fetchContractEdit()
         fetchContractJobEdit()
+        fetchMerVendorData()
+        fetchMerPaymentType()
+        fetchMerPaymentTemplate()
       }
-      fetchMerVendorData()
-      fetchMerPaymentType()
-      fetchMerPaymentTemplate()
+      isDisabled.value = false
       loadingBtn.value[0] = false;
       loadingBtnSecond.value[0] = false;
-  },
-  { immediate: true }
+  }
 );
 </script>
 
@@ -544,114 +544,121 @@ watch(
               </tr>
             </thead>
 
-            <tbody class="text-base" v-for="(data,index) in contractJobData.contract_job" :key="data.cjb_id">
-              <tr>
-                <td>
-                  <VChip
-                    label
-                    size="small"
-                    color="secondary"
-                  >
-                    {{ index + 1 }}
-                  </VChip>
-                </td>
-                <td>
-                  <template v-if="contractJobData.job_type.length > 0">
-                    <template v-for="(innerArray, indexOuter) in contractJobData.job_type" :key="indexOuter">
-                      {{ 
-                        innerArray
-                          .filter(jy => jy.cjb_id == data.cjb_id)
-                          .map(jy => jy.job_type)
-                          .join(', ')
-                      }}
-                    </template>
-                  </template>                
-                </td>
-                <td>
-                  {{ data.cjb_desc || '-' }}
-                </td>
-                <td>
-                  {{ data.cjb_qty || 0 }}
-                </td>
-                <td>
-                  {{ data.unt_id || '-' }}
-                </td>
-                <td style="width: 200px;">
-                  <AppAutocomplete
-                    placeholder="Select payment type"
-                    v-model="data.cjb_pay_type"
-                    :rules="[requiredValidator]"
-                    :items="dataMerPaymentType"
-                    :item-title="'title'"
-                    :item-value="'value'"
-                    :error-messages="props.errors?.cjb_pay_type"
-                    clearable
-                  />
-                  <VTooltip open-delay="200" location="top" activator="parent" v-if="data.cjb_pay_type != null && data.cjb_pay_type != ''">
-                    <span>{{ dataMerPaymentType.find((mpt) => mpt.value == data.cjb_pay_type)?.title }}</span>
-                  </VTooltip>
-                </td>
-                <td style="width: 200px;">
-                  <AppAutocomplete
-                    placeholder="Select payment template"
-                    v-model="data.cjb_pay_template"
-                    :rules="[requiredValidator]"
-                    :items="dataMerPaymentTemplate"
-                    :item-title="'title'"
-                    :item-value="'value'"
-                    :error-messages="props.errors?.cjb_pay_template"
-                    clearable
-                  />
-                  <VTooltip open-delay="200" location="top" activator="parent" v-if="data.cjb_pay_template != null && data.cjb_pay_template != ''">
-                    <span>{{ dataMerPaymentTemplate.find((mpt) => mpt.value == data.cjb_pay_template)?.title }}</span>
-                  </VTooltip>
-                </td>
-                <td style="width: 200px;">
-                  <AppTextField
-                    v-model="data.cjb_rate"
-                    placeholder="Type here..."
-                    :rules="[requiredValidator]"
-                    :error-messages="props.errors?.cjb_rate"
-                    type="number"
-                    clearable
-                  />
-                  <VTooltip open-delay="200" location="top" activator="parent" v-if="data.cjb_rate != null && data.cjb_rate != ''">
-                    <span>{{ data.cjb_rate }}</span>
-                  </VTooltip>
-                </td>
-              </tr>
-              <tr>
-                <td colspan="8">
-                  <VTable class="border collapse mt-3 mb-5">
-                    <thead>
-                      <tr>
-                        <th scope="col">
-                          Labor Type
-                        </th>
-                        <th scope="col">
-                          Labor QTY
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <template v-if="contractJobData.job_labor.length > 0" v-for="(innerArray, indexOuter) in contractJobData.job_labor" :key="indexOuter">
-                        <tr v-for="(dataCb, indexCb) in innerArray" :key="dataCb.cjb_id">
-                          <td v-if="dataCb.cjb_id == data.cjb_id">
-                            {{ dataCb.cjl_type }}
-                          </td>
-                          <td v-if="dataCb.cjb_id == data.cjb_id">
-                            {{ dataCb.cjl_qty }}
+            <tbody class="text-base">
+              <template v-if="contractJobData.contract_job && contractJobData.contract_job.lenght > 0" v-for="(data,index) in contractJobData.contract_job" :key="data.cjb_id">
+                <tr>
+                  <td>
+                    <VChip
+                      label
+                      size="small"
+                      color="secondary"
+                    >
+                      {{ index + 1 }}
+                    </VChip>
+                  </td>
+                  <td>
+                    <template v-if="contractJobData.job_type.length > 0">
+                      <template v-for="(innerArray, indexOuter) in contractJobData.job_type" :key="indexOuter">
+                        {{ 
+                          innerArray
+                            .filter(jy => jy.cjb_id == data.cjb_id)
+                            .map(jy => jy.job_type)
+                            .join(', ')
+                        }}
+                      </template>
+                    </template>                
+                  </td>
+                  <td>
+                    {{ data.cjb_desc || '-' }}
+                  </td>
+                  <td>
+                    {{ data.cjb_qty || 0 }}
+                  </td>
+                  <td>
+                    {{ data.unt_id || '-' }}
+                  </td>
+                  <td style="width: 200px;">
+                    <AppAutocomplete
+                      placeholder="Select payment type"
+                      v-model="data.cjb_pay_type"
+                      :rules="[requiredValidator]"
+                      :items="dataMerPaymentType"
+                      :item-title="'title'"
+                      :item-value="'value'"
+                      :error-messages="props.errors?.cjb_pay_type"
+                      clearable
+                    />
+                    <VTooltip open-delay="200" location="top" activator="parent" v-if="data.cjb_pay_type != null && data.cjb_pay_type != ''">
+                      <span>{{ dataMerPaymentType.find((mpt) => mpt.value == data.cjb_pay_type)?.title }}</span>
+                    </VTooltip>
+                  </td>
+                  <td style="width: 200px;">
+                    <AppAutocomplete
+                      placeholder="Select payment template"
+                      v-model="data.cjb_pay_template"
+                      :rules="[requiredValidator]"
+                      :items="dataMerPaymentTemplate"
+                      :item-title="'title'"
+                      :item-value="'value'"
+                      :error-messages="props.errors?.cjb_pay_template"
+                      clearable
+                    />
+                    <VTooltip open-delay="200" location="top" activator="parent" v-if="data.cjb_pay_template != null && data.cjb_pay_template != ''">
+                      <span>{{ dataMerPaymentTemplate.find((mpt) => mpt.value == data.cjb_pay_template)?.title }}</span>
+                    </VTooltip>
+                  </td>
+                  <td style="width: 200px;">
+                    <AppTextField
+                      v-model="data.cjb_rate"
+                      placeholder="Type here..."
+                      :rules="[requiredValidator]"
+                      :error-messages="props.errors?.cjb_rate"
+                      type="number"
+                      clearable
+                    />
+                    <VTooltip open-delay="200" location="top" activator="parent" v-if="data.cjb_rate != null && data.cjb_rate != ''">
+                      <span>{{ data.cjb_rate }}</span>
+                    </VTooltip>
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="8">
+                    <VTable class="border collapse mt-3 mb-5">
+                      <thead>
+                        <tr>
+                          <th scope="col">
+                            Labor Type
+                          </th>
+                          <th scope="col">
+                            Labor QTY
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <template v-if="contractJobData.job_labor.length > 0" v-for="(innerArray, indexOuter) in contractJobData.job_labor" :key="indexOuter">
+                          <tr v-for="(dataCb, indexCb) in innerArray" :key="dataCb.cjb_id">
+                            <td v-if="dataCb.cjb_id == data.cjb_id">
+                              {{ dataCb.cjl_type }}
+                            </td>
+                            <td v-if="dataCb.cjb_id == data.cjb_id">
+                              {{ dataCb.cjl_qty }}
+                            </td>
+                          </tr>
+                        </template>
+                        <tr v-else>
+                          <td colspan="2">
+                            Data is empty
                           </td>
                         </tr>
-                      </template>
-                      <tr v-else>
-                        <td colspan="2">
-                          Data is empty
-                        </td>
-                      </tr>
-                    </tbody>
-                  </VTable>
-                  <VDivider class="my-6 border-dashed" />
+                      </tbody>
+                    </VTable>
+                    <VDivider class="my-6 border-dashed" />
+                  </td>
+                </tr>
+              </template>
+              <tr v-else>
+                <td colspan="8" class="text-center">
+                  Data is empty
                 </td>
               </tr>
             </tbody>
@@ -675,22 +682,22 @@ watch(
             </div>
             <div v-if="!isLoading">
               <VBtn
+              :loading="loadingBtnSecond[0]"
+              :disabled="isDisabled"
+              color="error"
+              variant="tonal"
+              class="me-4"
+              @click="validateCreate('Reject')"
+              >
+                Reject
+              </VBtn>
+              <VBtn
                 :loading="loadingBtn[0]"
-                :disabled="loadingBtn[0]"
+                :disabled="isDisabled"
                 type="submit"
-                class="me-4"
                 @click="validateCreate('Submit')"
               >
                 Submit
-              </VBtn>
-              <VBtn
-                :loading="loadingBtnSecond[0]"
-                :disabled="loadingBtnSecond[0]"
-                color="error"
-                variant="tonal"
-                @click="validateCreate('Reject')"
-              >
-                Reject
               </VBtn>
             </div>
           </VRow>

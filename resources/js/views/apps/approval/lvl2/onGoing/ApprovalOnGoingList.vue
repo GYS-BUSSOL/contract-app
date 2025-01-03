@@ -84,7 +84,6 @@ const headers = [
     sortable: false,
   },
 ]
-
 // search filters
 const expiredStatus = [
   {
@@ -96,7 +95,7 @@ const expiredStatus = [
     value: 'null',
   }
 ]
-
+// Priority
 const priority = [
   {
     title: 'Tidak Segera',
@@ -177,6 +176,10 @@ const updateErrors = err => {
   errors.value = err;
 }
 
+const onUpdateTypeDialog = () => {
+  isTypeDialog.value = '';
+}
+
 const totalDays = computed(() => {
   if (!conDurationStart.value || !conDurationEnd.value) {
     return 0;
@@ -230,23 +233,23 @@ const fetchApprove = async (payload, clearedForm) => {
 
 const fetchRejectCancel = async (payload, clearedForm) => {
   try {
-      const response = await $api('/apps/approval-lvl2-reject-cancel/add', {
-        method: 'POST',
-        body: payload,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        onResponseError({ response }) {
-          alertErrorResponse()
-          const responseData = response._data;
-          const responseMessage = responseData.message;
-          const responseErrors = responseData.errors;
-          errors.value = responseErrors;
-          errorMessages.value = responseMessage;
-          throw new Error("Updated data failed");
-        },
-      });
+    const response = await $api('/apps/approval-lvl2-reject-cancel/add', {
+      method: 'POST',
+      body: payload,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      onResponseError({ response }) {
+        alertErrorResponse()
+        const responseData = response._data;
+        const responseMessage = responseData.message;
+        const responseErrors = responseData.errors;
+        errors.value = responseErrors;
+        errorMessages.value = responseMessage;
+        throw new Error("Updated data failed");
+      },
+    });
 
     const responseStringify = JSON.stringify(response);
     const responseParse = JSON.parse(responseStringify);
@@ -269,23 +272,23 @@ const fetchRejectCancel = async (payload, clearedForm) => {
 
 const fetchSendBU = async (payload, clearedForm) => {
   try {
-      const response = await $api('/apps/approval-lvl2-send-bu/add', {
-        method: 'POST',
-        body: payload,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        onResponseError({ response }) {
-          alertErrorResponse()
-          const responseData = response._data;
-          const responseMessage = responseData.message;
-          const responseErrors = responseData.errors;
-          errors.value = responseErrors;
-          errorMessages.value = responseMessage;
-          throw new Error("Updated data failed");
-        },
-      });
+    const response = await $api('/apps/approval-lvl2-send-bu/add', {
+      method: 'POST',
+      body: payload,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      onResponseError({ response }) {
+        alertErrorResponse()
+        const responseData = response._data;
+        const responseMessage = responseData.message;
+        const responseErrors = responseData.errors;
+        errors.value = responseErrors;
+        errorMessages.value = responseMessage;
+        throw new Error("Updated data failed");
+      },
+    });
 
     const responseStringify = JSON.stringify(response);
     const responseParse = JSON.parse(responseStringify);
@@ -326,8 +329,8 @@ const openDialog = async ({ type, item }) => {
 
   if(type == 'Add') {
     isAddDialogVisible.value = true
-    fetchTrigger.value += 1;
   }
+  fetchTrigger.value += 1;
 }
 
 </script>
@@ -520,6 +523,7 @@ const openDialog = async ({ type, item }) => {
     @ApprovalData="handleFormSubmit"
     @errorMessages="updateErrorMessages"
     @errors="updateErrors"
+    @updateTypeDialog="onUpdateTypeDialog"
   />
 
   <VSnackbar

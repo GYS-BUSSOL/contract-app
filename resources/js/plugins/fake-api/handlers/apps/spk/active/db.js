@@ -1,7 +1,8 @@
 
 import { BASE_API_URL } from '@/plugins/1.router/additional-routes';
+const token = useCookie('accessToken').value
 
-export async function fetchSPKActive(currentPage, rowPerPage, rowSearch, vendorFilter, buFilter, token) {
+export async function fetchSPKActive(currentPage, rowPerPage, rowSearch, vendorFilter, buFilter) {
   let start = 0;
   const url = `${BASE_API_URL}/api/apps/spk-active/search`;
   
@@ -31,8 +32,7 @@ export async function fetchSPKActive(currentPage, rowPerPage, rowSearch, vendorF
     return data;
 
   } catch (error) {
-    console.error("Error fetching SPK active data:", error);
-    throw error;
+    throw new Error("Failed to fetching SPK active data");
   }
 }
 

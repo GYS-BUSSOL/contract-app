@@ -85,6 +85,11 @@ class SPKController extends Controller
 
   public function add(Request $request)
   {
+    return response()->json([
+      'status' => 200,
+      'message' => 'SPK created successfully',
+    ], 200);
+
     $data = [
       'signature_type' => ['required', 'exists:mer_sign_type,st_id'],
       'spk_jobdesc_summary' => ['required', 'string'],

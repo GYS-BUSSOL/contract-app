@@ -3,6 +3,7 @@ import { getListMerBU } from '@db/apps/mer/db';
 import { ref, watch } from 'vue';
 import 'vue-skeletor/dist/vue-skeletor.css';
 import { VForm } from 'vuetify/components/VForm';
+const token = useCookie('accessToken').value
 
 const emit = defineEmits([
   'update:isDialogVisible',
@@ -10,7 +11,8 @@ const emit = defineEmits([
   'isSnackbarResponse',
   'isSnackbarResponseAlertColor',
   'errorMessages',
-  'errors'
+  'errors',
+  'updateTypeDialog'
 ])
 
 const props = defineProps({
@@ -61,10 +63,12 @@ const dialogModelValueUpdate = () => {
   dataBudget.description = null;
   dataBudget.bgt_bu_head = null;
   dataBudget.bgt_amount = null;
+  // Form reset
   refVForm.value?.reset();
   refVForm.value?.resetValidation();
   loadingBtn.value[0] = false;
   emit('update:isDialogVisible', false)
+  emit('updateTypeDialog')
 }
 
 const fetchMerBUData = async () => {
@@ -78,11 +82,10 @@ const fetchMerBUData = async () => {
         value: row.id,
       }));
     } else {
-      console.error('Failed to fetch mer business units data');
+      throw new Error("Failed to fetch mer business unit data");
     }
-    
   } catch (error) {
-    console.error('Error fetching mer business units data');
+    throw new Error("Failed to fetch mer business unit data");
   }
 }
 
@@ -101,6 +104,10 @@ const fetchEdit = async () => {
     isLoading.value = true;
     const response = await $api(`/apps/budget-bu/edit/${BuId.value}/${yearData.value}`, {
       method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
       onResponseError({ response }) {
         const responseData = response._data;
         const responseMessage = responseData.message;
@@ -168,16 +175,14 @@ watch(
   [() => BuId.value, () => typeDialog.value, () => props.fetchTrigger],
     ([newId,newType]) => {
       if (newType === "Edit" && newId) {
-        fetchEdit();
+        fetchEdit()
       } else if (newType === "Add") {
         dataBudget.year = null;
         fetchMerBUData()
-        isLoading.value = false;
       }
-      
+      isLoading.value = false;
       loadingBtn.value[0] = false;
-  },
-  { immediate: true }
+  }
 )
 </script>
 

@@ -14,7 +14,6 @@ export const handlerAppsSPKList = [
       const page = url.searchParams.get('page')
       const orderBy = url.searchParams.get('orderBy')
       const searchQuery = is.string(q) ? q : undefined
-      const token = url.searchParams.get('token')
       let queryLower = (searchQuery ?? '').toString().toLowerCase()
       const parsedSortBy = destr(sortBy)
       const sortByLocal = is.string(parsedSortBy) ? parsedSortBy : ''
@@ -23,7 +22,7 @@ export const handlerAppsSPKList = [
       const parsedItemsPerPage = destr(itemsPerPage)
       const itemsPerPageLocal = is.number(parsedItemsPerPage) ? parsedItemsPerPage : 10
       // Fetch Data
-      const fetchData = await fetchSPKList(page, itemsPerPage, queryLower, expiredStatus, token);
+      const fetchData = await fetchSPKList(page, itemsPerPage, queryLower, expiredStatus);
       const dataRows = fetchData.data.rows;
       const totalExpiredCount = fetchData.data.total_expired || 0
       const totalNotExpiredCount = fetchData.data.total_not_expired || 0
@@ -102,53 +101,5 @@ export const handlerAppsSPKList = [
         totalNotExpiredCount,
         page,
       }, { status: 200 })
-    }),
-
-    // Get Single SPKList Detail
-    http.get(('/api/apps/spk-list/:id'), async ({ params }) => {
-      const SPKId = Number(params.id)
-      const SPKList = db.SPKList.find(e => e.id === SPKId)
-      if (!SPKList) {
-        return HttpResponse.json({ message: 'SPKList not found' }, { status: 404 })
-      }
-      else {
-        return HttpResponse.json({
-          ...SPKList,
-          ...{
-            taskDone: 1230,
-            projectDone: 568,
-            taxId: 'Tax-8894',
-            language: 'English',
-          },
-        }, { status: 200 })
-      }
-    }),
-
-    // Delete SPKList
-    http.delete(('/api/apps/spk-list/:id'), async ({ params }) => {
-      const SPKId = Number(params.id)
-      const SPKIndex = db.SPKList.findIndex(e => e.id === SPKId)
-      if (SPKIndex === -1) {
-        return HttpResponse.json('SPKList not found', { status: 404 })
-      }
-      else {
-        db.SPKList.splice(SPKIndex, 1)
-        
-        return new HttpResponse(null, {
-          status: 204,
-        })
-      }
-    }),
-
-    // 👉 Add SPKList
-    http.post(('/api/apps/spk-list'), async ({ request }) => {
-      const SPKList = await request.json()
-
-      db.SPKList.push({
-        ...SPKList,
-        id: db.SPKList.length + 1,
-      })
-      
-      return HttpResponse.json({ body: SPKList }, { status: 201 })
     }),
 ]

@@ -18,12 +18,15 @@ const credentials = ref({
   username: '',
   password: '',
   remember: false,
+  captcha: ''
 })
 const refVForm = ref()
+const captchaPath = ref()
 const isPasswordVisible = ref(false)
 const errors = ref({
   username: undefined,
   password: undefined,
+  captcha: undefined
 })
 const loadingBtn = ref([])
 
@@ -35,10 +38,11 @@ const login = async () => {
       body: {
         username: credentials.value.username,
         password: credentials.value.password,
+        captcha: credentials.value.captcha
       },
       onResponseError({ response }) {
+        generateCaptcha()
         loadingBtn.value[0] = false
-        console.log(JSON.stringify(response));
         errors.value = {username: response._data.message}
       },
     });
@@ -54,8 +58,34 @@ const login = async () => {
       })
     }
   } catch (err) {
+    generateCaptcha()
     loadingBtn.value[0] = false
     throw new Error("Failed login");
+  }
+}
+
+const generateCaptcha = async () => {
+  try {
+    const response = await $api('/generate-captcha', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      onResponseError({ response }) {
+        throw new Error("Get data failed");
+      },
+    });
+
+    const responseStringify = JSON.stringify(response);
+    const responseParse = JSON.parse(responseStringify);
+
+    if(responseParse?.status == 200) {
+      captchaPath.value = responseParse?.data.img;
+    } else {
+      throw new Error("Get data failed");
+    }
+  } catch (error) {
+    throw new Error("Get data failed");
   }
 }
 
@@ -65,6 +95,10 @@ const onSubmit = () => {
       login()
   })
 }
+
+onMounted(() => {
+  generateCaptcha()
+});
 </script>
 
 <template>
@@ -128,14 +162,38 @@ const onSubmit = () => {
                   :append-inner-icon="isPasswordVisible ? 'tabler-eye-off' : 'tabler-eye'"
                   @click:append-inner="isPasswordVisible = !isPasswordVisible"
                 />
-
+                <div class="d-flex gap-5 mt-5">
+                  <div class="d-flex flex-column">
+                    <div>
+                      <img :src="captchaPath"/>
+                    </div>
+                    <div>
+                      <small class="text-primary cursor-pointer" @click="generateCaptcha()">
+                        <VIcon
+                          icon="tabler-reload"
+                          start
+                          class="flip-in-rtl"
+                        />
+                        Reload captcha
+                      </small>
+                    </div>
+                  </div>
+                  <div style="width: 100%;">
+                    <AppTextField
+                      v-model="credentials.captcha"
+                      placeholder="Type here..."
+                      type="text"
+                      :rules="[requiredValidator]"
+                      :error-messages="errors.captcha"
+                    />
+                  </div>
+                </div>
                 <!-- remember me checkbox -->
                 <div class="d-flex align-center justify-space-between flex-wrap my-6">
                   <VCheckbox
                     v-model="credentials.remember"
-                    label="Remember me"
+                    label="Remember me in 7 days"
                   />
-
                 </div>
 
                 <!-- login button -->

@@ -14,7 +14,6 @@ const orderBy = ref()
 const selectedRows = ref([])
 const dataMerVendor = ref([])
 const dataMerBU = ref([])
-const token = useCookie('accessToken')
 
 const updateOptions = options => {
   sortBy.value = options.sortBy[0]?.key
@@ -101,7 +100,6 @@ const {
     page,
     sortBy,
     orderBy,
-    token
   },
 }))
 
@@ -114,18 +112,6 @@ watch([selectedVendor, selectedBU], ([newVendor, newBU]) => {
   if(!newBU)
     selectedBU.value = 'All';
 });
-
-const deleteSPKActive = async id => {
-  await $api(`/apps/spk-active/${ id }`, { method: 'DELETE' })
-
-  // Delete from selectedRows
-  const index = selectedRows.value.findIndex(row => row === id)
-  if (index !== -1)
-    selectedRows.value.splice(index, 1)
-
-  // Refetch SPK Active
-  fetchSPKActive()
-}
 
 const formatDate = (date, time = false) => {
   return dayjs(date).format(`DD MMM YYYY${time ? ", HH:mm" : ""}`);
@@ -144,13 +130,12 @@ const fetchMerVendorData = async () => {
           value: row.vnd_name,
       }))];
     } else {
-      console.error('Failed to fetch vendor data');
+      throw new Error("Failed to fetch vendor data");
     }
-    
   } catch (error) {
-    console.error('Error fetching vendor data',error);
+    throw new Error("Failed to fetch vendor data");
   }
-};
+}
 
 const fetchBUData = async () => {
   try {
@@ -167,21 +152,11 @@ const fetchBUData = async () => {
         value: row.number,
       }))];
     } else {
-      console.error('Failed to fetch BU data');
+      throw new Error("Failed to fetch business unit data");
     }
-    
   } catch (error) {
-    console.error('Error fetching BU data',error);
+    throw new Error("Failed to fetch business unit data");
   }
-};
-
-const resolveSPKStatusVariant = stat => {
-  const statLowerCase = stat.toLowerCase()
-  
-  if (statLowerCase === 'active')
-    return 'success'
-
-  return 'error'
 }
 
 onMounted(() => {

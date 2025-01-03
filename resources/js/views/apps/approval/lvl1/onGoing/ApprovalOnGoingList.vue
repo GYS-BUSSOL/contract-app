@@ -166,6 +166,10 @@ const alertSuccessResponse = () => {
   isSnackbarResponseAlertColor.value = 'success'
 }
 
+const onUpdateTypeDialog = () => {
+  isTypeDialog.value = '';
+}
+
 const updateErrors = err => {
   errors.value = err;
 }
@@ -218,28 +222,29 @@ const fetchApprove = async (payload, clearedForm) => {
     }
   } catch (error) {
     alertErrorResponse()
+    throw new Error("Updated data failed");
   }
 }
 
 const fetchReject = async (payload, clearedForm) => {
   try {
-      const response = await $api('/apps/approval-lvl1-reject/add', {
-        method: 'POST',
-        body: payload,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        onResponseError({ response }) {
-          alertErrorResponse()
-          const responseData = response._data;
-          const responseMessage = responseData.message;
-          const responseErrors = responseData.errors;
-          errors.value = responseErrors;
-          errorMessages.value = responseMessage;
-          throw new Error("Updated data failed");
-        },
-      });
+    const response = await $api('/apps/approval-lvl1-reject/add', {
+      method: 'POST',
+      body: payload,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      onResponseError({ response }) {
+        alertErrorResponse()
+        const responseData = response._data;
+        const responseMessage = responseData.message;
+        const responseErrors = responseData.errors;
+        errors.value = responseErrors;
+        errorMessages.value = responseMessage;
+        throw new Error("Updated data failed");
+      },
+    });
 
     const responseStringify = JSON.stringify(response);
     const responseParse = JSON.parse(responseStringify);
@@ -257,6 +262,7 @@ const fetchReject = async (payload, clearedForm) => {
     }
   } catch (error) {
     alertErrorResponse()
+    throw new Error("Updated data failed");
   }
 }
 
@@ -278,8 +284,8 @@ const openDialog = async ({ type, item }) => {
 
   if(type == 'Add') {
     isAddDialogVisible.value = true
-    fetchTrigger.value += 1;
   }
+  fetchTrigger.value += 1;
 }
 
 </script>
@@ -466,6 +472,7 @@ const openDialog = async ({ type, item }) => {
     @ApprovalData="handleFormSubmit"
     @errorMessages="updateErrorMessages"
     @errors="updateErrors"
+    @updateTypeDialog="onUpdateTypeDialog"
   />
 
   <VSnackbar

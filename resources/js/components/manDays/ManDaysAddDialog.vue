@@ -1,15 +1,14 @@
 <script setup>
 import { getListMerLaborType } from '@db/apps/mer/db';
-import { ref, watch } from 'vue';
 import 'vue-skeletor/dist/vue-skeletor.css';
-import { VForm } from 'vuetify/components/VForm';
 const loadingBtn = ref([])
-
+const token = useCookie('accessToken')
 const emit = defineEmits([
   'update:isDialogVisible',
   'ManDaysData',
   'isSnackbarResponse',
-  'isSnackbarResponseAlertColor'
+  'isSnackbarResponseAlertColor',
+  'updateTypeDialog'
 ])
 
 const props = defineProps({
@@ -46,7 +45,7 @@ const manDaysData = reactive({
   laborType: null,
   rate: null,
   effectiveDate: "",
-});
+})
 
 const formattedRate = computed({
   get() {
@@ -59,15 +58,17 @@ const formattedRate = computed({
   set(value) {
     InptRate.value = value.replace(/[^0-9]/g, "");
   },
-});
+})
 
 const dialogModelValueUpdate = () => {
   manDaysData.laborType = null;
   manDaysData.rate = null;
   manDaysData.effectiveDate = "";
+  // Form reset
   refVForm.value?.reset()
   refVForm.value?.resetValidation()
   loadingBtn.value[0] = false;
+  emit('updateTypeDialog')
   emit('update:isDialogVisible', false)
 }
 
@@ -81,11 +82,10 @@ const fetchMerLaborTypeData = async () => {
         value: row.labor_type,
       }));
     } else {
-      console.error('Failed to fetch mer LaborT ype data');
+      throw new Error("Failed to fetch mer labor type data");
     }
-    
   } catch (error) {
-    console.error('Error fetching mer Labor Type data',error);
+    throw new Error("Failed to fetch mer labor type data");
   }
 }
 
@@ -94,6 +94,10 @@ const fetchMandaysEdit = async () => {
     isLoading.value = true;
     const response = await $api(`/configurations/man-days-rate/edit/${mandaysId.value}`, {
       method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
       onResponseError({ response }) {
         const responseData = response._data;
         const responseMessage = responseData.message;
@@ -136,8 +140,7 @@ watch(
       }
     fetchMerLaborTypeData()
     loadingBtn.value[0] = false;
-  },
-  { immediate: true }
+  }
 );
 
 const onSubmit = async () => {
@@ -228,6 +231,7 @@ const onSubmit = async () => {
                           placeholder="Type here..."
                           :rules="[requiredValidator]"
                           :error-messages="props.errors?.rate"
+                          type="number"
                           required
                         />
                       </VCol>
@@ -241,19 +245,19 @@ const onSubmit = async () => {
                       </div>
                       <div v-if="!isLoading">
                         <VBtn
+                          color="secondary"
+                          variant="tonal"
+                          @click="dialogModelValueUpdate"
+                          class="me-4"
+                        >
+                          Discard
+                        </VBtn>
+                        <VBtn
                           :loading="loadingBtn[0]"
                           :disabled="loadingBtn[0]"
                           type="submit"
-                          class="me-4"
                         >
                           <span>{{ typeDialog == 'Edit' ? 'Update' : 'Create' }}</span>
-                        </VBtn>
-                        <VBtn
-                          color="error"
-                          variant="tonal"
-                          @click="dialogModelValueUpdate"
-                        >
-                          Discard
                         </VBtn>
                       </div>
                     </VRow>

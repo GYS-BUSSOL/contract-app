@@ -1,9 +1,9 @@
 import { BASE_API_URL } from '@/plugins/1.router/additional-routes';
+const token = useCookie('accessToken').value
 
 export async function fetchHumanResources(currentPage, rowPerPage, rowSearch, roleFilter) {
   let start = 0;
   const url = `${BASE_API_URL}/api/configurations/human-resources/search`;
-  const token = 'YOUR_BEARER_TOKEN_HERE';
   
   if(currentPage != 1 && currentPage > 1)
     start = (currentPage * rowPerPage) - rowPerPage
@@ -58,7 +58,7 @@ export async function fetchHumanResources(currentPage, rowPerPage, rowSearch, ro
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // 'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(payload)
     });
@@ -69,9 +69,7 @@ export async function fetchHumanResources(currentPage, rowPerPage, rowSearch, ro
 
     const data = await response.json();
     return data;
-
   } catch (error) {
-    console.error("Error fetching Human Resources data:", error);
-    throw error;
+    throw new Error("Failed to fetching human resources data");
   }
 }

@@ -12,13 +12,14 @@ const orderBy = ref()
 const selectedRows = ref([])
 const isAreaBUDialogVisible = ref(false)
 const isAreaBUDialogDeleteVisible = ref(false)
-const isAreaBUTypeDialog = ref('Add')
+const isTypeDialog = ref('')
 const IDAreaBU = ref(0)
 const isSnackbarResponse = ref(false)
 const isSnackbarResponseAlertColor = ref('error')
 const fetchTrigger = ref(0);
 const errorMessages = ref('Internal server error')
 const successMessages = ref('Successfully')
+const token = useCookie('accessToken')
 const errors = ref({
   description: undefined,
   number: undefined
@@ -49,7 +50,6 @@ const headers = [
     sortable: false,
   },
 ]
-
 // search filters
 const status = [
   {
@@ -94,14 +94,6 @@ watch(
   { immediate: true }
 )
 
-const openDialog = async ({ id = null, type }) => {
-  isAreaBUTypeDialog.value = type
-  isAreaBUDialogVisible.value = true
-  if(type == 'Edit')
-    IDAreaBU.value = id
-    fetchTrigger.value += 1;
-}
-
 const openDialogDelete = async (id) => {
   IDAreaBU.value = id
   isAreaBUDialogDeleteVisible.value = true
@@ -142,21 +134,29 @@ const updateErrors = err => {
   errors.value = err;
 }
 
+const onUpdateTypeDialog = () => {
+  isTypeDialog.value = '';
+}
+
 const fetchAddData = async (areaBUData, clearedForm) => {
   try {
-      const response = await $api('/configurations/area-management-bu/add', {
-        method: 'POST',
-        body: JSON.stringify(areaBUData),
-        onResponseError({ response }) {
-          alertErrorResponse()
-          const responseData = response._data;
-          const responseMessage = responseData.message;
-          const responseErrors = responseData.errors;
-          errors.value = responseErrors;
-          errorMessages.value = responseMessage;
-          throw new Error("Created data failed");
-        },
-      });
+    const response = await $api('/configurations/area-management-bu/add', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(areaBUData),
+      onResponseError({ response }) {
+        alertErrorResponse()
+        const responseData = response._data;
+        const responseMessage = responseData.message;
+        const responseErrors = responseData.errors;
+        errors.value = responseErrors;
+        errorMessages.value = responseMessage;
+        throw new Error("Created data failed");
+      },
+    })
 
     const responseStringify = JSON.stringify(response);
     const responseParse = JSON.parse(responseStringify);
@@ -180,18 +180,22 @@ const fetchAddData = async (areaBUData, clearedForm) => {
 const fetchAreaBUUpdate = async (id, formData, clearedForm) => {
   try {
     const response = await $api(`/configurations/area-management-bu/update/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(formData),
-        onResponseError({ response }) {
-          alertErrorResponse()
-          const responseData = response._data;
-          const responseMessage = responseData.message;
-          const responseErrors = responseData.errors;
-          errors.value = responseErrors;
-          errorMessages.value = responseMessage;
-          throw new Error("Updated data failed");
-        },
-      });
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
+      onResponseError({ response }) {
+        alertErrorResponse()
+        const responseData = response._data;
+        const responseMessage = responseData.message;
+        const responseErrors = responseData.errors;
+        errors.value = responseErrors;
+        errorMessages.value = responseMessage;
+        throw new Error("Updated data failed");
+      },
+    })
     
     const responseStringify = JSON.stringify(response);
     const responseParse = JSON.parse(responseStringify);
@@ -214,11 +218,15 @@ const fetchAreaBUUpdate = async (id, formData, clearedForm) => {
 
 const deleteAreaBU = async id => {
   try {
-    isAreaBUTypeDialog.value = 'Delete'
+    isTypeDialog.value = 'Delete'
     const idAreaBU = Number(id);
     const response = await $api(`/configurations/area-management-bu/delete/${idAreaBU}`, {
-        method: 'DELETE',
-        onResponseError({ response }) {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      onResponseError({ response }) {
         alertErrorResponse()
         const responseData = response._data;
         const responseMessage = responseData.message;
@@ -252,6 +260,15 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
   } else if(mode === 'Edit') {
     fetchAreaBUUpdate(IDAreaBU.value, formData, dialogUpdate)
   }
+}
+
+const openDialog = async ({ id = null, type }) => {
+  isTypeDialog.value = type
+  isAreaBUDialogVisible.value = true
+  if(type == 'Edit') {
+    IDAreaBU.value = id
+  }
+  fetchTrigger.value += 1;
 }
 </script>
 
@@ -381,10 +398,11 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
       <!-- SECTION -->
     </VCard>
   </section>
+
   <AreaBUAddDialog
     v-model:isDialogVisible="isAreaBUDialogVisible"
     :errors="errors"
-    :typeDialog="isAreaBUTypeDialog"
+    :typeDialog="isTypeDialog"
     :areaBU-id="IDAreaBU"
     :fetch-trigger="fetchTrigger"
     @isSnackbarResponseAlertColor="updateSnackbarResponseAlertColor"
@@ -392,13 +410,16 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
     @AreaBUData="handleFormSubmit"
     @errorMessages="updateErrorMessages"
     @errors="updateErrors"
+    @updateTypeDialog="onUpdateTypeDialog"
   />
+
   <AreaBUDeleteDialog
     v-model:isDialogDeleteVisible="isAreaBUDialogDeleteVisible"
     :areaBU-id="IDAreaBU"
     :fetch-trigger="fetchTrigger"
     @id-deleted="deleteAreaBU"
   />
+
   <VSnackbar
     v-model="isSnackbarResponse"
     transition="scroll-y-reverse-transition"

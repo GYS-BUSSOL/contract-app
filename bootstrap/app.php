@@ -18,6 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append([
             ForceJsonResponse::class,
         ]);
+        $middleware->alias([
+            'Captcha' => Mews\Captcha\Facades\Captcha::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (Exception $e) {

@@ -1,8 +1,6 @@
 <script setup>
 import { getListMerBU } from '@db/apps/mer/db';
-import { ref, watch } from 'vue';
 import 'vue-skeletor/dist/vue-skeletor.css';
-import { VForm } from 'vuetify/components/VForm';
 
 const emit = defineEmits([
   'update:isDialogVisible',
@@ -10,7 +8,8 @@ const emit = defineEmits([
   'isSnackbarResponse',
   'isSnackbarResponseAlertColor',
   'errorMessages',
-  'errors'
+  'errors',
+  'updateTypeDialog'
 ])
 
 const props = defineProps({
@@ -41,6 +40,7 @@ const refVForm = ref()
 const typeDialog = computed(() => props.typeDialog)
 const userhrId = computed(() => props.userhrId)
 const loadingBtn = ref([])
+const token = useCookie('accessToken').value
 const userHRData = reactive({
   Username: "",
   UserDisplay: "",
@@ -71,8 +71,10 @@ const dialogModelValueUpdate = () => {
   userHRData.NoTlp = "";
   userHRData.Access = null;
   userHRData.BU = [];
+  // Form reset
   refVForm.value?.reset()
   refVForm.value?.resetValidation()
+  // Falsing button
   loadingBtn.value[0] = false;
   emit('update:isDialogVisible', false)
 }
@@ -88,11 +90,10 @@ const fetchMerBUData = async () => {
         value: row.id,
       }));
     } else {
-      console.error('Failed to fetch mer business units data');
+      throw new Error("Failed to fetch mer business unit data");
     }
-    
   } catch (error) {
-    console.error('Error fetching mer business units data');
+    throw new Error("Failed to fetch mer business unit data");
   }
 }
 
@@ -101,6 +102,10 @@ const fetchUserHREdit = async () => {
     isLoading.value = true;
     const response = await $api(`/configurations/human-resources/edit/${userhrId.value}`, {
       method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
       onResponseError({ response }) {
         const responseData = response._data;
         const responseMessage = responseData.message;
@@ -115,6 +120,7 @@ const fetchUserHREdit = async () => {
     const dataResponse = JSON.parse(JSON.stringify(response));
     if (dataResponse.status == 200) {
       const dataResult = dataResponse.data;
+
       isLoading.value = false;
       userHRData.Username = dataResult.usr_name;
       userHRData.UserDisplay = dataResult.usr_display_name;
@@ -122,6 +128,7 @@ const fetchUserHREdit = async () => {
       userHRData.Access = dataResult.usr_access;
       userHRData.BU = dataResult.bu_id.split(",")
         .map((id) => parseInt(id.trim(), 10));
+
     } else {
       emit('update:isDialogVisible', false)
       emit('isSnackbarResponse',true)
@@ -162,9 +169,8 @@ watch(
       }
       fetchMerBUData()
       loadingBtn.value[0] = false;
-  },
-  { immediate: true }
-);
+  }
+)
 </script>
 
 <template>
@@ -277,19 +283,19 @@ watch(
                       </div>
                       <div v-if="!isLoading">
                         <VBtn
+                          color="secondary"
+                          variant="tonal"
+                          @click="dialogModelValueUpdate"
+                          class="me-4"
+                        >
+                          Discard
+                        </VBtn>
+                        <VBtn
                           :loading="loadingBtn[0]"
                           :disabled="loadingBtn[0]"
                           type="submit"
-                          class="me-4"
                         >
                           <span>{{ typeDialog == 'Edit' ? 'Update' : 'Create' }}</span>
-                        </VBtn>
-                        <VBtn
-                          color="error"
-                          variant="tonal"
-                          @click="dialogModelValueUpdate"
-                        >
-                          Discard
                         </VBtn>
                       </div>
                     </VRow>

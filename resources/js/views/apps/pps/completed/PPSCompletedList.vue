@@ -15,7 +15,7 @@ const orderBy = ref()
 const selectedRows = ref([])
 const isJobTypeDetailDialogVisible = ref(false)
 const conReqId = ref()
-const isTypeDialog = ref('Detail')
+const isTypeDialog = ref('')
 const isSnackbarResponse = ref(false)
 const isSnackbarResponseAlertColor = ref('error')
 const fetchTrigger = ref(0);
@@ -97,31 +97,6 @@ const headers = [
     sortable: false,
   },
 ]
-
-const {
-  data: ppsDataCompleted,
-  execute: fetchPPSCompleted,
-} = await useApi(createUrl('/apps/pps-completed/search', {
-  query: {
-    qCompleted: searchQuery,
-    status: selectedStatus,
-    priority: selectedPriority,
-    expiredStatus: selectedExpiredStatus,
-    itemsPerPage,
-    page,
-    sortBy,
-    orderBy,
-  },
-}))
-
-const ppsCompleted = computed(() => ppsDataCompleted.value.ppsCompleted)
-const totalPPSCompleted = computed(() => ppsDataCompleted.value.totalPPSCompleted)
-const totalPriorityCount = computed(() => ppsDataCompleted.value.totalPriorityCount)
-const totalNotPriorityCount = computed(() => ppsDataCompleted.value.totalNotPriorityCount)
-
-emit('updateTotalNotPriority', totalNotPriorityCount.value);
-emit('updateTotalPriority', totalPriorityCount.value);
-
 // search filters
 const expiredStatus = [
   {
@@ -133,7 +108,7 @@ const expiredStatus = [
     value: 'null',
   }
 ]
-
+// Priority
 const priority = [
   {
     title: 'Tidak Segera',
@@ -144,7 +119,7 @@ const priority = [
     value: '1',
   }
 ]
-
+// Status
 const status = [
   {
     title: 'New Request',
@@ -184,6 +159,30 @@ const status = [
   }
 ]
 
+const {
+  data: ppsDataCompleted,
+  execute: fetchPPSCompleted,
+} = await useApi(createUrl('/apps/pps-completed/search', {
+  query: {
+    qCompleted: searchQuery,
+    status: selectedStatus,
+    priority: selectedPriority,
+    expiredStatus: selectedExpiredStatus,
+    itemsPerPage,
+    page,
+    sortBy,
+    orderBy,
+  },
+}))
+
+const ppsCompleted = computed(() => ppsDataCompleted.value.ppsCompleted)
+const totalPPSCompleted = computed(() => ppsDataCompleted.value.totalPPSCompleted)
+const totalPriorityCount = computed(() => ppsDataCompleted.value.totalPriorityCount)
+const totalNotPriorityCount = computed(() => ppsDataCompleted.value.totalNotPriorityCount)
+
+emit('updateTotalNotPriority', totalNotPriorityCount.value);
+emit('updateTotalPriority', totalPriorityCount.value);
+
 const resolvePPSPriorityVariant = stat => {
   const statLowerCase = stat.toLowerCase()
   if (statLowerCase === '1')
@@ -208,15 +207,21 @@ const updateErrors = err => {
   errors.value = err;
 }
 
+const onUpdateTypeDialog = () => {
+  isTypeDialog.value = '';
+}
+
 const formatDate = (date, time = false) => {
   return dayjs(date).format(`DD MMM YYYY${time ? ", HH:mm" : ""}`);
 }
 const openDialog = async ({ id = null, type, con_req_id = null }) => {
-  if(type == 'Detail')
+  isTypeDialog.value = type;
+  if(type == 'Detail') {
     isJobTypeDetailDialogVisible.value = true
     conReqId.value = con_req_id
+  }
     fetchTrigger.value += 1
-}
+  }
 </script>
 
 <template>
@@ -403,6 +408,7 @@ const openDialog = async ({ id = null, type, con_req_id = null }) => {
     @isSnackbarResponse="updateSnackbarResponse"
     @errorMessages="updateErrorMessages"
     @errors="updateErrors"
+    @updateTypeDialog="onUpdateTypeDialog"
   />
 
   <VSnackbar

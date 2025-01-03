@@ -1,9 +1,9 @@
 import { BASE_API_URL } from '@/plugins/1.router/additional-routes';
+const token = useCookie('accessToken').value
 
 export async function fetchReviewer(currentPage, rowPerPage, rowSearch, expiredFilter, statusFilter) {
   let start = 0;
   const url = `${BASE_API_URL}/api/apps/reviewer/search`;
-  const token = 'YOUR_BEARER_TOKEN_HERE';
 
   if(currentPage != 1 && currentPage > 1)
     start = (currentPage * rowPerPage) - rowPerPage
@@ -134,7 +134,7 @@ export async function fetchReviewer(currentPage, rowPerPage, rowSearch, expiredF
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // 'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(payload)
     });
@@ -145,10 +145,8 @@ export async function fetchReviewer(currentPage, rowPerPage, rowSearch, expiredF
 
     const data = await response.json();
     return data;
-
   } catch (error) {
-    console.error("Error fetching reviewer data:", error);
-    throw error;
+    throw new Error("Failed to fetching reviewer data");
   }
 }
 

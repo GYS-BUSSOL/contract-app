@@ -130,16 +130,15 @@ const updatePrintData = async () => {
   rangeType.value = rangeNew[0][0]
 }
 
-watch(
-  [() => SPKId.value],
-  async ([newSPKId]) => {
-    if(newSPKId) {
-      await fetchSPKEdit()
-      await updatePrintData()
+onMounted(async () => {
+  if(SPKId.value) {
+    await fetchSPKEdit()
+    await updatePrintData()
+    setInterval(()=> {
       window.print()
-    }
+    },1000)
   }
-)
+});
 </script>
 
 <template>

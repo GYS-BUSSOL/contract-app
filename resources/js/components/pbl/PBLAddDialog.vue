@@ -316,6 +316,14 @@ const formatDate = (date, time = false) => {
   return dayjs(date).format(`DD MMM YYYY${time ? ", HH:mm" : ""}`);
 }
 
+const onFalsingButton = () => {
+  // Falsing button
+  isDisabled.value = false
+  loadingBtn.value[0] = false
+  loadingBtnSecond.value[0] = false
+  loadingBtnThird.value[0] = false
+}
+
 const IDRFormat = (data) => {
   return 'Rp. ' + new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(data).replace('Rp', '').trim()
 }
@@ -732,27 +740,29 @@ const printSPK = async (type) => {
 watch(
   [() => typeDialog.value, () => props.fetchTrigger, () => props.isSuccessNextStep],
     ([newType]) => {
-      if (newType === "Add") {
-        fetchContractList()
-        fetchMerVendorData()
-        fetchSignatureTypeList()
+    if (newType === "Add") {
+      fetchContractList()
+      fetchMerVendorData()
+      fetchSignatureTypeList()
 
-        if(props.isSuccessNextStep) {
-          currentStep.value++
-          isCurrentStepValid.value = true
-        }
+      if(props.isSuccessNextStep) {
+        currentStep.value++
+        isCurrentStepValid.value = true
       }
+    }
+    onFalsingButton()
   }
 )
 
 watch(
   [() => SPKId.value],
     ([newSPKId]) => {
-      if(newSPKId) {
-        fetchSPKEdit()
-        fetchSPKLatestNumber()
-        fetchMerMeasurementUnitData()
-      }
+    if(newSPKId) {
+      fetchSPKEdit()
+      fetchSPKLatestNumber()
+      fetchMerMeasurementUnitData()
+    }
+    onFalsingButton()
   }
 )
 
@@ -763,6 +773,7 @@ watch([() => contractData.con_req_id], (conReqId) => {
       fetchContractEdit(conReqId)
       fetchContractJobEdit(conReqId)
     }
+    onFalsingButton()
   }
 )
 </script>

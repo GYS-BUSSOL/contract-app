@@ -12,7 +12,7 @@ const page = ref(1)
 const sortBy = ref()
 const orderBy = ref()
 const selectedRows = ref([])
-const isTypeDialog = ref('Detail')
+const isTypeDialog = ref('')
 const isSnackbarResponse = ref(false)
 const isJobTypeDetailDialogVisible = ref(false)
 const isSnackbarResponseAlertColor = ref('error')
@@ -84,8 +84,7 @@ const headers = [
     sortable: false,
   },
 ]
-
-// search filters
+// Search filters
 const expiredStatus = [
   {
     title: 'Expired data',
@@ -96,7 +95,7 @@ const expiredStatus = [
     value: 'null',
   }
 ]
-
+// Priority
 const priorityCompleted = [
   {
     title: 'Tidak Segera',
@@ -165,14 +164,18 @@ const updateErrors = err => {
   errors.value = err;
 }
 
+const onUpdateTypeDialog = () => {
+  isTypeDialog.value = '';
+}
+
 const openDialog = async ({ id = null, type, con_req_no = null, con_req_id = null }) => {
   isTypeDialog.value = type
   conReqNo.value = con_req_no
   conReqId.value = con_req_id
   if(type == 'Detail') {
     isJobTypeDetailDialogVisible.value = true
-    fetchTrigger.value += 1;
   }
+  fetchTrigger.value += 1;
 }
 </script>
 
@@ -366,6 +369,7 @@ const openDialog = async ({ id = null, type, con_req_no = null, con_req_id = nul
     @isSnackbarResponse="updateSnackbarResponse"
     @errorMessages="updateErrorMessages"
     @errors="updateErrors"
+    @updateTypeDialog="onUpdateTypeDialog"
   />
 
   <VSnackbar

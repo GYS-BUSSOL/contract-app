@@ -50,8 +50,8 @@ export async function fetchBudgetBU(currentPage, rowPerPage, rowSearch, yearFilt
       "columns": ["id"],
       "ascending": false
     },
-    "active_year" : year
-  };
+    "active_year" : String(year)
+  }
 
   if(yearFilter) {
     payload['columns'].push(
@@ -72,7 +72,7 @@ export async function fetchBudgetBU(currentPage, rowPerPage, rowSearch, yearFilt
         'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(payload)
-    });
+    })
 
     if (!response.ok) {
       throw new Error(`Error: ${response.status}`);
@@ -80,10 +80,8 @@ export async function fetchBudgetBU(currentPage, rowPerPage, rowSearch, yearFilt
 
     const data = await response.json();
     return data;
-
   } catch (error) {
-    console.error("Error fetching budget bu data:");
-    throw error;
+    throw new Error("Failed to fetching budget bu data");
   }
 }
 

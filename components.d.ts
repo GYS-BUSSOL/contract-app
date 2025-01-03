@@ -390,7 +390,6 @@ declare module 'vue' {
     JobTypeAddDialog: typeof import('./resources/js/components/jobType/JobTypeAddDialog.vue')['default']
     JobTypeDeleteDialog: typeof import('./resources/js/components/jobType/JobTypeDeleteDialog.vue')['default']
     ManDaysAddDialog: typeof import('./resources/js/components/manDays/ManDaysAddDialog.vue')['default']
-    'ManDaysAddDialog copy': typeof import('./resources/js/components/manDays/ManDaysAddDialog copy.vue')['default']
     ManDaysDeleteDialog: typeof import('./resources/js/components/manDays/ManDaysDeleteDialog.vue')['default']
     MoreBtn: typeof import('./resources/js/@core/components/MoreBtn.vue')['default']
     Notifications: typeof import('./resources/js/@core/components/Notifications.vue')['default']

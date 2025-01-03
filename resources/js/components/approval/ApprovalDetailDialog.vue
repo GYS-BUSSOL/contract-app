@@ -8,7 +8,8 @@ const emit = defineEmits([
   'isSnackbarResponse',
   'isSnackbarResponseAlertColor',
   'errorMessages',
-  'errors'
+  'errors',
+  'updateTypeDialog'
 ])
 
 const props = defineProps({
@@ -86,6 +87,7 @@ const dialogModelValueUpdate = () => {
   loadingBtn.value[0] = false;
   loadingBtnSecond.value[0] = false;
   emit('update:isDialogVisible', false)
+  emit('updateTypeDialog')
 }
 
 const formatDate = (date, time = false) => {
@@ -120,11 +122,10 @@ const fetchMerVendorData = async () => {
       }));
       allDataVendor.value = rows;
     } else {
-      console.error('Failed to fetch mer vendor data');
+      throw new Error("Failed to fetch mer vendor data");
     }
-    
   } catch (error) {
-    console.error('Error fetching mer vendor data');
+    throw new Error("Failed to fetch mer vendor data");
   }
 }
 
@@ -139,11 +140,10 @@ const fetchMerPaymentType = async () => {
         value: row.paytype_code,
       }));
     } else {
-      console.error('Failed to fetch mer payment type data');
+      throw new Error("Failed to fetch mer payment type data");
     }
-    
   } catch (error) {
-    console.error('Error fetching mer payment type data');
+    throw new Error("Failed to fetch mer payment type data");
   }
 }
 
@@ -158,11 +158,10 @@ const fetchMerPaymentTemplate = async () => {
         value: row.payment_code,
       }));
     } else {
-      console.error('Failed to fetch mer payment template data');
+      throw new Error("Failed to fetch mer payment template data");
     }
-    
   } catch (error) {
-    console.error('Error fetching mer payment template data');
+    throw new Error("Failed to fetch mer payment template data");
   }
 }
 
@@ -343,7 +342,6 @@ const fetchHistoryList = async () => {
         sts_description: row.sts_description,
         ths_comment: row.ths_comment != null && row.ths_comment != '' ? row.ths_comment : '-',
       }));
-      console.log({historyData: historyData.value.length, data : JSON.stringify(historyData.value)});
     } else {
       emit('update:isDialogVisible', false)
       emit('isSnackbarResponse',true)
@@ -361,19 +359,18 @@ const fetchHistoryList = async () => {
 watch(
   [() => contractReqId.value, () => typeDialog.value, () => props.fetchTrigger],
     ([newConreqId,newType]) => {
-      if (newType === "Detail"&& newConreqId) {
+      if (newType === "Detail" && newConreqId) {
         fetchContractEdit()
         fetchContractJobList()
         fetchValuationList()
         fetchHistoryList()
+        fetchMerVendorData()
+        fetchMerPaymentType()
+        fetchMerPaymentTemplate()
       }
-      fetchMerVendorData()
-      fetchMerPaymentType()
-      fetchMerPaymentTemplate()
       loadingBtn.value[0] = false;
       loadingBtnSecond.value[0] = false;
-  },
-  { immediate: true }
+  }
 );
 </script>
 
@@ -583,8 +580,8 @@ watch(
               </th>
             </tr>
           </thead>
-          <tbody class="text-base" v-for="(data,index) in contractJobData.contract_job" :key="data.cjb_id">
-            <template v-if="contractJobData.contract_job.length > 0">
+          <tbody class="text-base">
+            <template v-if="contractJobData.contract_job && contractJobData.contract_job.length > 0" v-for="(data,index) in contractJobData.contract_job" :key="data.cjb_id">
               <tr>
                 <td>
                   <VChip
@@ -638,100 +635,104 @@ watch(
                   </VTooltip>
                 </td>
               </tr>
+              <tr>
+                <td colspan="9">
+                  <VTable class="border collapse mt-3 mb-5">
+                    <thead>
+                      <tr>
+                        <th scope="col">
+                          Labor Type
+                        </th>
+                        <th scope="col" class="text-center">
+                          Labor QTY
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <template v-if="contractJobData.job_labor.length > 0" v-for="(innerArray, indexOuter) in contractJobData.job_labor" :key="indexOuter">
+                        <tr v-for="(dataCb, indexCb) in innerArray" :key="dataCb.cjb_id">
+                          <td v-if="dataCb.cjb_id == data.cjb_id">
+                            {{ dataCb.cjl_type }}
+                          </td>
+                          <td class="text-center" v-if="dataCb.cjb_id == data.cjb_id">
+                            {{ dataCb.cjl_qty }}
+                          </td>
+                        </tr>
+                      </template>
+                      <tr v-else>
+                        <td colspan="2" class="text-center">
+                          Data is empty
+                        </td>
+                      </tr>
+                    </tbody>
+                  </VTable>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="9">
+                  <VTable class="border collapse mt-3 mb-5">
+                    <thead>
+                      <tr>
+                        <th scope="col">
+                          Year-Month
+                        </th>
+                        <th scope="col">
+                          Type
+                        </th>
+                        <th scope="col">
+                          Increment
+                        </th>
+                        <th scope="col">
+                          Total
+                        </th>
+                        <th scope="col">
+                          Action
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <template v-if="contractJobData.job_target.length > 0" v-for="(innerArray, indexOuter) in contractJobData.job_target" :key="indexOuter">
+                        <tr v-for="(dataCt, indexCb) in innerArray" :key="dataCt.cjt_id">                        
+                          <td v-if="dataCt.cjb_id == data.cjb_id">
+                            {{ dayjs(dataCt.cjt_year + '-' + dataCt.cjt_month).format('YYYY-MM') }}
+                          </td>
+                          <td v-if="dataCt.cjb_id == data.cjb_id">
+                            {{ dataCt.cjt_type == '1' ? 'Same With UOM' : 'Percentage' }}
+                          </td>
+                          <td v-if="dataCt.cjb_id == data.cjb_id">
+                            {{ dataCt.cjt_qty }}
+                          </td>
+                          <td v-if="dataCt.cjb_id == data.cjb_id">
+                            {{ dataCt.cjt_total }}
+                          </td>
+                          <td v-if="dataCt.cjb_id == data.cjb_id">
+                            <IconBtn @click="">
+                              <VIcon icon="tabler-printer" />
+                              <VTooltip open-delay="200" location="top" activator="parent">
+                                <span>Print data</span>
+                              </VTooltip>
+                            </IconBtn>
+                          </td>
+                        </tr>
+                      </template>
+                      <tr v-else>
+                        <td colspan="4" class="text-center">
+                          Data is empty
+                        </td>
+                      </tr>
+                    </tbody>
+                  </VTable>
+                  <VDivider v-if="index !== contractJobData.contract_job.length - 1" class="my-6 border-dashed" />
+                </td>
+              </tr>
             </template>
-            <tr>
-              <td colspan="9">
-                <VTable class="border collapse mt-3 mb-5">
-                  <thead>
-                    <tr>
-                      <th scope="col">
-                        Labor Type
-                      </th>
-                      <th scope="col" class="text-center">
-                        Labor QTY
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <template v-if="contractJobData.job_labor.length > 0" v-for="(innerArray, indexOuter) in contractJobData.job_labor" :key="indexOuter">
-                      <tr v-for="(dataCb, indexCb) in innerArray" :key="dataCb.cjb_id">
-                        <td v-if="dataCb.cjb_id == data.cjb_id">
-                          {{ dataCb.cjl_type }}
-                        </td>
-                        <td class="text-center" v-if="dataCb.cjb_id == data.cjb_id">
-                          {{ dataCb.cjl_qty }}
-                        </td>
-                      </tr>
-                    </template>
-                    <tr v-else>
-                      <td colspan="2" class="text-center">
-                        Data is empty
-                      </td>
-                    </tr>
-                  </tbody>
-                </VTable>
-              </td>
-            </tr>
-            <tr>
-              <td colspan="9">
-                <VTable class="border collapse mt-3 mb-5">
-                  <thead>
-                    <tr>
-                      <th scope="col">
-                        Year-Month
-                      </th>
-                      <th scope="col">
-                        Type
-                      </th>
-                      <th scope="col">
-                        Increment
-                      </th>
-                      <th scope="col">
-                        Total
-                      </th>
-                      <th scope="col">
-                        Action
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <template v-if="contractJobData.job_target.length > 0" v-for="(innerArray, indexOuter) in contractJobData.job_target" :key="indexOuter">
-                      <tr v-for="(dataCt, indexCb) in innerArray" :key="dataCt.cjt_id">                        
-                        <td v-if="dataCt.cjb_id == data.cjb_id">
-                          {{ dayjs(dataCt.cjt_year + '-' + dataCt.cjt_month).format('YYYY-MM') }}
-                        </td>
-                        <td v-if="dataCt.cjb_id == data.cjb_id">
-                          {{ dataCt.cjt_type == '1' ? 'Same With UOM' : 'Percentage' }}
-                        </td>
-                        <td v-if="dataCt.cjb_id == data.cjb_id">
-                          {{ dataCt.cjt_qty }}
-                        </td>
-                        <td v-if="dataCt.cjb_id == data.cjb_id">
-                          {{ dataCt.cjt_total }}
-                        </td>
-                        <td v-if="dataCt.cjb_id == data.cjb_id">
-                          <IconBtn @click="">
-                            <VIcon icon="tabler-printer" />
-                            <VTooltip open-delay="200" location="top" activator="parent">
-                              <span>Print data</span>
-                            </VTooltip>
-                          </IconBtn>
-                        </td>
-                      </tr>
-                    </template>
-                    <tr v-else>
-                      <td colspan="4" class="text-center">
-                        Data is empty
-                      </td>
-                    </tr>
-                  </tbody>
-                </VTable>
-                <VDivider v-if="index !== contractJobData.contract_job.length - 1" class="my-6 border-dashed" />
-              </td>
-            </tr>
+            <tr v-else>
+                <td colspan="9" class="text-center">
+                  Data is empty
+                </td>
+              </tr>
           </tbody>
         </VTable>
-        <p v-if="contractJobData.contract_job.length == 0 && !isLoading" class="text-center mt-5">Data is empty</p>
         <!-- History & BU Rate Service -->
         <VRow class="mt-5">
           <VCol cols="12" md="6">

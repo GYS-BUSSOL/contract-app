@@ -4,7 +4,7 @@ import { getListMerContractStatus } from '@db/apps/range/db';
 const emit = defineEmits(['sumBudget','sumExpense','sumBalance','activeYear']);
 // Store
 const searchQuery = ref('')
-const selectedYears = ref()
+const selectedYears = ref(new Date().getFullYear())
 const dataRangeYear = ref([])
 // Data table options
 const itemsPerPage = ref(10)
@@ -14,8 +14,8 @@ const orderBy = ref()
 const selectedRows = ref([])
 const isDialogVisible = ref(false)
 const isTypeDialog = ref('')
-const IDBU = ref(0)
-const yearData = ref('')
+const IDBU = ref()
+const yearData = ref()
 const isSnackbarResponse = ref(false)
 const isSnackbarResponseAlertColor = ref('error')
 const fetchTrigger = ref(0);
@@ -106,12 +106,15 @@ const fetchRangeYear = async () => {
       for (let i = minYear; i <= maxYear; i++) {
         dataRangeYear.value.push({ title: i, value: i });
       }
+      dataRangeYear.value.push({
+        title: new Date().getFullYear(),
+        value: new Date().getFullYear()
+      });
     } else {
-      console.error('Failed to fetch get range year');
+      throw new Error("Failed to fetch get range year data");
     }
-    
   } catch (error) {
-    console.error('Error fetching get range year');
+    throw new Error("Failed to fetch get range year data");
   }
 };
 
@@ -149,6 +152,10 @@ const updateErrorMessages = err => {
 
 const updateErrors = err => {
   errors.value = err;
+}
+
+const onUpdateTypeDialog = () => {
+  isTypeDialog.value = '';
 }
 
 const fetchAddData = async (jobTypeData, clearedForm) => {
@@ -194,18 +201,22 @@ const fetchAddData = async (jobTypeData, clearedForm) => {
 const fetchUpdateData = async (id, formData, clearedForm) => {
   try {
     const response = await $api(`/apps/budget-bu/update/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(formData),
-        onResponseError({ response }) {
-          alertErrorResponse()
-          const responseData = response._data;
-          const responseMessage = responseData.message;
-          const responseErrors = responseData.errors;
-          errors.value = responseErrors;
-          errorMessages.value = responseMessage;
-          throw new Error("Updated data failed");
-        },
-      });
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
+      onResponseError({ response }) {
+        alertErrorResponse()
+        const responseData = response._data;
+        const responseMessage = responseData.message;
+        const responseErrors = responseData.errors;
+        errors.value = responseErrors;
+        errorMessages.value = responseMessage;
+        throw new Error("Updated data failed");
+      },
+    });
     
     const responseStringify = JSON.stringify(response);
     const responseParse = JSON.parse(responseStringify);
@@ -237,10 +248,11 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
 const openDialog = async ({ id = null, type, year = null }) => {
   isTypeDialog.value = type
   isDialogVisible.value = true
-  if(type == 'Edit')
+  if(type == 'Edit') {
     IDBU.value = id;
     yearData.value = year;
-    fetchTrigger.value += 1;
+  }
+  fetchTrigger.value += 1;
 }
 </script>
 
@@ -394,6 +406,7 @@ const openDialog = async ({ id = null, type, year = null }) => {
     @BUData="handleFormSubmit"
     @errorMessages="updateErrorMessages"
     @errors="updateErrors"
+    @updateTypeDialog="onUpdateTypeDialog"
   />
 
   <VSnackbar

@@ -230,6 +230,10 @@ const updateRangeIncrement = data => {
   rangeIncrement.value = data
 }
 
+const onUpdateTypeDialog = () => {
+  isTypeDialog.value = '';
+}
+
 const updateAddDialogVisible =  async ({type, stat, cjb_id = null}) => {
   isAddDialogVisible.value = stat
   isTypeDialog.value = type
@@ -245,34 +249,34 @@ const updateDeleteDialogVisible =  async ({type, stat, cjb_id = null}) => {
 
 const fetchAddPPSData = async (PPSData) => {
   try {
-      const formData = new FormData();
-      
-      for (const [key, value] of Object.entries(PPSData)) {
-        if (value instanceof File) {
-          formData.append(key, value);
-        } else if (typeof value === 'object' && value !== null) {
-          formData.append(key, JSON.stringify(value));
-        } else {
-          formData.append(key, value);
-        }
+    const formData = new FormData();
+    
+    for (const [key, value] of Object.entries(PPSData)) {
+      if (value instanceof File) {
+        formData.append(key, value);
+      } else if (typeof value === 'object' && value !== null) {
+        formData.append(key, JSON.stringify(value));
+      } else {
+        formData.append(key, value);
       }
-      const response = await $api('/apps/pps-ongoing/add', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        onResponseError({ response }) {
-          alertErrorResponse()
-          const responseData = response._data;
-          const responseMessage = responseData.message;
-          const responseErrors = responseData.errors;
-          errors.value = responseErrors;
-          errorMessages.value = responseMessage;
-          throw new Error("Created data failed");
-        },
-      });
+    }
+    const response = await $api('/apps/pps-ongoing/add', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      onResponseError({ response }) {
+        alertErrorResponse()
+        const responseData = response._data;
+        const responseMessage = responseData.message;
+        const responseErrors = responseData.errors;
+        errors.value = responseErrors;
+        errorMessages.value = responseMessage;
+        throw new Error("Created data failed");
+      },
+    });
 
     const responseStringify = JSON.stringify(response);
     const responseParse = JSON.parse(responseStringify);
@@ -310,7 +314,6 @@ const fetchAddJobTypeData = async (type, JobTypeData, clearedForm, clearedJobtyp
       }
       formData.append('con_id',conId.value)
       formData.append('periode',rangeIncrement.value)
-      console.log({rangeIncrement: rangeIncrement.value, con_id: conId.value});
       const response = await $api('/apps/trn-job-type/add', {
         method: 'POST',
         body: formData,
@@ -353,8 +356,8 @@ const deletedJobType = async id => {
   try {
     const cjbId = Number(id);
     const response = await $api(`/apps/trn-job-type/delete/${cjbId}`, {
-        method: 'DELETE',
-        onResponseError({ response }) {
+      method: 'DELETE',
+      onResponseError({ response }) {
         alertErrorResponse()
         const responseData = response._data;
         const responseMessage = responseData.message;
@@ -402,13 +405,14 @@ const openDialog = async ({ id = null, type, con_req_id = null }) => {
     isAddDialogVisible.value = true
   } else if (type == 'List Job Type') {
     isListJobTypeDialogVisible.value = true
-  } else if(type == 'Detail')
+  } else if(type == 'Detail') {
     isJobTypeDetailDialogVisible.value = true
+  }
   if(type == 'Edit' || type == 'List Job Type' || type == 'Detail' ) {
     conId.value = id;
     conReqId.value = con_req_id
-    fetchTrigger.value += 1
   }
+  fetchTrigger.value += 1
 }
 
 </script>
@@ -643,6 +647,7 @@ const openDialog = async ({ id = null, type, con_req_id = null }) => {
     @isSnackbarResponseAlertColor="updateSnackbarResponseAlertColor"
     @isSnackbarResponse="updateSnackbarResponse"
     @PPSData="handlePPSFormSubmit"
+    @updateTypeDialog="onUpdateTypeDialog"
     @JobTypeData="handleJobTypeFormSubmit"
     @errorMessages="updateErrorMessages"
     @errors="updateErrors"

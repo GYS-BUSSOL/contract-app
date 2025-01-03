@@ -21,7 +21,8 @@ const emit = defineEmits([
   'isSnackbarResponseAlertColor',
   'errorMessages',
   'errors',
-  'updateRangeIncrement'
+  'updateRangeIncrement',
+  'updateTypeDialog'
 ]);
 
 const props = defineProps({
@@ -257,15 +258,20 @@ const dialogModelValueUpdate = () => {
   refPPSForm.value?.resetValidation()
   refJobTypeForm.value?.reset()
   refJobTypeForm.value?.resetValidation()
+  // Back step
+  currentStep.value--
+  isCurrentStepValid.value = true
+  // Falsing button
   loadingBtn.value[0] = false;
   loadingBtnSecond.value[0] = false;
   isDisabled.value = false;
   emit('updateRangeIncrement',[])
-  emit('updateTypeDialog','Add')
+  emit('updateTypeDialog')
   emit('update:isDialogVisible', false)
 }
 
 const dialogModelJobtypeValueUpdate = () => {
+  // Labor
   laborData.labor = [{id: Date.now(), type: null, qty: null},]
   // Job Type form
   ppsOngoingData.job_type = null;
@@ -279,8 +285,13 @@ const dialogModelJobtypeValueUpdate = () => {
   ppsOngoingData.cjt_type = null;
   ppsOngoingData.cjt_qty = null;
   ppsOngoingData.total = null;
+  // Form all reset
   refJobTypeForm.value?.reset()
   refJobTypeForm.value?.resetValidation()
+  // Back step
+  currentStep.value--
+  isCurrentStepValid.value = true
+  // Falsing button
   loadingBtn.value[0] = false;
   loadingBtnSecond.value[0] = false;
   isDisabled.value = false;
@@ -313,8 +324,6 @@ const averageEvenly = () => {
 
 const syncWorkLocation = () => {
   if (ppsOngoingData.ck_wl && ppsOngoingData.wc.length > 0) {
-    console.log({ck_wl: ppsOngoingData.ck_wl});
-    
     ppsOngoingData.work_location = ppsOngoingData.wc.length > 0 ? ppsOngoingData.wc : '';
   } else {
     ppsOngoingData.ck_wl = false;
@@ -362,6 +371,7 @@ const hasRequiredKeys = (row) => {
 const fetchCompanyData = async () => {
   try {
     const response = await getListCompany();
+
     if (response.status === 200) {
       const rows = response.data.rows || [];
       dataCompany.value = rows.map((row) => ({
@@ -369,17 +379,17 @@ const fetchCompanyData = async () => {
         value: row.company_code,
       }));
     } else {
-      console.error('Failed to fetch company data');
+      throw new Error("Failed to fetch company data");
     }
-    
   } catch (error) {
-    console.error('Error fetching company data',error);
+    throw new Error("Failed to fetch company data");
   }
 }
 
 const fetchMerBUData = async () => {
   try {
     const response = await getListMerBU();
+
     if (response.status === 200) {
       const rows = response.data.rows || [];
       dataMerBU.value = rows.map((row) => ({
@@ -387,11 +397,10 @@ const fetchMerBUData = async () => {
         value: row.number,
       }));
     } else {
-      console.error('Failed to fetch mer business units data');
+      throw new Error("Failed to fetch mer business unit data");
     }
-    
   } catch (error) {
-    console.error('Error fetching mer business units data',error);
+    throw new Error("Failed to fetch mer business unit data");
   }
 }
 
@@ -405,11 +414,10 @@ const fetchMerCCData = async () => {
         value: row.number,
       }));
     } else {
-      console.error('Failed to fetch mer cost center data');
+      throw new Error("Failed to fetch mer cost center data");
     }
-    
   } catch (error) {
-    console.error('Error fetching mer cost center data',error);
+    throw new Error("Failed to fetch mer cost center data");
   }
 }
 
@@ -452,11 +460,10 @@ const fetchMerWCData = async () => {
         value: row.number,
       }));
     } else {
-      console.error('Failed to fetch mer work center data');
+      throw new Error("Failed to fetch mer work center data");
     }
-    
   } catch (error) {
-    console.error('Error fetching mer work center data',error);
+    throw new Error("Failed to fetch mer work center data");
   }
 }
 
@@ -470,11 +477,10 @@ const fetchMerVendorData = async () => {
         value: row.vnd_id,
       }));
     } else {
-      console.error('Failed to fetch mer vendor data');
+      throw new Error("Failed to fetch mer vendor data");
     }
-    
   } catch (error) {
-    console.error('Error fetching mer vendor data',error);
+    throw new Error("Failed to fetch mer vendor data");
   }
 }
 
@@ -488,11 +494,10 @@ const fetchMerJobTypeData = async () => {
         value: row.job_type_id,
       }));
     } else {
-      console.error('Failed to fetch job type data');
+      throw new Error("Failed to fetch job type data");
     }
-    
   } catch (error) {
-    console.error('Error fetching job type data');
+    throw new Error("Failed to fetch job type data");
   }
 }
 
@@ -506,11 +511,10 @@ const fetchMerMeasurementUnitData = async () => {
         value: row.unt_code,
       }));
     } else {
-      console.error('Failed to fetch measurement unit data');
+      throw new Error("Failed to fetch measurement unit data");
     }
-    
   } catch (error) {
-    console.error('Error fetching measurement unit data');
+    throw new Error("Failed to fetch measurement unit data");
   }
 }
 
@@ -524,11 +528,10 @@ const fetchMerPaymentTypeData = async () => {
         value: row.paytype_code,
       }));
     } else {
-      console.error('Failed to fetch payment type data');
+      throw new Error("Failed to fetch payment type data");
     }
-    
   } catch (error) {
-    console.error('Error fetching payment type data');
+    throw new Error("Failed to fetch payment type data");
   }
 }
 
@@ -542,11 +545,10 @@ const fetchMerLaborTypeData = async () => {
         value: row.labor_type,
       }));
     } else {
-      console.error('Failed to fetch labor type data');
+      throw new Error("Failed to fetch labor type data");
     }
-    
   } catch (error) {
-    console.error('Error fetching labor type data');
+    throw new Error("Failed to fetch labor type data");
   }
 }
 
@@ -699,7 +701,7 @@ const onSubmitPPS = () => {
     const mode = props.typeDialog;
     emit("PPSData", { mode, formData: {...formDataToObject}, dialogUpdate: dialogModelValueUpdate });
   } catch (err) {
-    loadingBtn.value[0] = false
+    throw new Error("Failed to create PPS");
   }
 }
 
@@ -728,9 +730,7 @@ const onSubmitJobType = (type) => {
       loadingBtnSecond.value[0] = true;
     emit("JobTypeData", { type ,formData: {...formDataToObject}, dialogUpdate: dialogModelValueUpdate, dialogJobtypeUpdate: dialogModelJobtypeValueUpdate });
   } catch (err) {
-    isDisabled.value = false;
-    loadingBtn.value[0] = false;
-    loadingBtnSecond.value[0] = false;
+    throw new Error("Failed to create job type");
   }
 }
 
@@ -742,57 +742,60 @@ const openPathDialog = (path) => {
 watch(
   [() => conId.value, () => conReqId.value, () => typeDialog.value, () => props.cjbId, () => props.fetchTrigger, () => props.isSuccessNextStep],
   ([newId,newConReq,newType, newCjbId]) => {
-      if (newType === "Edit" && newId) {
-        fetchPPSOngodingEdit();
-      } else if (newType === "Add") {
-        isLoading.value = false;
-        if(props.isSuccessNextStep) {
-          currentStep.value++
-          isCurrentStepValid.value = true
-        }
+    if (newType === "Edit" && newId && newType != '') {
+      fetchPPSOngodingEdit();
+    } else if (newType === "Add" && newType != '') {
+      isLoading.value = false;
+      if(props.isSuccessNextStep) {
+        currentStep.value++
+        isCurrentStepValid.value = true
       }
+    }
 
-      if(newType === 'Add Job Type') {
-        dialogModelJobtypeValueUpdate()
-      }
-      
-      if(newType !== 'List Job Type' && newType != '') {
-        fetchCompanyData()
-        fetchMerBUData()
-        fetchMerCCData()
-        fetchMerWCData()
-        fetchMerVendorData()
-        fetchMerShiftData()
-      } 
-      if(newType == 'Edit Job Type' && newType != '') {
-        fetchContractJobSingleEdit()
-      }
+    if(newType === 'Add Job Type' && newType != '') {
+      dialogModelJobtypeValueUpdate()
       fetchMerJobTypeData()
       fetchMerMeasurementUnitData()
       fetchMerPaymentTypeData()
       fetchMerLaborTypeData()
+    }
+    
+    if(newType === 'Add' || newType === 'Edit' && newType != '') {
+      fetchCompanyData()
+      fetchMerBUData()
+      fetchMerCCData()
+      fetchMerWCData()
+      fetchMerVendorData()
+      fetchMerShiftData()
+    }
 
-      numberedSteps.value = [
-        ...(newType !== 'List Job Type' && newType !== 'Edit Job Type' && newType !== 'Add Job Type'
-          ? [
-              {
-                title: 'PPS Data',
-                subtitle: (newType === 'Edit' ? 'Edit' : 'Add') + ' PPS data',
-              },
-            ]
-          : []),
-        ...(newType === 'Add' || newType === 'List Job Type' || newType === 'Edit Job Type' || newType === 'Add Job Type'
-          ? [
-              {
-                title: 'Job Type',
-                subtitle:  (newType === 'Edit Job Type' ? 'Edit' : 'Add') +' job type',
-              },
-            ]
-          : []),
-      ];
-      loadingBtn.value[0] = false;
-  },
-  { immediate: true }
+    if(newType === 'Edit Job Type' && newType != '') {
+      fetchContractJobSingleEdit()
+    }
+
+    numberedSteps.value = [
+      ...(newType !== 'List Job Type' && newType !== 'Edit Job Type' && newType !== 'Add Job Type'
+        ? [
+            {
+              title: 'PPS Data',
+              subtitle: (newType === 'Edit' ? 'Edit' : 'Add') + ' PPS data',
+            },
+          ]
+        : []),
+      ...(newType === 'Add' || newType === 'List Job Type' || newType === 'Edit Job Type' || newType === 'Add Job Type'
+        ? [
+            {
+              title: 'Job Type',
+              subtitle:  (newType === 'Edit Job Type' ? 'Edit' : 'Add') +' job type',
+            },
+          ]
+        : []),
+    ];
+
+    loadingBtn.value[0] = false;
+    loadingBtnSecond.value[0] = false;
+    isDisabled.value = false;
+  }
 )
 
 watch(() => ppsOngoingData.ck_wl, (newValue) => {

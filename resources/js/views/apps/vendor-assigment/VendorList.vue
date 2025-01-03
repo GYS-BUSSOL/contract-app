@@ -12,7 +12,7 @@ const page = ref(1)
 const sortBy = ref()
 const orderBy = ref()
 const selectedRows = ref([])
-const isTypeDialog = ref('Add')
+const isTypeDialog = ref('')
 const isAddDialogVisible = ref(false)
 const fetchTrigger = ref(0)
 const conReqNo = ref(0)
@@ -67,7 +67,6 @@ const headers = [
     sortable: false,
   },
 ]
-
 // search filters
 const expiredStatus = [
   {
@@ -79,7 +78,7 @@ const expiredStatus = [
     value: 'null',
   }
 ]
-
+// Priority
 const priority = [
   {
     title: 'Tidak Segera',
@@ -200,35 +199,29 @@ const updateErrors = err => {
   errors.value = err;
 }
 
-const openDialog = async ({ id = null, type, con_req_no = null, con_req_id = null }) => {
-  isTypeDialog.value = type
-  isAddDialogVisible.value = true
-  if(type == 'Add')
-    conReqNo.value = con_req_no
-    conReqId.value = con_req_id
-    fetchTrigger.value += 1;
+const onUpdateTypeDialog = () => {
+  isTypeDialog.value = '';
 }
 
 const fetchAddData = async (vendorData, clearedForm) => {
   try {
-
-      const response = await $api('/apps/contract-job/add', {
-        method: 'POST',
-        body: JSON.stringify(vendorData),
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        onResponseError({ response }) {
-          alertErrorResponse()
-          const responseData = response._data;
-          const responseMessage = responseData.message;
-          const responseErrors = responseData.errors;
-          errors.value = responseErrors;
-          errorMessages.value = responseMessage;
-          throw new Error("Created data failed");
-        },
-      });
+    const response = await $api('/apps/contract-job/add', {
+      method: 'POST',
+      body: JSON.stringify(vendorData),
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      onResponseError({ response }) {
+        alertErrorResponse()
+        const responseData = response._data;
+        const responseMessage = responseData.message;
+        const responseErrors = responseData.errors;
+        errors.value = responseErrors;
+        errorMessages.value = responseMessage;
+        throw new Error("Created data failed");
+      },
+    });
 
     const responseStringify = JSON.stringify(response);
     const responseParse = JSON.parse(responseStringify);
@@ -246,29 +239,29 @@ const fetchAddData = async (vendorData, clearedForm) => {
     }
   } catch (error) {
     alertErrorResponse()
+    throw new Error("Created data failed");
   }
 }
 
 const fetchRejectData = async (vendorData, clearedForm) => {
   try {
-
-      const response = await $api('/apps/contract-job/reject-status', {
-        method: 'POST',
-        body: JSON.stringify(vendorData),
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        onResponseError({ response }) {
-          alertErrorResponse()
-          const responseData = response._data;
-          const responseMessage = responseData.message;
-          const responseErrors = responseData.errors;
-          errors.value = responseErrors;
-          errorMessages.value = responseMessage;
-          throw new Error("Rejected data failed");
-        },
-      });
+    const response = await $api('/apps/contract-job/reject-status', {
+      method: 'POST',
+      body: JSON.stringify(vendorData),
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      onResponseError({ response }) {
+        alertErrorResponse()
+        const responseData = response._data;
+        const responseMessage = responseData.message;
+        const responseErrors = responseData.errors;
+        errors.value = responseErrors;
+        errorMessages.value = responseMessage;
+        throw new Error("Rejected data failed");
+      },
+    });
 
     const responseStringify = JSON.stringify(response);
     const responseParse = JSON.parse(responseStringify);
@@ -286,6 +279,7 @@ const fetchRejectData = async (vendorData, clearedForm) => {
     }
   } catch (error) {
     alertErrorResponse()
+    throw new Error("Rejected data failed");
   }
 }
 
@@ -295,6 +289,16 @@ const handleFormSubmit = async ({mode,formData,dialogUpdate}) => {
   } else if(mode === "Reject"){
     fetchRejectData(formData,dialogUpdate)
   }
+}
+
+const openDialog = async ({ id = null, type, con_req_no = null, con_req_id = null }) => {
+  isTypeDialog.value = type
+  isAddDialogVisible.value = true
+  if(type == 'Add') {
+    conReqNo.value = con_req_no
+    conReqId.value = con_req_id
+  }
+  fetchTrigger.value += 1;
 }
 </script>
 
@@ -483,6 +487,7 @@ const handleFormSubmit = async ({mode,formData,dialogUpdate}) => {
     @isSnackbarResponseAlertColor="updateSnackbarResponseAlertColor"
     @isSnackbarResponse="updateSnackbarResponse"
     @vendorData="handleFormSubmit"
+    @updateTypeDialog="onUpdateTypeDialog"
     @errorMessages="updateErrorMessages"
     @errors="updateErrors"
   />

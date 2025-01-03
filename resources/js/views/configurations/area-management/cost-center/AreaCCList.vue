@@ -12,13 +12,14 @@ const orderBy = ref()
 const selectedRows = ref([])
 const isAreaCCDialogVisible = ref(false)
 const isAreaCCDialogDeleteVisible = ref(false)
-const isAreaCCTypeDialog = ref('Add')
+const isTypeDialog = ref('')
 const IDAreaCC = ref(0)
 const isSnackbarResponse = ref(false)
 const isSnackbarResponseAlertColor = ref('error')
 const fetchTrigger = ref(0);
 const errorMessages = ref('Internal server error')
 const successMessages = ref('Successfully')
+const token = useCookie('accessToken')
 const errors = ref({
   description: undefined,
   number: undefined
@@ -49,7 +50,6 @@ const headers = [
     sortable: false,
   },
 ]
-
 // search filters
 const status = [
   {
@@ -94,19 +94,6 @@ watch(
   { immediate: true }
 );
 
-const openDialog = async ({ id = null, type }) => {
-  isAreaCCTypeDialog.value = type
-  isAreaCCDialogVisible.value = true
-  if(type == 'Edit')
-    IDAreaCC.value = id
-    fetchTrigger.value += 1;
-}
-
-const openDialogDelete = async (id) => {
-  IDAreaCC.value = id
-  isAreaCCDialogDeleteVisible.value = true
-}
-
 const resolveAreaCCStatusVariant = stat => {
   if (stat == 0 && stat != null )
     return 'success'
@@ -142,10 +129,18 @@ const updateErrors = err => {
   errors.value = err;
 }
 
+const onUpdateTypeDialog = () => {
+  isTypeDialog.value = '';
+}
+
 const fetchAddData = async (areaCCData, clearedForm) => {
   try {
     const response = await $api('/configurations/area-management-cc/add', {
       method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify(areaCCData),
       onResponseError({ response }) {
         alertErrorResponse()
@@ -180,18 +175,22 @@ const fetchAddData = async (areaCCData, clearedForm) => {
 const fetchAreaCCUpdate = async (id, formData, clearedForm) => {
   try {
     const response = await $api(`/configurations/area-management-cc/update/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(formData),
-        onResponseError({ response }) {
-          alertErrorResponse()
-          const responseData = response._data;
-          const responseMessage = responseData.message;
-          const responseErrors = responseData.errors;
-          errors.value = responseErrors;
-          errorMessages.value = responseMessage;
-          throw new Error("Updated data failed");
-        },
-      });
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
+      onResponseError({ response }) {
+        alertErrorResponse()
+        const responseData = response._data;
+        const responseMessage = responseData.message;
+        const responseErrors = responseData.errors;
+        errors.value = responseErrors;
+        errorMessages.value = responseMessage;
+        throw new Error("Updated data failed");
+      },
+    })
     
     const responseStringify = JSON.stringify(response);
     const responseParse = JSON.parse(responseStringify);
@@ -214,11 +213,15 @@ const fetchAreaCCUpdate = async (id, formData, clearedForm) => {
 
 const deleteAreaCC = async id => {
   try {
-    isAreaCCTypeDialog.value = 'Delete'
+    isTypeDialog.value = 'Delete'
     const idAreaCC = Number(id);
     const response = await $api(`/configurations/area-management-cc/delete/${idAreaCC}`, {
-        method: 'DELETE',
-        onResponseError({ response }) {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      onResponseError({ response }) {
         alertErrorResponse()
         const responseData = response._data;
         const responseMessage = responseData.message;
@@ -252,6 +255,20 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
   } else if(mode === 'Edit') {
     fetchAreaCCUpdate(IDAreaCC.value, formData, dialogUpdate)
   }
+}
+
+const openDialog = async ({ id = null, type }) => {
+  isTypeDialog.value = type
+  isAreaCCDialogVisible.value = true
+  if(type == 'Edit') {
+    IDAreaCC.value = id
+  }
+    fetchTrigger.value += 1;
+}
+
+const openDialogDelete = async (id) => {
+  IDAreaCC.value = id
+  isAreaCCDialogDeleteVisible.value = true
 }
 </script>
 
@@ -381,10 +398,11 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
       <!-- SECTION -->
     </VCard>
   </section>
+
   <AreaCCAddDialog
     v-model:isDialogVisible="isAreaCCDialogVisible"
     :errors="errors"
-    :typeDialog="isAreaCCTypeDialog"
+    :typeDialog="isTypeDialog"
     :areaCC-id="IDAreaCC"
     :fetch-trigger="fetchTrigger"
     @isSnackbarResponseAlertColor="updateSnackbarResponseAlertColor"
@@ -392,13 +410,16 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
     @AreaCCData="handleFormSubmit"
     @errorMessages="updateErrorMessages"
     @errors="updateErrors"
+    @updateTypeDialog="onUpdateTypeDialog"
   />
+
   <AreaCCDeleteDialog
     v-model:isDialogDeleteVisible="isAreaCCDialogDeleteVisible"
     :areaCC-id="IDAreaCC"
     :fetch-trigger="fetchTrigger"
     @id-deleted="deleteAreaCC"
   />
+
   <VSnackbar
     v-model="isSnackbarResponse"
     transition="scroll-y-reverse-transition"

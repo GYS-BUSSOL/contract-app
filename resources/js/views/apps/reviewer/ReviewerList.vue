@@ -19,7 +19,7 @@ const isJobTypeDetailDialogVisible = ref(false)
 const isSnackbarResponseAlertColor = ref('error')
 const errorMessages = ref('Internal server error')
 const successMessages = ref('Successfully')
-const isTypeDialog = ref('Detail')
+const isTypeDialog = ref('')
 const fetchTrigger = ref(0)
 const conReqNo = ref(0)
 const conReqId = ref(0)
@@ -77,7 +77,6 @@ const headers = [
     sortable: false,
   },
 ]
-
 // search filters
 const expiredStatus = [
   {
@@ -135,6 +134,10 @@ const updateErrors = err => {
   errors.value = err;
 }
 
+const onUpdateTypeDialog = () => {
+  isTypeDialog.value = '';
+}
+
 const formatDate = (date, time = false) => {
   return dayjs(date).format(`DD MMM YYYY${time ? ", HH:mm" : ""}`);
 }
@@ -153,11 +156,10 @@ const fetchMerContractStatus = async () => {
         value: row.sts_description,
       }));
     } else {
-      console.error('Failed to fetch mer contract status data');
+      throw new Error("Failed to fetch mer contract status data");
     }
-    
   } catch (error) {
-    console.error('Error fetching mer contract status data',error);
+    throw new Error("Failed to fetch mer contract status data");
   }
 }
 
@@ -167,8 +169,8 @@ const openDialog = async ({ id = null, type, con_req_no = null, con_req_id = nul
   conReqId.value = con_req_id
   if(type == 'Detail') {
     isJobTypeDetailDialogVisible.value = true
-    fetchTrigger.value += 1;
   }
+  fetchTrigger.value += 1;
 }
 
 onMounted(() => {
@@ -343,6 +345,7 @@ onMounted(() => {
     @isSnackbarResponse="updateSnackbarResponse"
     @errorMessages="updateErrorMessages"
     @errors="updateErrors"
+    @updateTypeDialog="onUpdateTypeDialog"
   />
 
   <VSnackbar

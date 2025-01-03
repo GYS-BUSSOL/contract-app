@@ -1,9 +1,9 @@
 import { BASE_API_URL } from '@/plugins/1.router/additional-routes';
+const token = useCookie('accessToken').value
 
 export async function fetchSignatureType(currentPage, rowPerPage, rowSearch) {
   let start = 0;
   const url = `${BASE_API_URL}/api/configurations/signature-type/search`;
-  const token = 'YOUR_BEARER_TOKEN_HERE';
   
   if(currentPage != 1 && currentPage > 1)
     start = (currentPage * rowPerPage) - rowPerPage
@@ -30,14 +30,14 @@ export async function fetchSignatureType(currentPage, rowPerPage, rowSearch) {
       "columns": ["st_id"],
       "ascending": false
     }
-  };
+  }
 
   try {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // 'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(payload)
     });
@@ -48,9 +48,7 @@ export async function fetchSignatureType(currentPage, rowPerPage, rowSearch) {
 
     const data = await response.json();
     return data;
-
   } catch (error) {
-    console.error("Error fetching job type data:", error);
-    throw error;
+    throw new Error("Failed to fetching job type data");
   }
 }

@@ -15,7 +15,6 @@ export const handlerAppsSPKActive = [
       const page = url.searchParams.get('page')
       const orderBy = url.searchParams.get('orderBy')
       const searchQuery = is.string(q) ? q : undefined
-      const token = url.searchParams.get('token')
       let queryLower = (searchQuery ?? '').toString().toLowerCase()
       const parsedSortBy = destr(sortBy)
       const sortByLocal = is.string(parsedSortBy) ? parsedSortBy : ''
@@ -24,7 +23,7 @@ export const handlerAppsSPKActive = [
       const parsedItemsPerPage = destr(itemsPerPage)
       const itemsPerPageLocal = is.number(parsedItemsPerPage) ? parsedItemsPerPage : 10
       // Fetch Data
-      const fetchData = await fetchSPKActive(page, itemsPerPage, queryLower, vendor, bu, token);
+      const fetchData = await fetchSPKActive(page, itemsPerPage, queryLower, vendor, bu);
       const dataRows = fetchData.data.rows;
       // Filter SPK Active
       let filteredSPKActive = dataRows.filter(SPKActive => (
@@ -160,53 +159,5 @@ export const handlerAppsSPKActive = [
         totalSPKActive,
         page,
       }, { status: 200 })
-    }),
-
-    // Get Single SPKActive Detail
-    http.get(('/api/apps/spk-report/:id'), async ({ params }) => {
-      const SPKId = Number(params.id)
-      const SPKActive = db.SPKActive.find(e => e.id === SPKId)
-      if (!SPKActive) {
-        return HttpResponse.json({ message: 'SPK active not found' }, { status: 404 })
-      }
-      else {
-        return HttpResponse.json({
-          ...SPKActive,
-          ...{
-            taskDone: 1230,
-            projectDone: 568,
-            taxId: 'Tax-8894',
-            language: 'English',
-          },
-        }, { status: 200 })
-      }
-    }),
-
-    // Delete SPKActive
-    http.delete(('/api/apps/spk-report/:id'), async ({ params }) => {
-      const SPKId = Number(params.id)
-      const SPKIndex = db.SPKActive.findIndex(e => e.id === SPKId)
-      if (SPKIndex === -1) {
-        return HttpResponse.json('SPK active not found', { status: 404 })
-      }
-      else {
-        db.SPKActive.splice(SPKIndex, 1)
-        
-        return new HttpResponse(null, {
-          status: 204,
-        })
-      }
-    }),
-
-    // 👉 Add SPKActive
-    http.post(('/api/apps/spk-active'), async ({ request }) => {
-      const SPKActive = await request.json()
-
-      db.SPKActive.push({
-        ...SPKActive,
-        id: db.SPKActive.length + 1,
-      })
-      
-      return HttpResponse.json({ body: SPKActive }, { status: 201 })
     }),
 ]

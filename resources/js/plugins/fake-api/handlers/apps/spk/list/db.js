@@ -1,6 +1,7 @@
 import { BASE_API_URL } from '@/plugins/1.router/additional-routes';
+const token = useCookie('accessToken').value
 
-export async function fetchSPKList(currentPage, rowPerPage, rowSearch, expiredFilter, token) {
+export async function fetchSPKList(currentPage, rowPerPage, rowSearch, expiredFilter) {
   let start = 0;
   const url = `${BASE_API_URL}/api/apps/spk-list/search`;
   
@@ -128,10 +129,8 @@ export async function fetchSPKList(currentPage, rowPerPage, rowSearch, expiredFi
 
     const data = await response.json();
     return data;
-
   } catch (error) {
-    console.error("Error fetching SPK list data:", error);
-    throw error;
+    throw new Error("Failed to fetching SPK data");
   }
 }
 

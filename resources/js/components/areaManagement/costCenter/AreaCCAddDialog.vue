@@ -1,7 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue';
 import 'vue-skeletor/dist/vue-skeletor.css';
-import { VForm } from 'vuetify/components/VForm';
 
 const emit = defineEmits([
   'update:isDialogVisible',
@@ -9,7 +7,8 @@ const emit = defineEmits([
   'isSnackbarResponse',
   'isSnackbarResponseAlertColor',
   'errorMessages',
-  'errors'
+  'errors',
+  'updateTypeDialog'
 ])
 
 const props = defineProps({
@@ -40,6 +39,7 @@ const refVForm = ref()
 const typeDialog = computed(() => props.typeDialog)
 const areaCCId = computed(() => props.areaCCId)
 const loadingBtn = ref([])
+const token = useCookie('accessToken')
 const areaCCData = reactive({
   number: null,
   description: null,
@@ -48,9 +48,13 @@ const areaCCData = reactive({
 const dialogModelValueUpdate = () => {
   areaCCData.number = null;
   areaCCData.description = null;
+  // Reset form
   refVForm.value?.reset()
   refVForm.value?.resetValidation()
+  // Falsing button
   loadingBtn.value[0] = false;
+  // Emit
+  emit('updateTypeDialog')
   emit('update:isDialogVisible', false)
 }
 
@@ -59,6 +63,10 @@ const fetchAreaCCEdit = async () => {
     isLoading.value = true;
     const response = await $api(`/configurations/area-management-cc/edit/${areaCCId.value}`, {
       method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
       onResponseError({ response }) {
         const responseData = response._data;
         const responseMessage = responseData.message;
@@ -90,19 +98,6 @@ const fetchAreaCCEdit = async () => {
   }
 }
 
-watch(
-  [() => areaCCId.value, () => typeDialog.value, () => props.fetchTrigger],
-    ([newId,newType]) => {
-      if (newType === "Edit" && newId) {
-        fetchAreaCCEdit();
-      } else if (newType === "Add") {
-        isLoading.value = false;
-      }
-      loadingBtn.value[0] = false;
-  },
-  { immediate: true }
-);
-
 const onSubmit = async () => {
   refVForm.value?.validate().then(({ valid }) => {
     try {
@@ -118,6 +113,18 @@ const onSubmit = async () => {
     }
   })
 }
+
+watch(
+  [() => areaCCId.value, () => typeDialog.value, () => props.fetchTrigger],
+    ([newId,newType]) => {
+      if (newType === "Edit" && newId) {
+        fetchAreaCCEdit();
+      } else if (newType === "Add") {
+        isLoading.value = false;
+      }
+      loadingBtn.value[0] = false;
+  }
+)
 </script>
 
 <template>
@@ -135,8 +142,9 @@ const onSubmit = async () => {
               <div class="d-flex flex-column justify-center">
                 <div class="d-flex gap-x-4 align-center">
                   <div>
-                    <div class="card__actions d-flex justify-end" v-if="isLoading">
-                      <Skeletor width="105" height="36" class="me-4" pill/>
+                    <div class="card__actions d-flex flex-column gap-5 justify-end" v-if="isLoading">
+                      <Skeletor width="200" height="30"/>
+                      <Skeletor width="105" height="25"/>
                     </div>
                     <div class="text-h4 font-weight-medium" v-if="!isLoading">
                       {{ typeDialog == 'Edit' ? 'Edit' : 'Create New' }} Area Cost Center
@@ -144,9 +152,6 @@ const onSubmit = async () => {
                   </div>
                 </div>
               </div>
-            </div>
-            <div class="card__text mb-5" v-if="isLoading">
-              <Skeletor v-for="i in 1" :key="i" height="40" pill class="mt-5"/>
             </div>
             <VRow>
               <VCol cols="12">
@@ -158,6 +163,11 @@ const onSubmit = async () => {
                   <VRow>
                     <VCol cols="12" v-if="!isLoading">
                       <h5>(*) Is required</h5>
+                    </VCol>
+                    <VCol cols="12" md="6"  v-for="i in 2" :key="i">
+                      <div class="card__text mb-5" v-if="isLoading">
+                        <Skeletor height="40" pill class="mt-5"/>
+                      </div>
                     </VCol>
                     <VCol cols="12" v-if="!isLoading">
                       <VRow>
@@ -172,7 +182,7 @@ const onSubmit = async () => {
                             required
                           />
                         </VCol>
-                        <VCol md="6">
+                        <VCol cols="12" md="6">
                           <AppTextField
                             v-model="areaCCData.description"
                             persistent-placeholder
@@ -194,19 +204,19 @@ const onSubmit = async () => {
                       </div>
                       <div v-if="!isLoading">
                         <VBtn
+                          color="secondary"
+                          variant="tonal"
+                          @click="dialogModelValueUpdate"
+                          class="me-4"
+                        >
+                          Discard
+                        </VBtn>
+                        <VBtn
                           :loading="loadingBtn[0]"
                           :disabled="loadingBtn[0]"
                           type="submit"
-                          class="me-4"
                         >
                           <span>{{ typeDialog == 'Edit' ? 'Update' : 'Create' }}</span>
-                        </VBtn>
-                        <VBtn
-                          color="error"
-                          variant="tonal"
-                          @click="dialogModelValueUpdate"
-                        >
-                          Discard
                         </VBtn>
                       </div>
                     </VRow>

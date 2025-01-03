@@ -11,13 +11,14 @@ const orderBy = ref()
 const selectedRows = ref([])
 const isSignatureTypeDialogVisible = ref(false)
 const isSignatureTypeDialogDeleteVisible = ref(false)
-const isSignatureTypeTypeDialog = ref('Add')
+const isTypeDialog = ref('')
 const IDSignatureType = ref(0)
 const isSnackbarResponse = ref(false)
 const isSnackbarResponseAlertColor = ref('error')
 const fetchTrigger = ref(0);
 const errorMessages = ref('Internal server error')
 const successMessages = ref('Successfully')
+const token = useCookie('accessToken')
 const errors = ref({
   st_desc: undefined,
   st_user: undefined
@@ -61,19 +62,6 @@ const {
 const signatureType = computed(() => signatureTypeData.value.signatureType)
 const totalSignatureType = computed(() => signatureTypeData.value.totalSignatureType)
 
-const openDialog = async ({ id = null, type }) => {
-  isSignatureTypeTypeDialog.value = type
-  isSignatureTypeDialogVisible.value = true
-  if(type == 'Edit')
-    IDSignatureType.value = id
-    fetchTrigger.value += 1;
-}
-
-const openDialogDelete = async (id) => {
-  IDSignatureType.value = id
-  isSignatureTypeDialogDeleteVisible.value = true
-}
-
 const updateSnackbarResponse = res => {
   isSnackbarResponse.value = res;
 }
@@ -102,10 +90,18 @@ const updateErrors = err => {
   errors.value = err;
 }
 
+const onUpdateTypeDialog = () => {
+  isTypeDialog.value = '';
+}
+
 const fetchAddData = async (signatureTypeData, clearedForm) => {
   try {
     const response = await $api('/configurations/signature-type/add', {
       method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify(signatureTypeData),
       onResponseError({ response }) {
         alertErrorResponse()
@@ -141,6 +137,10 @@ const fetchSignatureTypeUpdate = async (id, formData, clearedForm) => {
   try {
     const response = await $api(`/configurations/signature-type/update/${id}`, {
       method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify(formData),
       onResponseError({ response }) {
         alertErrorResponse()
@@ -174,10 +174,14 @@ const fetchSignatureTypeUpdate = async (id, formData, clearedForm) => {
 
 const deleteSignatureType = async id => {
   try {
-    isSignatureTypeTypeDialog.value = 'Delete'
+    isTypeDialog.value = 'Delete'
     const idSignatureType = Number(id);
     const response = await $api(`/configurations/signature-type/delete/${idSignatureType}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
         onResponseError({ response }) {
         alertErrorResponse()
         const responseData = response._data;
@@ -212,6 +216,19 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
   } else if(mode === 'Edit') {
     fetchSignatureTypeUpdate(IDSignatureType.value, formData, dialogUpdate)
   }
+}
+
+const openDialog = async ({ id = null, type }) => {
+  isTypeDialog.value = type
+  isSignatureTypeDialogVisible.value = true
+  if(type == 'Edit')
+    IDSignatureType.value = id
+    fetchTrigger.value += 1;
+}
+
+const openDialogDelete = async (id) => {
+  IDSignatureType.value = id
+  isSignatureTypeDialogDeleteVisible.value = true
 }
 </script>
 
@@ -324,10 +341,11 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
       <!-- SECTION -->
     </VCard>
   </section>
+
   <SignatureTypeAddDialog
     v-model:isDialogVisible="isSignatureTypeDialogVisible"
     :errors="errors"
-    :typeDialog="isSignatureTypeTypeDialog"
+    :typeDialog="isTypeDialog"
     :signatureType-id="IDSignatureType"
     :fetch-trigger="fetchTrigger"
     @isSnackbarResponseAlertColor="updateSnackbarResponseAlertColor"
@@ -335,13 +353,16 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
     @SignatureTypeData="handleFormSubmit"
     @errorMessages="updateErrorMessages"
     @errors="updateErrors"
+    @updateTypeDialog="onUpdateTypeDialog"
   />
+
   <SignatureTypeDeleteDialog
     v-model:isDialogDeleteVisible="isSignatureTypeDialogDeleteVisible"
     :signatureType-id="IDSignatureType"
     :fetch-trigger="fetchTrigger"
     @id-deleted="deleteSignatureType"
   />
+
   <VSnackbar
     v-model="isSnackbarResponse"
     transition="scroll-y-reverse-transition"

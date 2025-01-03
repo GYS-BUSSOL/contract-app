@@ -11,13 +11,14 @@ const orderBy = ref()
 const selectedRows = ref([])
 const isUserHRDialogVisible = ref(false)
 const isUserHRDialogDeleteVisible = ref(false)
-const isUserHRTypeDialog = ref('Add')
+const isTypeDialog = ref('')
 const IDUserHR = ref(0)
 const isSnackbarResponse = ref(false)
 const isSnackbarResponseAlertColor = ref('error')
 const fetchTrigger = ref(0);
 const errorMessages = ref('Internal server error')
 const successMessages = ref('Successfully')
+const token = useCookie('accessToken')
 const errors = ref({
   Username: undefined,
   UserDisplay: undefined,
@@ -77,7 +78,6 @@ const headers = [
     sortable: false,
   },
 ]
-
 // search filters
 const role = [
   {
@@ -127,10 +127,11 @@ watch(
 )
 
 const openDialog = async ({ id = null, type }) => {
-  isUserHRTypeDialog.value = type
+  isTypeDialog.value = type
   isUserHRDialogVisible.value = true
-  if(type == 'Edit')
+  if(type == 'Edit') {
     IDUserHR.value = id
+  }
     fetchTrigger.value += 1;
 }
 
@@ -167,21 +168,29 @@ const updateErrors = err => {
   errors.value = err;
 }
 
+const onUpdateTypeDialog = () => {
+  isTypeDialog.value = '';
+}
+
 const fetchAddData = async (userHRData, clearedForm) => {
   try {
-      const response = await $api('/configurations/human-resources/add', {
-        method: 'POST',
-        body: JSON.stringify(userHRData),
-        onResponseError({ response }) {
-          alertErrorResponse()
-          const responseData = response._data;
-          const responseMessage = responseData.message;
-          const responseErrors = responseData.errors;
-          errors.value = responseErrors;
-          errorMessages.value = responseMessage;
-          throw new Error("Created data failed");
-        },
-      });
+    const response = await $api('/configurations/human-resources/add', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userHRData),
+      onResponseError({ response }) {
+        alertErrorResponse()
+        const responseData = response._data;
+        const responseMessage = responseData.message;
+        const responseErrors = responseData.errors;
+        errors.value = responseErrors;
+        errorMessages.value = responseMessage;
+        throw new Error("Created data failed");
+      },
+    });
 
     const responseStringify = JSON.stringify(response);
     const responseParse = JSON.parse(responseStringify);
@@ -207,6 +216,10 @@ const fetchUserHRUpdate = async (id, formData, clearedForm) => {
     const idPPSOngoing = Number(id);
     const response = await $api(`/configurations/human-resources/update/${idPPSOngoing}`, {
         method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(formData),
         onResponseError({ response }) {
           alertErrorResponse()
@@ -240,10 +253,14 @@ const fetchUserHRUpdate = async (id, formData, clearedForm) => {
 
 const deletedUserHR = async id => {
   try {
-    isUserHRTypeDialog.value = 'Delete'
+    isTypeDialog.value = 'Delete'
     const idUserHR = Number(id);
     const response = await $api(`/configurations/human-resources/delete/${idUserHR}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
         onResponseError({ response }) {
         alertErrorResponse()
         const responseData = response._data;
@@ -470,7 +487,7 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
   <HRAddDialog
     v-model:isDialogVisible="isUserHRDialogVisible"
     :errors="errors"
-    :typeDialog="isUserHRTypeDialog"
+    :typeDialog="isTypeDialog"
     :userhr-id="IDUserHR"
     :fetch-trigger="fetchTrigger"
     @isSnackbarResponseAlertColor="updateSnackbarResponseAlertColor"
@@ -478,13 +495,16 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
     @UserHRData="handleFormSubmit"
     @errorMessages="updateErrorMessages"
     @errors="updateErrors"
+    @updateTypeDialog="onUpdateTypeDialog"
   />
+
   <HRDeleteDialog
     v-model:isDialogDeleteVisible="isUserHRDialogDeleteVisible"
     :userhr-id="IDUserHR"
     :fetch-trigger="fetchTrigger"
     @idDeleted="deletedUserHR"
   />
+
   <VSnackbar
     v-model="isSnackbarResponse"
     transition="scroll-y-reverse-transition"

@@ -118,11 +118,10 @@ const fetchMerVendorData = async () => {
       }));
       allDataVendor.value = rows;
     } else {
-      console.error('Failed to fetch mer vendor data');
+      throw new Error("Failed to fetch mer vendor data");
     }
-    
   } catch (error) {
-    console.error('Error fetching mer vendor data');
+    throw new Error("Failed to fetch mer vendor data");
   }
 }
 
@@ -137,11 +136,10 @@ const fetchMerPaymentType = async () => {
         value: row.paytype_code,
       }));
     } else {
-      console.error('Failed to fetch mer payment type data');
+      throw new Error("Failed to fetch mer payment type data");
     }
-    
   } catch (error) {
-    console.error('Error fetching mer payment type data');
+    throw new Error("Failed to fetch mer payment type data");
   }
 }
 
@@ -261,7 +259,7 @@ const openDeleteJobtypeDialog = (cjb_id) => {
 watch(
   [() => contractReqId.value, () => typeDialog.value, () => props.fetchTrigger],
     ([newConreqId,newType]) => {
-      if (newConreqId && newType === "List Job Type" || newType === "Edit Job Type" || newType === "Delete") {
+      if (newConreqId && newType === "List Job Type" || newType === "Edit Job Type" || newType === "Delete" && newType != '') {
         fetchContractEdit()
         fetchContractJobEdit()
         fetchMerPaymentType()
@@ -269,8 +267,7 @@ watch(
       }
       loadingBtn.value[0] = false;
       loadingBtnSecond.value[0] = false;
-  },
-  { immediate: true }
+  }
 )
 </script>
 

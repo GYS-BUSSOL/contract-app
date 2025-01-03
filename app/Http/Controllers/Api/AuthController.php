@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\{Request, JsonResponse};
-use App\Http\Controllers\Controller;
 use App\Models\User;
-use Illuminate\Support\Facades\Session;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\{Request, JsonResponse};
+use Illuminate\Support\Facades\Cache;
 
 class AuthController extends Controller
 {
@@ -28,7 +28,8 @@ class AuthController extends Controller
         try {
             $data = [
                 'username' => ['required', 'string'],
-                'password' => ['required', 'string']
+                'password' => ['required', 'string'],
+                'captcha' => ['required', 'string']
             ];
 
             $validated = $this->handleValidationException($request, $data);
@@ -36,9 +37,17 @@ class AuthController extends Controller
                 return $validated;
             }
 
+            $key = Cache::get('captcha_key');
+            if (!captcha_api_check($validated['captcha'], $key)) {
+                return response()->json([
+                    'status' => 400,
+                    'errors' => 'Failed captcha',
+                    'message' => 'Captcha is incorrect'
+                ], 400);
+            }
+
             $username = $validated['username'];
             $password = $validated['password'];
-
             $adServers = ["ldap://gysdc01.gyssteel.com", "ldap://gysdc02.gyssteel.com"];
 
             $ldapConnected = false;

@@ -58,7 +58,6 @@ class PPSController extends Controller
 
   public function add(Request $request)
   {
-    Log::info(['requestAll' => $request->all()]);
     $data = $this->param();
     $validated = $this->handleValidationException($request, $data);
     if ($validated instanceof JsonResponse) {
@@ -75,13 +74,11 @@ class PPSController extends Controller
       $userName = Auth::user()->usr_display_name;
 
       $generateRequestId = $this->generateRequestId();
-      Log::info('generated');
       $newRequestId = $generateRequestId['newRequestId'];
       $newOrderNo = $generateRequestId['newOrderNo'];
 
       $uploadedAttachment = null;
       if ($request->hasFile('file_attachment')) {
-        Log::info('fileAttachment');
         $request->validate([
           'file_attachment' => ['file', 'extensions:doc,pdf,gif,jpeg,png', 'max:2048']
         ]);
@@ -92,9 +89,7 @@ class PPSController extends Controller
         list($duration_start, $duration_end) = explode(' to ', $duration);
         $duration_start = Carbon::createFromFormat('Y-m-d', $duration_start)->format('Y-m-d');
         $duration_end = Carbon::createFromFormat('Y-m-d', $duration_end)->format('Y-m-d');
-        Log::info(["duration_start" => $duration_start, 'duration_end' => $duration_end]);
       }
-      Log::info('duration');
       $arrContract = [
         'validated' => $validated,
         'duration_start' => $duration_start,
@@ -107,12 +102,11 @@ class PPSController extends Controller
         'user_name' => $userName
       ];
 
-      Log::info(['validated' => $validated]);
       $contractData = $this->addContract($arrContract);
-      if (is_string($validated['shift_checklist'])) {
+      if (is_string($validated['shift_checklist']) && !is_array(json_decode(trim($validated['shift_checklist'], "'"), true))) {
         $shiftChecklistArray = explode(',', trim($validated['shift_checklist'], '"'));
       } else {
-        $shiftChecklistArray = json_decode($validated['shift_checklist'], true);
+        $shiftChecklistArray = json_decode(trim($validated['shift_checklist'], "'"), true);
       }
 
       if (isset($shiftChecklistArray)) {
@@ -139,7 +133,6 @@ class PPSController extends Controller
         'isChecklist' => $wlChecklist,
         'wlData' => $wlData
       ];
-      Log::info(["arrWLData" => $arrWLData]);
       $this->updateContract($arrWLData, $newRequestId);
       $this->addTimeHistory($arrContract);
 
@@ -219,7 +212,6 @@ class PPSController extends Controller
 
   public function update(Request $request, int $id)
   {
-    Log::info(['requestAll' => $request->all(), 'id' => $id]);
     $data = $this->param();
     $validated = $this->handleValidationException($request, $data);
     if ($validated instanceof JsonResponse) {
@@ -245,7 +237,6 @@ class PPSController extends Controller
           if (Storage::exists($dataCurrent['con_file_attachment']))
             Storage::delete($dataCurrent['con_file_attachment']);
         }
-        Log::info('fileAttachment');
         $request->validate([
           'file_attachment' => ['file', 'extensions:doc,pdf,gif,jpeg,png', 'max:2048']
         ]);
@@ -258,9 +249,7 @@ class PPSController extends Controller
         list($duration_start, $duration_end) = explode(' to ', $duration);
         $duration_start = Carbon::createFromFormat('Y-m-d', $duration_start)->format('Y-m-d');
         $duration_end = Carbon::createFromFormat('Y-m-d', $duration_end)->format('Y-m-d');
-        Log::info(["duration_start" => $duration_start, 'duration_end' => $duration_end]);
       }
-      Log::info('duration');
       $arrContract = [
         'validated' => $validated,
         'duration_start' => $duration_start,
@@ -273,7 +262,6 @@ class PPSController extends Controller
         'user_name' => $userName
       ];
 
-      Log::info(['validated' => $validated]);
       $contractData = $this->updateContractRequest($arrContract);
       $shiftChecklistArray = json_decode($validated['shift_checklist'], true);
 
@@ -301,7 +289,6 @@ class PPSController extends Controller
         'isChecklist' => $wlChecklist,
         'wlData' => $wlData
       ];
-      Log::info(["arrWLData" => $arrWLData]);
       $this->updateContractRequestWL($arrWLData, $newRequestId);
       $this->addTimeHistory($arrContract);
 
@@ -328,7 +315,6 @@ class PPSController extends Controller
     $filename = $newRequestId . '.' . $file->getClientOriginalExtension();
     $filePath = public_path('storage/attachment_pps/' . $filename);
     $file->move(public_path('storage/attachment_pps'), $filename);
-    Log::info(['arrFileAttachment' => $filePath]);
     return 'attachment_pps/' . $filename;
   }
 
@@ -372,7 +358,6 @@ class PPSController extends Controller
       'con_comment_jobtarget' => $validated['con_comment_jobtarget'],
     ];
     $result = $this->contract->create($arrContractData);
-    Log::info(['arrContractData' => $result]);
     return $result;
   }
 
@@ -419,9 +404,7 @@ class PPSController extends Controller
         ['con_req_no', $newOrderNo]
       ])
       ->first();
-    Log::info(['resultDataUpdate' => $result, 'arrContractData' => $arrContractData]);
     $result->update($arrContractData);
-    Log::info(['arrContractData' => $result]);
     return $result;
   }
 
@@ -432,7 +415,6 @@ class PPSController extends Controller
       'con_wc_checklist' => $arrWLData['isChecklist'],
       'con_work_location' => $arrWLData['wlData']
     ]);
-    Log::info(['updateContract' => $result]);
     return $result;
   }
 
@@ -443,7 +425,6 @@ class PPSController extends Controller
       'con_wc_checklist' => $arrWLData['isChecklist'],
       'con_work_location' => $arrWLData['wlData']
     ]);
-    Log::info(['updateContract' => $result]);
     return $result;
   }
 
@@ -462,12 +443,10 @@ class PPSController extends Controller
     ];
 
     $result = TimeHistory::create($arrDataTH);
-    Log::info(['arrDataTH' => $result]);
   }
 
   private function addShift(array $shiftChecklistArray, array $arrContract)
   {
-    Log::info(['shiftChecklistArray' => $shiftChecklistArray]);
     foreach ($shiftChecklistArray as $shift) {
       $merShift =  MerShift::firstWhere('shift_code', $shift);
       $arrShiftData = [
@@ -485,10 +464,8 @@ class PPSController extends Controller
 
   private function updateShift(array $shiftChecklistArray, array $arrContract)
   {
-    Log::info(['shiftChecklistArray' => $shiftChecklistArray]);
     foreach ($shiftChecklistArray as $shift) {
       $merShift =  MerShift::firstWhere('shift_code', $shift);
-      Log::info(['merShift' => $merShift]);
       $arrShiftData = [
         'sh_shift' => $shift,
         'sh_jam' => $merShift['shift_jam'],
@@ -499,14 +476,12 @@ class PPSController extends Controller
       ];
       $result = TrnShift::firstWhere('sh_con_req_id', $arrContract['request_id']);
       $result->update($arrShiftData);
-      Log::info(['arrShiftData' => $result]);
     }
   }
 
   private function addCC(string $arrCC, array $arrContract)
   {
     $arrCC = explode(',', $arrCC);
-    Log::info(['arrCC' => $arrCC]);
     foreach ($arrCC as $cc) {
       $arrCCData = [
         'con_req_id' => $arrContract['request_id'],
@@ -517,14 +492,12 @@ class PPSController extends Controller
         'aud_machine' => $arrContract['ip']
       ];
       $result = TrnBUCCWC::create($arrCCData);
-      Log::info(['arrCCData' => $result]);
     }
   }
 
   private function updateCC(string $arrCC, array $arrContract)
   {
     $arrCC = explode(',', $arrCC);
-    Log::info(['arrCC' => $arrCC]);
     foreach ($arrCC as $cc) {
       $arrCCData = [
         'tbc_code' => $cc,
@@ -537,14 +510,12 @@ class PPSController extends Controller
         ['tbc_kategori', 'cc']
       ]);
       $result->update($arrCCData);
-      Log::info(['arrCCData' => $result]);
     }
   }
 
   private function addWC(string $arrWC, array $arrContract)
   {
     $arrWC = explode(',', $arrWC);
-    Log::info(['arrWC' => $arrWC]);
     foreach ($arrWC as $cc) {
       $arrWCData = [
         'con_req_id' => $arrContract['request_id'],
@@ -555,14 +526,12 @@ class PPSController extends Controller
         'aud_machine' => $arrContract['ip']
       ];
       $result = TrnBUCCWC::create($arrWCData);
-      Log::info(['arrWCData' => $result]);
     }
   }
 
   private function updateWC(string $arrWC, array $arrContract)
   {
     $arrWC = explode(',', $arrWC);
-    Log::info(['arrWC' => $arrWC]);
     foreach ($arrWC as $cc) {
       $arrWCData = [
         'tbc_code' => $cc,
@@ -575,7 +544,6 @@ class PPSController extends Controller
         ['tbc_kategori', 'wc']
       ]);
       $result->update($arrWCData);
-      Log::info(['arrWCData' => $result]);
     }
   }
 
@@ -600,7 +568,6 @@ class PPSController extends Controller
       'newOrderNo' => $newOrderNo,
       'newRequestId' => $newRequestId
     ];
-    Log::info(['generateRequestId' => $result]);
     return $result;
   }
 

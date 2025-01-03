@@ -1,9 +1,9 @@
 import { BASE_API_URL } from '@/plugins/1.router/additional-routes';
+const token = useCookie('accessToken').value
 
 export async function fetchApprovalLvl2OnGoing(currentPage, rowPerPage, rowSearch, priorityFilter, expiredFilter) {
   let start = 0;
   const url = `${BASE_API_URL}/api/apps/approval-lvl2-ongoing/search`;
-  const token = 'YOUR_BEARER_TOKEN_HERE';
 
   if(currentPage != 1 && currentPage > 1)
     start = (currentPage * rowPerPage) - rowPerPage
@@ -120,7 +120,7 @@ export async function fetchApprovalLvl2OnGoing(currentPage, rowPerPage, rowSearc
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // 'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(payload)
     });
@@ -131,17 +131,14 @@ export async function fetchApprovalLvl2OnGoing(currentPage, rowPerPage, rowSearc
 
     const data = await response.json();
     return data;
-
   } catch (error) {
-    console.error("Error fetching pps data:", error);
-    throw error;
+    throw new Error("Failed to fetching PPS on going data");
   }
 }
 
 export async function fetchApprovalLvl2Completed(currentPage, rowPerPage, rowSearch, priorityFilter, expiredFilter) {
   let start = 0;
   const url = `${BASE_API_URL}/api/apps/approval-lvl2-completed/search`;
-  const token = 'YOUR_BEARER_TOKEN_HERE';
 
   if(currentPage != 1 && currentPage > 1)
     start = (currentPage * rowPerPage) - rowPerPage
@@ -282,7 +279,7 @@ export async function fetchApprovalLvl2Completed(currentPage, rowPerPage, rowSea
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // 'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(payload)
     });
@@ -293,17 +290,13 @@ export async function fetchApprovalLvl2Completed(currentPage, rowPerPage, rowSea
 
     const data = await response.json();
     return data;
-
   } catch (error) {
-    console.error("Error fetching pps data:", error);
-    throw error;
+    throw new Error("Failed to fetching PPS completed data");
   }
 }
 
 export async function addPPS(request) {
   const url = `${BASE_API_URL}/api/apps/pps/add`;
-  // const token = localStorage.getItem('token') || 'YOUR_BEARER_TOKEN_HERE';
-
   const formData = new FormData();
 
   for (const [key, value] of Object.entries(request)) {
@@ -317,6 +310,9 @@ export async function addPPS(request) {
   try {
     const response = await fetch(url, {
       method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
       body: formData,
     });
 
@@ -327,9 +323,7 @@ export async function addPPS(request) {
 
     const data = await response.json();
     return data;
-
   } catch (error) {
-    console.error("Error fetching pps data:", error);
-    throw error;
+    throw new Error("Failed to create PPS");
   }
 }

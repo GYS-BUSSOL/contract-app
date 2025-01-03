@@ -1,9 +1,9 @@
 import { BASE_API_URL } from '@/plugins/1.router/additional-routes';
+const token = useCookie('accessToken').value
 
 export async function fetchAreaWC(currentPage, rowPerPage, rowSearch, statusFilter) {
   let start = 0;
   const url = `${BASE_API_URL}/api/configurations/area-management-wc/search`;
-  const token = 'YOUR_BEARER_TOKEN_HERE';
   
   if(currentPage != 1 && currentPage > 1)
     start = (currentPage * rowPerPage) - rowPerPage
@@ -46,7 +46,7 @@ export async function fetchAreaWC(currentPage, rowPerPage, rowSearch, statusFilt
       "columns": ["id"],
       "ascending": true
     }
-  };
+  }
 
   if(statusFilter) {
     payload['columns'].push(
@@ -73,7 +73,7 @@ export async function fetchAreaWC(currentPage, rowPerPage, rowSearch, statusFilt
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // 'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(payload)
     });
@@ -84,9 +84,7 @@ export async function fetchAreaWC(currentPage, rowPerPage, rowSearch, statusFilt
 
     const data = await response.json();
     return data;
-
   } catch (error) {
-    console.error("Error fetching work center data:", error);
-    throw error;
+    throw new Error("Failed to fetching work center data");
   }
 }

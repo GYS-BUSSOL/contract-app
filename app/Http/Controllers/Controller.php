@@ -222,7 +222,7 @@ class Controller extends BaseController
       }
       return response()->json([
         'status' => 422,
-        'errors' =>  $stackErr,
+        'errors' => $stackErr,
         'message' => 'Error validations',
       ], 422);
     }

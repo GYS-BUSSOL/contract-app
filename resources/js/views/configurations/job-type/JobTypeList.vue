@@ -12,16 +12,16 @@ const orderBy = ref()
 const selectedRows = ref([])
 const isJobTypeDialogVisible = ref(false)
 const isJobTypeDialogDeleteVisible = ref(false)
-const isJobTypeTypeDialog = ref('')
+const isTypeDialog = ref('')
 const IDJobType = ref(0)
 const isSnackbarResponse = ref(false)
 const isSnackbarResponseAlertColor = ref('error')
 const fetchTrigger = ref(0);
 const errorMessages = ref('Internal server error')
 const successMessages = ref('Successfully')
+const token = useCookie('accessToken')
 const errors = ref({
-  description: undefined,
-  number: undefined
+  job_type: undefined,
 })
 const updateOptions = options => {
   sortBy.value = options.sortBy[0]?.key
@@ -44,7 +44,6 @@ const headers = [
     key: 'job_is_active',
   },
 ]
-
 // search filters
 const status = [
   {
@@ -125,21 +124,29 @@ const updateErrors = err => {
   errors.value = err;
 }
 
+const onUpdateTypeDialog = () => {
+  isTypeDialog.value = '';
+}
+
 const fetchAddData = async (jobTypeData, clearedForm) => {
   try {
-      const response = await $api('/configurations/job-type/add', {
-        method: 'POST',
-        body: JSON.stringify(jobTypeData),
-        onResponseError({ response }) {
-          alertErrorResponse()
-          const responseData = response._data;
-          const responseMessage = responseData.message;
-          const responseErrors = responseData.errors;
-          errors.value = responseErrors;
-          errorMessages.value = responseMessage;
-          throw new Error("Created data failed");
-        },
-      });
+    const response = await $api('/configurations/job-type/add', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(jobTypeData),
+      onResponseError({ response }) {
+        alertErrorResponse()
+        const responseData = response._data;
+        const responseMessage = responseData.message;
+        const responseErrors = responseData.errors;
+        errors.value = responseErrors;
+        errorMessages.value = responseMessage;
+        throw new Error("Created data failed");
+      },
+    })
 
     const responseStringify = JSON.stringify(response);
     const responseParse = JSON.parse(responseStringify);
@@ -164,6 +171,10 @@ const fetchJobTypeUpdate = async (id, formData, clearedForm) => {
   try {
     const response = await $api(`/configurations/job-type/update/${id}`, {
       method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify(formData),
       onResponseError({ response }) {
         alertErrorResponse()
@@ -197,10 +208,14 @@ const fetchJobTypeUpdate = async (id, formData, clearedForm) => {
 
 const deleteJobType = async id => {
   try {
-    isJobTypeTypeDialog.value = 'Delete'
+    isTypeDialog.value = 'Delete'
     const idJobType = Number(id);
     const response = await $api(`/configurations/job-type/delete/${idJobType}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
         onResponseError({ response }) {
         alertErrorResponse()
         const responseData = response._data;
@@ -238,10 +253,11 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
 }
 
 const openDialog = async ({ id = null, type }) => {
-  isJobTypeTypeDialog.value = type
+  isTypeDialog.value = type
   isJobTypeDialogVisible.value = true
-  if(type == 'Edit')
+  if(type == 'Edit') {
     IDJobType.value = id
+  }
     fetchTrigger.value += 1;
 }
 </script>
@@ -373,7 +389,7 @@ const openDialog = async ({ id = null, type }) => {
   <JobTypeAddDialog
     v-model:isDialogVisible="isJobTypeDialogVisible"
     :errors="errors"
-    :typeDialog="isJobTypeTypeDialog"
+    :typeDialog="isTypeDialog"
     :jobType-id="IDJobType"
     :fetch-trigger="fetchTrigger"
     @isSnackbarResponseAlertColor="updateSnackbarResponseAlertColor"
@@ -381,7 +397,9 @@ const openDialog = async ({ id = null, type }) => {
     @JobTypeData="handleFormSubmit"
     @errorMessages="updateErrorMessages"
     @errors="updateErrors"
+    @updateTypeDialog="onUpdateTypeDialog"
   />
+
   <JobTypeDeleteDialog
     v-model:isDialogDeleteVisible="isJobTypeDialogDeleteVisible"
     :jobType-id="IDJobType"

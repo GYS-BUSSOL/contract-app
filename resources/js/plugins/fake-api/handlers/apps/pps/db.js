@@ -1,7 +1,7 @@
 import { BASE_API_URL } from '@/plugins/1.router/additional-routes';
-const token = useCookie('accessToken').value
 
 export async function fetchPPSOnGoing(currentPage, rowPerPage, rowSearch, priorityFilter, statusFilter, expiredFilter) {
+  const token = useCookie('accessToken').value
   let start = 0;
   const url = `${BASE_API_URL}/api/apps/pps-ongoing/search`;
 
@@ -137,19 +137,19 @@ export async function fetchPPSOnGoing(currentPage, rowPerPage, rowSearch, priori
     });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status}`);
+      throw new Error("Error fetching PPS on going data");
     }
 
     const data = await response.json();
     return data;
 
   } catch (error) {
-    console.error("Error fetching pps data:", error);
-    throw error;
+    throw new Error("Error fetching PPS on going data");
   }
 }
 
 export async function fetchPPSCompleted(currentPage, rowPerPage, rowSearch, priorityFilter, statusFilter, expiredFilter) {
+  const token = useCookie('accessToken').value
   let start = 0;
   const url = `${BASE_API_URL}/api/apps/pps-completed/search`;
 
@@ -285,14 +285,13 @@ export async function fetchPPSCompleted(currentPage, rowPerPage, rowSearch, prio
     });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status}`);
+      throw new Error("Error fetching PPS completed data");
     }
 
     const data = await response.json();
     return data;
 
   } catch (error) {
-    console.error("Error fetching pps data:", error);
-    throw error;
+    throw new Error("Error fetching PPS completed data");
   }
 }

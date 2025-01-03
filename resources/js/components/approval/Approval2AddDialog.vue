@@ -18,6 +18,7 @@ const emit = defineEmits([
   'isSnackbarResponseAlertColor',
   'errorMessages',
   'errors',
+  'updateTypeDialog'
 ])
 
 const props = defineProps({
@@ -184,9 +185,14 @@ const dialogModelValueUpdate = () => {
   estimatedCostData.con_duration_end = null;
   // Comment Approval
   con_comment_coo_approve.value = null;
-  loadingBtn.value[0] = false;
-  loadingBtnSecond.value[0] = false;
+  // Falsing  button
+  isDisabled.value = false
+  loadingBtn.value[0] = false
+  loadingBtnSecond.value[0] = false
+  loadingBtnThree.value[0] = false
+  loadingBtnFour.value[0] = false
   emit('update:isDialogVisible', false)
+  emit('updateTypeDialog')
 }
 
 const formatDate = (date, time = false) => {
@@ -223,11 +229,10 @@ const fetchMerVendorData = async () => {
       }));
       allDataVendor.value = rows;
     } else {
-      console.error('Failed to fetch mer vendor data');
+      throw new Error("Failed to fetch mer vendor data");
     }
-    
   } catch (error) {
-    console.error('Error fetching mer vendor data');
+    throw new Error("Failed to fetch mer vendor data");
   }
 }
 
@@ -242,11 +247,10 @@ const fetchMerPaymentType = async () => {
         value: row.paytype_code,
       }));
     } else {
-      console.error('Failed to fetch mer payment type data');
+      throw new Error("Failed to fetch mer payment type data");
     }
-    
   } catch (error) {
-    console.error('Error fetching mer payment type data');
+    throw new Error("Failed to fetch mer payment type data");
   }
 }
 
@@ -261,11 +265,10 @@ const fetchMerPaymentTemplate = async () => {
         value: row.payment_code,
       }));
     } else {
-      console.error('Failed to fetch mer payment template data');
+      throw new Error("Failed to fetch mer payment template data");
     }
-    
   } catch (error) {
-    console.error('Error fetching mer payment template data');
+    throw new Error("Failed to fetch mer payment template data");
   }
 }
 
@@ -275,18 +278,16 @@ const fetchRejectCategory = async () => {
     if (response.status === 200) {
 
       const rows = response.data.rows || [];
-      console.log({rows});
       
       dataRejectCategory.value = rows.map((row) => ({
         title: row.katrj_name,
         value: row.katrj_id,
       }));
     } else {
-      console.error('Failed to fetch reject category data');
+      throw new Error("Failed to fetch reject category data");
     }
-    
   } catch (error) {
-    console.error('Error fetching reject category data');
+    throw new Error("Failed to fetch reject category data");
   }
 }
 
@@ -472,7 +473,6 @@ const fetchHistoryList = async () => {
         sts_description: row.sts_description,
         ths_comment: row.ths_comment != null && row.ths_comment != '' ? row.ths_comment : '-',
       }));
-      console.log({historyData: historyData.value.length, data : JSON.stringify(historyData.value)});
     } else {
       emit('update:isDialogVisible', false)
       emit('isSnackbarResponse',true)
@@ -514,23 +514,23 @@ const fetchCostData = async () => {
       },
     });
 
-  const responseStringify = JSON.stringify(response);
-  const responseParse = JSON.parse(responseStringify);
+    const responseStringify = JSON.stringify(response);
+    const responseParse = JSON.parse(responseStringify);
 
-  if(responseParse?.status == 200) {
-    const data = responseParse.data || {};
-    
-    costData.total_budget = data.totBudget;
-    costData.total_expense = data.totalExpense;
-    costData.total_balance = data.balanceBudget;
-    estimatedCostData.con_duration_start = data.durationStart;
-    estimatedCostData.con_duration_end = data.durationEnd;
-    estimatedCostData.days = data.durationDay;
-  } else {
-    emit('isSnackbarResponse',true)
-    emit('isSnackbarResponseAlertColor', 'error')
-    throw new Error("Created data failed");
-  }
+    if(responseParse?.status == 200) {
+      const data = responseParse.data || {};
+      
+      costData.total_budget = data.totBudget;
+      costData.total_expense = data.totalExpense;
+      costData.total_balance = data.balanceBudget;
+      estimatedCostData.con_duration_start = data.durationStart;
+      estimatedCostData.con_duration_end = data.durationEnd;
+      estimatedCostData.days = data.durationDay;
+    } else {
+      emit('isSnackbarResponse',true)
+      emit('isSnackbarResponseAlertColor', 'error')
+      throw new Error("Created data failed");
+    }
   } catch (error) {
     emit('isSnackbarResponse',true)
     emit('isSnackbarResponseAlertColor', 'error')
@@ -585,16 +585,16 @@ watch(
         fetchHistoryList()
         fetchCostData()
         fetchCostDetail()
+        fetchMerVendorData()
+        fetchMerPaymentType()
+        fetchMerPaymentTemplate()
+        fetchRejectCategory()
       }
       isDisabled.value = false
       loadingBtn.value[0] = false
       loadingBtnSecond.value[0] = false
       loadingBtnThree.value[0] = false
       loadingBtnFour.value[0] = false
-      fetchMerVendorData()
-      fetchMerPaymentType()
-      fetchMerPaymentTemplate()
-      fetchRejectCategory()
   }
 )
 </script>

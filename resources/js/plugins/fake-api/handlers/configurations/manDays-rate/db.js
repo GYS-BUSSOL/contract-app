@@ -1,9 +1,9 @@
 import { BASE_API_URL } from '@/plugins/1.router/additional-routes';
+const token = useCookie('accessToken').value
 
 export async function fetchManDays(currentPage, rowPerPage, rowSearch, statusFilter) {
   let start = 0;
   const url = `${BASE_API_URL}/api/configurations/man-days-rate/search`;
-  const token = 'YOUR_BEARER_TOKEN_HERE';
   
   if(currentPage != 1 && currentPage > 1)
     start = (currentPage * rowPerPage) - rowPerPage
@@ -47,10 +47,10 @@ export async function fetchManDays(currentPage, rowPerPage, rowSearch, statusFil
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // 'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(payload)
-    });
+    })
 
     if (!response.ok) {
       throw new Error(`Error: ${response.status}`);
@@ -58,9 +58,7 @@ export async function fetchManDays(currentPage, rowPerPage, rowSearch, statusFil
 
     const data = await response.json();
     return data;
-
   } catch (error) {
-    console.error("Error fetching Man Days data:", error);
-    throw error;
+    throw new Error("Failed to fetching man days rate data");
   }
 }

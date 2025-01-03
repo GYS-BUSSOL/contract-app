@@ -18,7 +18,6 @@ export const handlerAppsSPKReport = [
       const page = url.searchParams.get('page')
       const orderBy = url.searchParams.get('orderBy')
       const searchQuery = is.string(q) ? q : undefined
-      const token = url.searchParams.get('token')
       let queryLower = (searchQuery ?? '').toString().toLowerCase()
       const parsedSortBy = destr(sortBy)
       const sortByLocal = is.string(parsedSortBy) ? parsedSortBy : ''
@@ -27,7 +26,7 @@ export const handlerAppsSPKReport = [
       const parsedItemsPerPage = destr(itemsPerPage)
       const itemsPerPageLocal = is.number(parsedItemsPerPage) ? parsedItemsPerPage : 10
       // Fetch Data
-      const fetchData = await fetchSPKReport(page, itemsPerPage, queryLower, vendor, bu, startDate, endDate, spkStatus, token);
+      const fetchData = await fetchSPKReport(page, itemsPerPage, queryLower, vendor, bu, startDate, endDate, spkStatus);
       const dataRows = fetchData.data.rows;
       const totalActiveSPKCount = fetchData.data.total_active_spk || 0
       const totalNotActiveSPKCount = fetchData.data.total_not_active_spk || 0
@@ -167,53 +166,5 @@ export const handlerAppsSPKReport = [
         totalNotActiveSPKCount,
         page,
       }, { status: 200 })
-    }),
-
-    // Get Single SPKReport Detail
-    http.get(('/api/apps/spk-report/:id'), async ({ params }) => {
-      const SPKId = Number(params.id)
-      const SPKReport = db.SPKReport.find(e => e.id === SPKId)
-      if (!SPKReport) {
-        return HttpResponse.json({ message: 'SPK report not found' }, { status: 404 })
-      }
-      else {
-        return HttpResponse.json({
-          ...SPKReport,
-          ...{
-            taskDone: 1230,
-            projectDone: 568,
-            taxId: 'Tax-8894',
-            language: 'English',
-          },
-        }, { status: 200 })
-      }
-    }),
-
-    // Delete SPKReport
-    http.delete(('/api/apps/spk-report/:id'), async ({ params }) => {
-      const SPKId = Number(params.id)
-      const SPKIndex = db.SPKReport.findIndex(e => e.id === SPKId)
-      if (SPKIndex === -1) {
-        return HttpResponse.json('SPK report not found', { status: 404 })
-      }
-      else {
-        db.SPKReport.splice(SPKIndex, 1)
-        
-        return new HttpResponse(null, {
-          status: 204,
-        })
-      }
-    }),
-
-    // 👉 Add SPKReport
-    http.post(('/api/apps/spk-report'), async ({ request }) => {
-      const SPKReport = await request.json()
-
-      db.SPKReport.push({
-        ...SPKReport,
-        id: db.SPKReport.length + 1,
-      })
-      
-      return HttpResponse.json({ body: SPKReport }, { status: 201 })
     }),
 ]

@@ -5,7 +5,6 @@ import { HttpResponse, http } from 'msw'
 
 export const handlerAppsPPS = [
   
-    // Get PPS Details
     http.get(('/api/apps/pps-ongoing/search'), async ({ request }) => {
       const url = new URL(request.url)
       const q = url.searchParams.get('q')

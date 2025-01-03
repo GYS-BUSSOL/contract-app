@@ -10,7 +10,6 @@ const page = ref(1)
 const sortBy = ref()
 const orderBy = ref()
 const selectedRows = ref([])
-const token = useCookie('accessToken')
 const updateOptions = options => {
   sortBy.value = options.sortBy[0]?.key
   orderBy.value = options.sortBy[0]?.order
@@ -63,7 +62,6 @@ const {
     page,
     sortBy,
     orderBy,
-    token
   },
 }))
 

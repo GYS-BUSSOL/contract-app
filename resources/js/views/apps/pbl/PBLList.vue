@@ -229,7 +229,8 @@ const fetchAddData = async (SPKData) => {
 
       successMessages.value = responseMessage;
       isSuccessNextStep.value = true;
-      SPKId.value = data.spk_id;
+      // SPKId.value = data.spk_id;
+      SPKId.value = 56;
     } else {
       alertErrorResponse()
       throw new Error("Created data failed");
@@ -318,17 +319,6 @@ const fetchPrintData = async (SPKData, clearedForm) => {
   }
 }
 
-const openDialog = async ({ type, con_req_id = null }) => {
-  isTypeDialog.value = type
-  conReqId.value = con_req_id
-  if(type == 'Add') {
-    isAddDialogVisible.value = true
-  } else if(type == 'Detail') {
-    isJobTypeDetailDialogVisible.value = true
-  }
-  fetchTrigger.value += 1;
-}
-
 const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
   if (mode === "Add") {
     fetchAddData(formData, dialogUpdate)
@@ -340,6 +330,17 @@ const handleForPrint = async ({mode, formData, dialogUpdate}) => {
   } else if(mode === 'Print') {
     fetchPrintData(formData, dialogUpdate)
   }
+}
+
+const openDialog = async ({ type, con_req_id = null }) => {
+  isTypeDialog.value = type
+  conReqId.value = con_req_id
+  if(type == 'Add') {
+    isAddDialogVisible.value = true
+  } else if(type == 'Detail') {
+    isJobTypeDetailDialogVisible.value = true
+  }
+  fetchTrigger.value += 1;
 }
 </script>
 

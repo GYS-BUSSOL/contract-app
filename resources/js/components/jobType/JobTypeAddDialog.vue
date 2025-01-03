@@ -1,7 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue';
 import 'vue-skeletor/dist/vue-skeletor.css';
-import { VForm } from 'vuetify/components/VForm';
 
 const emit = defineEmits([
   'update:isDialogVisible',
@@ -9,7 +7,8 @@ const emit = defineEmits([
   'isSnackbarResponse',
   'isSnackbarResponseAlertColor',
   'errorMessages',
-  'errors'
+  'errors',
+  'updateTypeDialog'
 ])
 
 const props = defineProps({
@@ -46,9 +45,13 @@ const jobTypeData = reactive({
 
 const dialogModelValueUpdate = () => {
   jobTypeData.job_type = null;
+  // Reset form
   refVForm.value?.reset()
   refVForm.value?.resetValidation()
+  // Falsing button
   loadingBtn.value[0] = false;
+  // Emit
+  emit('updateTypeDialog')
   emit('update:isDialogVisible', false)
 }
 
@@ -96,9 +99,8 @@ watch(
         isLoading.value = false;
       }
       loadingBtn.value[0] = false;
-  },
-  { immediate: true }
-);
+  }
+)
 
 const onSubmit = async () => {
   refVForm.value?.validate().then(({ valid }) => {
@@ -133,8 +135,8 @@ const onSubmit = async () => {
                 <div class="d-flex gap-x-4 align-center">
                   <div>
                     <div class="card__actions d-flex justify-end flex-column" v-if="isLoading">
-                      <Skeletor width="150" height="36" class="me-4" pill/>
-                      <Skeletor width="85" height="26" class="mt-5" pill/>
+                      <Skeletor width="150" height="36" class="me-4"/>
+                      <Skeletor width="85" height="26" class="mt-5"/>
                     </div>
                     <div class="text-h4 font-weight-medium" v-if="!isLoading">
                       {{ typeDialog == 'Edit' ? 'Edit' : 'Create New' }} Job Type
@@ -185,19 +187,19 @@ const onSubmit = async () => {
                       </div>
                       <div v-if="!isLoading">
                         <VBtn
+                          color="secondary"
+                          variant="tonal"
+                          @click="dialogModelValueUpdate"
+                          class="me-4"
+                        >
+                          Discard
+                        </VBtn>
+                        <VBtn
                           :loading="loadingBtn[0]"
                           :disabled="loadingBtn[0]"
                           type="submit"
-                          class="me-4"
                         >
                           <span>{{ typeDialog == 'Edit' ? 'Update' : 'Create' }}</span>
-                        </VBtn>
-                        <VBtn
-                          color="error"
-                          variant="tonal"
-                          @click="dialogModelValueUpdate"
-                        >
-                          Discard
                         </VBtn>
                       </div>
                     </VRow>

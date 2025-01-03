@@ -8,7 +8,8 @@ const emit = defineEmits([
   'isSnackbarResponse',
   'isSnackbarResponseAlertColor',
   'errorMessages',
-  'errors'
+  'errors',
+  'updateTypeDialog'
 ])
 
 const props = defineProps({
@@ -83,9 +84,11 @@ const dialogModelValueUpdate = () => {
   contractJobData.job_type = [];
   contractJobData.job_labor = [];
   contractJobData.job_target = [];
+  // Falsing button
   loadingBtn.value[0] = false;
   loadingBtnSecond.value[0] = false;
   emit('update:isDialogVisible', false)
+  emit('updateTypeDialog')
 }
 
 const formatDate = (date, time = false) => {
@@ -118,13 +121,13 @@ const fetchMerVendorData = async () => {
         title: row.vnd_name,
         value: row.vnd_id,
       }));
+
       allDataVendor.value = rows;
     } else {
-      console.error('Failed to fetch mer vendor data');
+      throw new Error("Failed to fetch mer vendor data");
     }
-    
   } catch (error) {
-    console.error('Error fetching mer vendor data');
+    throw new Error("Failed to fetch mer vendor data");
   }
 }
 
@@ -139,11 +142,10 @@ const fetchMerPaymentType = async () => {
         value: row.paytype_code,
       }));
     } else {
-      console.error('Failed to fetch mer payment type data');
+      throw new Error("Failed to fetch mer payment type data");
     }
-    
   } catch (error) {
-    console.error('Error fetching mer payment type data');
+    throw new Error("Failed to fetch mer payment type data");
   }
 }
 
@@ -158,11 +160,10 @@ const fetchMerPaymentTemplate = async () => {
         value: row.payment_code,
       }));
     } else {
-      console.error('Failed to fetch mer payment template data');
+      throw new Error("Failed to fetch mer payment template data");
     }
-    
   } catch (error) {
-    console.error('Error fetching mer payment template data');
+    throw new Error("Failed to fetch mer payment template data");
   }
 }
 
@@ -335,6 +336,7 @@ const fetchHistoryList = async () => {
     const dataResponse = JSON.parse(JSON.stringify(response));
     if (dataResponse.status == 200) {
       const rows = dataResponse.data || [];
+      
       historyData.value = rows.map((row) => ({
         ths_id: row.ths_id,
         sts_id: row.sts_id,
@@ -343,7 +345,6 @@ const fetchHistoryList = async () => {
         sts_description: row.sts_description,
         ths_comment: row.ths_comment != null && row.ths_comment != '' ? row.ths_comment : '-',
       }));
-      console.log({historyData: historyData.value.length, data : JSON.stringify(historyData.value)});
     } else {
       emit('update:isDialogVisible', false)
       emit('isSnackbarResponse',true)
@@ -361,19 +362,18 @@ const fetchHistoryList = async () => {
 watch(
   [() => contractReqId.value, () => typeDialog.value, () => props.fetchTrigger],
     ([newConreqId,newType]) => {
-      if (newType === "Detail"&& newConreqId) {
+      if (newType === "Detail" && newConreqId && newType != '') {
         fetchContractEdit()
         fetchContractJobList()
         fetchValuationList()
         fetchHistoryList()
+        fetchMerVendorData()
+        fetchMerPaymentType()
+        fetchMerPaymentTemplate()
       }
-      fetchMerVendorData()
-      fetchMerPaymentType()
-      fetchMerPaymentTemplate()
       loadingBtn.value[0] = false;
       loadingBtnSecond.value[0] = false;
-  },
-  { immediate: true }
+  }
 );
 </script>
 
@@ -854,21 +854,6 @@ watch(
               </VExpansionPanel>
             </VExpansionPanels>
           </VCol>
-        </VRow>
-        <VRow class="d-flex justify-end mt-5">
-          <div class="card__actions d-flex justify-end" v-if="isLoading">
-            <Skeletor width="96" height="36" />
-          </div>
-          <div v-if="!isLoading">
-            <VBtn
-              class="me-4"
-              color="secondary"
-              variant="tonal"
-              @click="dialogModelValueUpdate"
-            >
-              Discard
-            </VBtn>
-          </div>
         </VRow>
       </VCard>
   </VDialog>

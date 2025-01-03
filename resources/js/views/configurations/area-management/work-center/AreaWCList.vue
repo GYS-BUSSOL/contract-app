@@ -12,13 +12,14 @@ const orderBy = ref()
 const selectedRows = ref([])
 const isAreaWCDialogVisible = ref(false)
 const isAreaWCDialogDeleteVisible = ref(false)
-const isAreaWCTypeDialog = ref('Add')
+const isTypeDialog = ref('')
 const IDAreaWC = ref(0)
 const isSnackbarResponse = ref(false)
 const isSnackbarResponseAlertColor = ref('error')
 const fetchTrigger = ref(0);
 const errorMessages = ref('Internal server error')
 const successMessages = ref('Successfully')
+const token = useCookie('accessToken')
 const errors = ref({
   description: undefined,
   number: undefined
@@ -49,7 +50,6 @@ const headers = [
     sortable: false,
   },
 ]
-
 // search filters
 const status = [
   {
@@ -94,19 +94,6 @@ watch(
   { immediate: true }
 )
 
-const openDialog = async ({ id = null, type }) => {
-  isAreaWCTypeDialog.value = type
-  isAreaWCDialogVisible.value = true
-  if(type == 'Edit')
-    IDAreaWC.value = id
-    fetchTrigger.value += 1;
-}
-
-const openDialogDelete = async (id) => {
-  IDAreaWC.value = id
-  isAreaWCDialogDeleteVisible.value = true
-}
-
 const resolveAreaWCStatusVariant = stat => {
   if (stat == 0 && stat != null )
     return 'success'
@@ -142,21 +129,29 @@ const updateErrors = err => {
   errors.value = err;
 }
 
+const onUpdateTypeDialog = () => {
+  isTypeDialog.value = '';
+}
+
 const fetchAddData = async (areaWCData, clearedForm) => {
   try {
-      const response = await $api('/configurations/area-management-wc/add', {
-        method: 'POST',
-        body: JSON.stringify(areaWCData),
-        onResponseError({ response }) {
-          alertErrorResponse()
-          const responseData = response._data;
-          const responseMessage = responseData.message;
-          const responseErrors = responseData.errors;
-          errors.value = responseErrors;
-          errorMessages.value = responseMessage;
-          throw new Error("Created data failed");
-        },
-      });
+    const response = await $api('/configurations/area-management-wc/add', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(areaWCData),
+      onResponseError({ response }) {
+        alertErrorResponse()
+        const responseData = response._data;
+        const responseMessage = responseData.message;
+        const responseErrors = responseData.errors;
+        errors.value = responseErrors;
+        errorMessages.value = responseMessage;
+        throw new Error("Created data failed");
+      },
+    })
 
     const responseStringify = JSON.stringify(response);
     const responseParse = JSON.parse(responseStringify);
@@ -181,6 +176,10 @@ const fetchAreaWCUpdate = async (id, formData, clearedForm) => {
   try {
     const response = await $api(`/configurations/area-management-wc/update/${id}`, {
       method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify(formData),
       onResponseError({ response }) {
         alertErrorResponse()
@@ -191,7 +190,7 @@ const fetchAreaWCUpdate = async (id, formData, clearedForm) => {
         errorMessages.value = responseMessage;
         throw new Error("Updated data failed");
       },
-    });
+    })
     
     const responseStringify = JSON.stringify(response);
     const responseParse = JSON.parse(responseStringify);
@@ -214,10 +213,14 @@ const fetchAreaWCUpdate = async (id, formData, clearedForm) => {
 
 const deleteAreaWC = async id => {
   try {
-    isAreaWCTypeDialog.value = 'Delete'
+    isTypeDialog.value = 'Delete'
     const idAreaWC = Number(id);
     const response = await $api(`/configurations/area-management-wc/delete/${idAreaWC}`, {
       method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
       onResponseError({ response }) {
         alertErrorResponse()
         const responseData = response._data;
@@ -228,6 +231,7 @@ const deleteAreaWC = async id => {
         throw new Error("Deleted data failed");
       },
     })
+    
     const responseStringify = JSON.stringify(response);
     const responseParse = JSON.parse(responseStringify);
 
@@ -252,6 +256,20 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
   } else if(mode === 'Edit') {
     fetchAreaWCUpdate(IDAreaWC.value, formData, dialogUpdate)
   }
+}
+
+const openDialog = async ({ id = null, type }) => {
+  isTypeDialog.value = type
+  isAreaWCDialogVisible.value = true
+  if(type == 'Edit') {
+    IDAreaWC.value = id
+  }
+  fetchTrigger.value += 1;
+}
+
+const openDialogDelete = async (id) => {
+  IDAreaWC.value = id
+  isAreaWCDialogDeleteVisible.value = true
 }
 </script>
 
@@ -381,10 +399,11 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
       <!-- SECTION -->
     </VCard>
   </section>
+
   <AreaWCAddDialog
     v-model:isDialogVisible="isAreaWCDialogVisible"
     :errors="errors"
-    :typeDialog="isAreaWCTypeDialog"
+    :typeDialog="isTypeDialog"
     :areaWC-id="IDAreaWC"
     :fetch-trigger="fetchTrigger"
     @isSnackbarResponseAlertColor="updateSnackbarResponseAlertColor"
@@ -392,13 +411,16 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
     @AreaWCData="handleFormSubmit"
     @errorMessages="updateErrorMessages"
     @errors="updateErrors"
+    @updateTypeDialog="onUpdateTypeDialog"
   />
+
   <AreaWCDeleteDialog
     v-model:isDialogDeleteVisible="isAreaWCDialogDeleteVisible"
     :areaWC-id="IDAreaWC"
     :fetch-trigger="fetchTrigger"
     @id-deleted="deleteAreaWC"
   />
+  
   <VSnackbar
     v-model="isSnackbarResponse"
     transition="scroll-y-reverse-transition"

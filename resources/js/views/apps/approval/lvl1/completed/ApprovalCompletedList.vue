@@ -125,14 +125,18 @@ const updateErrors = err => {
   errors.value = err;
 }
 
+const onUpdateTypeDialog = () => {
+  isTypeDialog.value = '';
+}
+
 const openDialog = async ({ id = null, type, con_req_no = null, con_req_id = null }) => {
   isTypeDialog.value = type
   conReqNo.value = con_req_no
   conReqId.value = con_req_id
   if(type == 'Detail') {
     isJobTypeDetailDialogVisible.value = true
-    fetchTrigger.value += 1;
   }
+  fetchTrigger.value += 1;
 }
 </script>
 
@@ -278,6 +282,7 @@ const openDialog = async ({ id = null, type, con_req_no = null, con_req_id = nul
     @isSnackbarResponse="updateSnackbarResponse"
     @errorMessages="updateErrorMessages"
     @errors="updateErrors"
+    @updateTypeDialog="onUpdateTypeDialog"
   />
 
   <VSnackbar

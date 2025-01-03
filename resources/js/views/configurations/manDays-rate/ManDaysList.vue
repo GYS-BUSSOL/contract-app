@@ -13,13 +13,14 @@ const orderBy = ref()
 const selectedRows = ref([])
 const isManDaysDialogVisible = ref(false)
 const isManDaysDialogDeleteVisible = ref(false)
-const isManDaysTypeDialog = ref('Add')
+const isTypeDialog = ref('')
 const IDManDays = ref(0)
 const isSnackbarResponse = ref(false)
 const isSnackbarResponseAlertColor = ref('error')
 const fetchTrigger = ref(0);
 const errorMessages = ref('Internal server error')
 const successMessages = ref('Successfully')
+const token = useCookie('accessToken')
 const errors = ref({
   laborType: undefined,
   rate: undefined,
@@ -57,7 +58,6 @@ const headers = [
     sortable: false,
   },
 ]
-
 // search filters
 const status = [
   {
@@ -99,11 +99,12 @@ watch(
 );
 
 const openDialog = async ({ id = null, type }) => {
-  isManDaysTypeDialog.value = type
+  isTypeDialog.value = type
   isManDaysDialogVisible.value = true
-  if(type == 'Edit')
+  if(type == 'Edit') {
     IDManDays.value = id
-    fetchTrigger.value += 1;
+  }
+  fetchTrigger.value += 1;
 }
 
 const openDialogDelete = async (id) => {
@@ -155,21 +156,29 @@ const updateErrors = err => {
   errors.value = err;
 }
 
+const onUpdateTypeDialog = () => {
+  isTypeDialog.value = '';
+}
+
 const fetchAddData = async (manDaysData, clearedForm) => {
   try {
-      const response = await $api('/configurations/man-days-rate/add', {
-        method: 'POST',
-        body: JSON.stringify(manDaysData),
-        onResponseError({ response }) {
-          alertErrorResponse()
-          const responseData = response._data;
-          const responseMessage = responseData.message;
-          const responseErrors = responseData.errors;
-          errors.value = responseErrors;
-          errorMessages.value = responseMessage;
-          throw new Error("Created data failed");
-        },
-      });
+    const response = await $api('/configurations/man-days-rate/add', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(manDaysData),
+      onResponseError({ response }) {
+        alertErrorResponse()
+        const responseData = response._data;
+        const responseMessage = responseData.message;
+        const responseErrors = responseData.errors;
+        errors.value = responseErrors;
+        errorMessages.value = responseMessage;
+        throw new Error("Created data failed");
+      },
+    })
 
     const responseStringify = JSON.stringify(response);
     const responseParse = JSON.parse(responseStringify);
@@ -194,6 +203,10 @@ const fetchMandaysUpdate = async (id, formData, clearedForm) => {
   try {
     const response = await $api(`/configurations/man-days-rate/update/${id}`, {
       method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify(formData),
       onResponseError({ response }) {
         alertErrorResponse()
@@ -227,11 +240,15 @@ const fetchMandaysUpdate = async (id, formData, clearedForm) => {
 
 const deleteManDays = async id => {
   try {
-    isManDaysTypeDialog.value = 'Delete'
+    isTypeDialog.value = 'Delete'
     const idManDays = Number(id);
     const response = await $api(`/configurations/man-days-rate/delete/${idManDays}`, {
-        method: 'DELETE',
-        onResponseError({ response }) {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      onResponseError({ response }) {
         alertErrorResponse()
         const responseData = response._data;
         const responseMessage = responseData.message;
@@ -411,7 +428,7 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
   <ManDaysAddDialog
     v-model:isDialogVisible="isManDaysDialogVisible"
     :errors="errors"
-    :typeDialog="isManDaysTypeDialog"
+    :typeDialog="isTypeDialog"
     :mandays-id="IDManDays"
     :fetch-trigger="fetchTrigger"
     @isSnackbarResponseAlertColor="updateSnackbarResponseAlertColor"
@@ -419,6 +436,7 @@ const handleFormSubmit = async ({mode, formData, dialogUpdate}) => {
     @ManDaysData="handleFormSubmit"
     @errorMessages="updateErrorMessages"
     @errors="updateErrors"
+    @updateTypeDialog="onUpdateTypeDialog"
   />
   <ManDaysDeleteDialog
     v-model:isDialogDeleteVisible="isManDaysDialogDeleteVisible"
